@@ -121,6 +121,10 @@ local config = {
 }
 ```
 
+### Credits
+* [luau language server](https://github.com/JohnnyMorganz/luau-lsp/)
+* [tree sitter luau](https://github.com/polychromatist/tree-sitter-luau)
+
 ### TODO
 * Add some action to sync treesitter queries
 * Add some way to set local configs, might be useful for `server.types` or `sourcemap.rojo_project_file`
