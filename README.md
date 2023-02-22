@@ -2,7 +2,7 @@
 Luau lsp extension with fully luau support!
 
 ## Usage
-You should be use `require("luau-lsp").setup {}` instead of `lspconfig.luau_lsp.setup {}`
+You should use `require("luau-lsp").setup {}` instead of `lspconfig.luau_lsp.setup {}`
 <details>
 <summary>mason-lspconfig.nvim</summary>
 
