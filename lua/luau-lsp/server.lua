@@ -1,7 +1,7 @@
-local lspconfig = require "lspconfig"
-local curl = require "plenary.curl"
-local util = require "luau-lsp.util"
 local config = require "luau-lsp.config"
+local curl = require "plenary.curl"
+local lspconfig = require "lspconfig"
+local util = require "luau-lsp.util"
 
 local CURRENT_FFLAGS =
   "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCDesktopClient"
@@ -24,7 +24,6 @@ end
 local setup_server = vim.schedule_wrap(function(cmd)
   local server = lspconfig.luau_lsp
 
-  print("server setup")
   server.setup {
     cmd = cmd,
     filetypes = { "luau" },
@@ -101,7 +100,7 @@ function M.setup()
         on_fflags(fflags)
       end)
     else
-      on_fflags({})
+      on_fflags {}
     end
   end
 
