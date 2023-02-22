@@ -1,0 +1,4 @@
+docs/tags
+
+storage/*
+!storage/.gitkeep
