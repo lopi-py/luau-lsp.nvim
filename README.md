@@ -15,6 +15,14 @@ require("mason-lspconfig").setup_handlers {
 ```
 </details>
 
+## Treesitter
+```lua
+require("luau-lsp").treesitter()
+
+-- treesitter configs here
+```
+`:TSInstall luau`
+
 ## Roblox
 This plugin also supports roblox environment:
 ```lua
