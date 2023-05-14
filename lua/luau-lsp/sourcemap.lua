@@ -71,7 +71,13 @@ function M.generate()
     args = args,
     on_exit = function(self, code)
       if code ~= 0 then
-        vim.notify(self:stderr_result(), vim.log.levels.ERROR, { title = "luau lsp" })
+        vim.schedule(function()
+          vim.notify(
+            table.concat(self:stderr_result(), "\n"),
+            vim.log.levels.ERROR,
+            { title = "luau lsp" }
+          )
+        end)
       end
     end,
   }):start()
