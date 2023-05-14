@@ -16,11 +16,6 @@ require("mason-lspconfig").setup_handlers {
 </details>
 
 ## Treesitter
-```lua
-require("luau-lsp").treesitter()
-
--- treesitter configs here
-```
 `:TSInstall luau`
 
 ## Roblox
@@ -134,5 +129,4 @@ local config = {
 * [tree sitter luau](https://github.com/polychromatist/tree-sitter-luau)
 
 ### TODO
-* Add some action to sync treesitter queries
 * Add some way to set local configs, might be useful for `server.types` or `sourcemap.rojo_project_file`
