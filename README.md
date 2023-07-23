@@ -16,6 +16,12 @@ require("mason-lspconfig").setup_handlers {
 </details>
 
 ## Treesitter
+Note that nvim-treesitter has its own luau parser but causes some [conflicts](https://github.com/polychromatist/tree-sitter-luau#note-on-the-neovim-case), so the following line is required
+```lua
+require("luau-lsp").treesitter() -- required
+
+-- treesitter configs here
+```
 `:TSInstall luau`
 
 ## Roblox
@@ -66,7 +72,9 @@ require("luau-lsp").setup {
     settings = {
       -- see https://github.com/JohnnyMorganz/luau-lsp/blob/main/editors/code/package.json
       completion = {
-        suggestImports = true,
+        imports = {
+          enabled = true,
+        },
       },
     },
   },

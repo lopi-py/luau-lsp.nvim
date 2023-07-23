@@ -32,4 +32,12 @@ function M.make_on_finish(count, callback)
   end
 end
 
+function M.parser_revision()
+  return (M.plugin_path() / "parser.revision"):read()
+end
+
+function M.get_query(query_type)
+  return (M.plugin_path() / "queries" / "luau" / (query_type .. ".scm")):read()
+end
+
 return M
