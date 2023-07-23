@@ -39,8 +39,8 @@ end)
 function M.download_types(name, callback)
   local data = require("luau-lsp.types." .. name)
 
-  local types_file = util.storage_path(name .. "Types.d.luau")
-  local docs_file = util.storage_path(name .. "Docs.json")
+  local types_file = util.storage_file(name .. "Types.d.luau")
+  local docs_file = util.storage_file(name .. "Docs.json")
 
   local on_finish = util.make_on_finish(2, function()
     table.insert(config.get().server.types.definition_files, types_file)
