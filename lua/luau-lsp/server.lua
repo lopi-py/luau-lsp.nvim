@@ -74,7 +74,7 @@ function M.setup()
     end
 
     local function on_fflags(fflags)
-      local fflags = vim.tbl_extend("force", fflags, config.get().server.fflags.overrides)
+      local fflags = vim.tbl_extend("force", fflags, config.get().server.fflags.override)
 
       for name, value in pairs(fflags) do
         table.insert(cmd, format("--flag:%s=%s", name, value))

@@ -39,7 +39,7 @@ local DEFAULTS = {
       --- Sync currently enabled FFlags with Roblox's published FFlags. This currently only syncs FFlags which begin with "Luau"
       sync = true,
       ---@type table<string, "True"|"False"|number> @Override FFlags passed to Luau
-      overrides = {},
+      override = {},
     },
 
     ---@type table<string, any> @Server settings, see [luau lsp settings](https://github.com/JohnnyMorganz/luau-lsp/blob/main/editors/code/package.json)
