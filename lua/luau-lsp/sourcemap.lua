@@ -57,8 +57,8 @@ function M.generate()
     return
   end
 
-  local project_file = config.get().sourcemap.rojo_project_file
-  local include_non_scripts = config.get().sourcemap.include_non_scripts
+  local project_file = config.get().sourcemap.rojoProjectFile
+  local include_non_scripts = config.get().sourcemap.includeNonScripts
 
   local args = { "sourcemap", project_file, "-o", "sourcemap.json" }
 
@@ -67,7 +67,7 @@ function M.generate()
   end
 
   Job:new({
-    command = config.get().sourcemap.rojo_path,
+    command = config.get().sourcemap.rojoPath,
     args = args,
     on_exit = function(self, code)
       if code ~= 0 then

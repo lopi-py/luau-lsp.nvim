@@ -1,4 +1,5 @@
 local Path = require "plenary.path"
+
 local group = vim.api.nvim_create_augroup("luau-lsp", { clear = true })
 
 local M = {

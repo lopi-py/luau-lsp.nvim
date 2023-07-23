@@ -1,3 +1,4 @@
+local Path = require "plenary.path"
 local config = require "luau-lsp.config"
 local curl = require "plenary.curl"
 local lspconfig = require "lspconfig"
@@ -27,9 +28,9 @@ local setup_server = vim.schedule_wrap(function(cmd)
   server.setup {
     cmd = cmd,
     filetypes = { "luau" },
-    root_dir = lspconfig.util.root_pattern(config.get().root_files),
+    root_dir = lspconfig.util.root_pattern(config.get().rootFiles),
     settings = {
-      ["luau-lsp"] = config.get().server.settings,
+      ["luau-lsp"] = config.get(),
     },
   }
 
@@ -43,8 +44,8 @@ function M.download_types(name, callback)
   local docs_file = util.storage_file(name .. "Docs.json")
 
   local on_finish = util.make_on_finish(2, function()
-    table.insert(config.get().server.types.definition_files, types_file)
-    table.insert(config.get().server.types.documentation_files, docs_file)
+    table.insert(config.get().types.definitionFiles, types_file)
+    table.insert(config.get().types.documentationFiles, docs_file)
     callback()
   end)
 
@@ -65,29 +66,33 @@ function M.setup()
   local function on_download()
     local cmd = { "luau-lsp", "lsp" }
 
-    for _, file in ipairs(config.get().server.types.definition_files) do
-      table.insert(cmd, "--definitions=" .. file)
+    for _, file in ipairs(config.get().types.definitionFiles) do
+      if Path:new(file):exists() then
+        table.insert(cmd, "--definitions=" .. file)
+      end
     end
 
-    for _, file in ipairs(config.get().server.types.documentation_files) do
-      table.insert(cmd, "--docs=" .. file)
+    for _, file in ipairs(config.get().types.documentationFiles) do
+      if Path:new(file):exists() then
+        table.insert(cmd, "--docs=" .. file)
+      end
     end
 
     local function on_fflags(fflags)
-      local fflags = vim.tbl_extend("force", fflags, config.get().server.fflags.override)
+      local fflags = vim.tbl_extend("force", fflags, config.get().fflags.override)
 
       for name, value in pairs(fflags) do
         table.insert(cmd, format("--flag:%s=%s", name, value))
       end
 
-      if not config.get().server.fflags.enable_by_default then
+      if not config.get().fflags.enableByDefault then
         table.insert(cmd, "--no-flags-enabled")
       end
 
       setup_server(cmd)
     end
 
-    if config.get().server.fflags.sync then
+    if config.get().fflags.sync then
       get_flags(function(result)
         local fflags = {}
 
@@ -104,7 +109,7 @@ function M.setup()
     end
   end
 
-  if config.get().server.types.roblox then
+  if config.get().types.roblox then
     M.download_types("roblox", on_download)
   else
     on_download()
