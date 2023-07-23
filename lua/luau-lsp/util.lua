@@ -1,4 +1,5 @@
 local Path = require "plenary.path"
+local a = require "plenary.async"
 
 local group = vim.api.nvim_create_augroup("luau-lsp", { clear = true })
 
@@ -20,25 +21,18 @@ function M.autocmd(event, opts)
   vim.api.nvim_create_autocmd(event, opts)
 end
 
---- Utility for multiple async functions
----@param count number
----@param callback function
-function M.make_on_finish(count, callback)
-  local current_count = 0
-  return function(...)
-    current_count = current_count + 1
-    if current_count == count then
-      callback(...)
-    end
-  end
-end
-
 function M.parser_revision()
   return (M.plugin_path() / "parser.revision"):read()
 end
 
 function M.get_query(query_type)
   return (M.plugin_path() / "queries" / "luau" / (query_type .. ".scm")):read()
+end
+
+function M.run_all(async_fns, callback)
+  a.run(function()
+    return a.util.join(async_fns)
+  end, callback)
 end
 
 return M
