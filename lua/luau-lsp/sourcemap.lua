@@ -1,39 +1,10 @@
 local Job = require "plenary.job"
-local config = require "luau-lsp.config"
+local c = require "luau-lsp.config"
 local util = require "luau-lsp.util"
 
+local job_id = nil
+
 local M = {}
-
-local function autogenerate()
-  util.autocmd({ "BufWritePost", "BufDelete" }, {
-    pattern = "*.luau,*.json",
-    callback = function(event)
-      local match = event.match
-      local clients = vim.lsp.get_active_clients {
-        name = "luau_lsp",
-      }
-
-      local should_generate = false
-
-      for _, client in ipairs(clients) do
-        local workspace = client.workspace_folders[1]
-        for dir in vim.fs.parents(match) do
-          if dir == workspace.name then
-            should_generate = true
-            break
-          end
-        end
-        if should_generate then
-          break
-        end
-      end
-
-      if should_generate then
-        M.generate()
-      end
-    end,
-  })
-end
 
 function M.setup()
   util.autocmd("LspAttach", {
@@ -47,27 +18,28 @@ function M.setup()
     end,
   })
 
-  if config.get().sourcemap.autogenerate then
-    autogenerate()
-  end
+  vim.api.nvim_create_user_command("RojoSourcemap", function()
+    M.generate()
+  end, {})
 end
 
 function M.generate()
-  if not config.get().sourcemap.enabled then
+  if not c.get().sourcemap.enabled or job_id then
     return
   end
 
-  local project_file = config.get().sourcemap.rojoProjectFile
-  local include_non_scripts = config.get().sourcemap.includeNonScripts
+  local args = { "sourcemap", c.get().sourcemap.rojoProjectFile, "-o", "sourcemap.json" }
 
-  local args = { "sourcemap", project_file, "-o", "sourcemap.json" }
-
-  if include_non_scripts then
+  if c.get().sourcemap.includeNonScripts then
     table.insert(args, "--include-non-scripts")
   end
 
-  Job:new({
-    command = config.get().sourcemap.rojoPath,
+  if c.get().sourcemap.autogenerate then
+    table.insert(args, "--watch")
+  end
+
+  job_id = Job:new({
+    command = c.get().sourcemap.rojoPath or "rojo",
     args = args,
     on_exit = function(self, code)
       if code ~= 0 then
@@ -79,6 +51,8 @@ function M.generate()
           )
         end)
       end
+
+      job_id = nil
     end,
   }):start()
 end

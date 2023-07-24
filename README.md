@@ -2,14 +2,22 @@
 Luau lsp extension with fully luau support!
 
 ## Usage
-You should use `require("luau-lsp").setup {}` instead of `lspconfig.luau_lsp.setup {}`
+You should use `require("luau-lsp.server").setup {}` instead of `lspconfig.luau_lsp.setup {}`
 <details>
 <summary>mason-lspconfig.nvim</summary>
 
 ```lua
 require("mason-lspconfig").setup_handlers {
-  ["luau_lsp"] = function()
-    require("luau-lsp").setup { ... }
+  luau_lsp = function()
+    -- use this function like require("lspconfig").luau_lsp.setup { ... }
+    require("luau-lsp.server").setup {
+      filetypes = { "lua", "luau" }, -- default is { "luau" }
+      settings = {
+        ["luau-lsp"] = {
+          ...,
+        },
+      },
+    }
   end,
 }
 ```
@@ -27,110 +35,71 @@ require("luau-lsp").treesitter() -- required
 ## Roblox
 This plugin also supports roblox environment:
 ```lua
-require("luau-lsp").setup {
-  sourcemap = {
-    enable = true, -- enable sourcemap generation
-    autogenerate = true, -- auto generate sourcemap when saving/deleting buffers
-  },
-  types = {
-    roblox = true, -- enable roblox api
+require("luau-lsp.server").setup {
+  settings = {
+    ["luau-lsp"] = {
+      sourcemap = {
+        enable = true, -- enable sourcemap generation
+        autogenerate = true, -- auto generate sourcemap with rojo's sourcemap watcher
+      },
+      types = {
+        roblox = true, -- enable roblox api
+      },
+    },
   },
 }
 ```
 
 ## Adding definition files
 ```lua
-require("luau-lsp").setup {
-  types = {
-    definitionFiles = { "testez.d.luau", "path/to/definition/file" },
-    documentationFiles = { "path/to/documentation/file" },
+require("luau-lsp.server").setup {
+  settings = {
+    ["luau-lsp"] = {
+      types = {
+        definitionFiles = { "testez.d.luau", "path/to/definition/file" },
+        documentationFiles = { "path/to/documentation/file" },
+      },
+    },
   },
 }
 ```
 
 ## Override Luau FFLags
 ```lua
-require("luau-lsp").setup {
-  fflags = {
-    override = {
-      LuauTarjanChildLimit = 0,
+require("luau-lsp.server").setup {
+  settings = {
+    ["luau-lsp"] = {
+      fflags = {
+        override = {
+          LuauTarjanChildLimit = 0,
+        },
+      },
     },
   },
 }
 ```
 
-## Server Settings
+## Auto Imports
 ```lua
-require("luau-lsp").setup {
-  -- see https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
-  completion = {
-    imports = {
-      enabled = true,
+require("luau-lsp.server").setup {
+  settings = {
+    ["luau-lsp"] = {
+      completion = {
+        imports = {
+          enabled = true,
+        },
+      },
     },
   },
 }
 ```
 
-## Configuration
-```lua
-local config = {
-  ---@type string[] @Root files to find workspace folder
-  rootFiles = {
-    "*.project.json",
-    ".luaurc",
-    "aftman.toml",
-    "selene.toml",
-    "stylua.toml",
-    "wally.toml",
-    ".git",
-  },
-
-  sourcemap = {
-    --- Whether Rojo sourcemap parsing is enabled
-    enabled = false,
-    --- Automatically run the `rojo sourcemap` command to regenerate sourcemaps on changes
-    autogenerate = false,
-    --- Path to the Rojo executable. If not provided, attempts to run `rojo` in the workspace directory, so it must be available on the PATH
-    rojoPath = "rojo",
-    --- The name of the Rojo project file to generate a sourcemap for. Only applies if `sourcemap.autogenerate` is enabled
-    rojoProjectFile = "default.project.json",
-    --- Include non-script instances in the generated sourcemap
-    includeNonScripts = true,
-  },
-
-  types = {
-    ---@type string[] @A list of paths to definition files to load in to the type checker. Note that definition file syntax is currently unstable and may change at any time
-    definitionFiles = {},
-    ---@type string[] @A list of paths to documentation files which provide documentation support to the definition files provided
-    documentationFiles = {},
-    --- Load in and automatically update Roblox type definitions for the type checker
-    roblox = false,
-  },
-
-  fflags = {
-    --- Enable all (boolean) Luau FFlags by default. These flags can later be overriden by `server.fflags.override` and `server.fflags.sync`
-    enableByDefault = false,
-    --- Sync currently enabled FFlags with Roblox's published FFlags. This currently only syncs FFlags which begin with "Luau"
-    sync = true,
-    ---@type table<string, "True"|"False"|number> @Override FFlags passed to Luau
-    override = {},
-  },
-
-  -- server specific options
-  -- see https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
-  -- e.g. completion.imports.enabled:
-  completion = {
-    imports = {
-      enabled = true,
-    },
-  },
-}
-```
+### See [this schema](https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json) for full `luau-lsp.` options
 
 ### Credits
 * [luau language server](https://github.com/JohnnyMorganz/luau-lsp/)
 * [tree sitter luau](https://github.com/polychromatist/tree-sitter-luau)
 
 ### TODO
-* Add some way to set local configs, might be useful for `types` or `sourcemap.rojoProjectFile`
-* Add an action to sync queries and parser's revision
+* Add some way to set local configs, might be useful for `luau-lsp.types` or `luau-lsp.sourcemap.rojoProjectFile`
+* Add a github action to sync queries and parser's revision
