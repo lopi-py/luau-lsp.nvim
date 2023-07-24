@@ -1,6 +1,8 @@
 # Luau LSP
 Luau lsp extension with fully luau support!
 
+![](https://i.gyazo.com/c91af237f64ca4c81f4732334050dd0e.gif)
+
 ## Usage
 You should use `require("luau-lsp.server").setup {}` instead of `lspconfig.luau_lsp.setup {}`
 <details>
