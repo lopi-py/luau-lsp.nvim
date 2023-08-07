@@ -1,6 +1,7 @@
 local Path = require "plenary.path"
 local a = require "plenary.async"
 local c = require "luau-lsp.config"
+local compat = require "luau-lsp.compat"
 local curl = require "plenary.curl"
 local lsputil = require "lspconfig.util"
 local util = require "luau-lsp.util"
@@ -88,7 +89,7 @@ local get_cmd = a.wrap(function(callback)
     local current_fflags = {}
 
     if c.get().fflags.sync then
-      vim
+      compat
         .iter(get_fflags())
         :filter(function(name)
           return name:match "^FFlagLuau"
