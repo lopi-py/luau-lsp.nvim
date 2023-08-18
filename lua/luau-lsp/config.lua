@@ -35,6 +35,8 @@ local defaults = {
         "*.project.json",
       }, { path = path })
     end,
+    -- see https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
+    settings = {},
   },
 }
 
