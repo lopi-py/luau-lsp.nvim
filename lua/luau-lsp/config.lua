@@ -1,37 +1,57 @@
+local M = {}
+
 ---@class LuauLspConfig
-local DEFAULTS = {
+local defaults = {
   sourcemap = {
     enabled = true,
-    autogenerate = true,
-    rojoPath = nil,
-    rojoProjectFile = "default.project.json",
-    includeNonScripts = true,
+    rojo_path = "rojo",
+    rojo_project_file = "default.project.json",
+    include_non_scripts = true,
   },
   types = {
-    definitionFiles = {},
-    documentationFiles = {},
+    ---@type string[]
+    definition_files = {},
+    ---@type string[]
+    documentation_files = {},
     roblox = true,
   },
   fflags = {
-    enableByDefault = false,
+    enable_by_default = false,
     sync = true,
+    ---@type table<string, "True"|"False"|number>
     override = {},
+  },
+  ---@type table<string, any>
+  server = {
+    cmd = { "luau-lsp", "lsp" },
+    root_pattern = function(path)
+      return vim.find({
+        ".git",
+        ".luaurc",
+        "selene.toml",
+        "stylua.toml",
+        "aftman.toml",
+        "wally.toml",
+        "*.project.json",
+      }, { path = path })
+    end,
   },
 }
 
-local M = {
-  ---@type LuauLspConfig
-  values = vim.deepcopy(DEFAULTS),
-}
+---@type LuauLspConfig
+M.options = nil
 
----@param config LuauLspConfig
-function M.setup(config)
-  M.values = vim.tbl_deep_extend("force", M.values, config)
+---@param options? LuauLspConfig
+function M.setup(options)
+  M.options = vim.tbl_deep_extend("force", defaults, options or {})
+
+  require("luau-lsp.sourcemap").setup()
+  require("luau-lsp.server").setup()
 end
 
 ---@return LuauLspConfig
 function M.get()
-  return M.values
+  return M.options
 end
 
 return M

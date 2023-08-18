@@ -1,11 +1,17 @@
+local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
 local M = {}
 
+---@param opts? LuauLspConfig
+function M.setup(opts)
+  require("luau-lsp.config").setup(opts)
+end
+
 function M.treesitter()
   local success, parsers = pcall(require, "nvim-treesitter.parsers")
   if not success then
-    vim.notify("nvim-treesitter not found", vim.log.levels.ERROR, { title = "luau lsp" })
+    log.error "nvim-treesitter not found"
     return
   end
 
