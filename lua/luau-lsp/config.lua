@@ -24,16 +24,18 @@ local defaults = {
   ---@type table<string, any>
   server = {
     cmd = { "luau-lsp", "lsp" },
-    root_pattern = function(path)
-      return vim.find({
-        ".git",
-        ".luaurc",
-        "selene.toml",
-        "stylua.toml",
-        "aftman.toml",
-        "wally.toml",
-        "*.project.json",
-      }, { path = path })
+    root_dir = function(path)
+      local util = require "lspconfig.util"
+      return util.find_git_ancestor(path)
+        or util.root_pattern(
+          ".luaurc",
+          "selene.toml",
+          "stylua.toml",
+          "aftman.toml",
+          "wally.toml",
+          "mantle.yml",
+          "*.project.json"
+        )(path)
     end,
     -- see https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
     settings = {},
