@@ -143,4 +143,5 @@ require("luau-lsp").setup {
 * [tree sitter luau](https://github.com/polychromatist/tree-sitter-luau)
 
 ### TODO
-* Add a github action to sync queries and parser's revision
+- [x] ~~Add some way to set local configs, might be useful for `types` or `sourcemap.rojo_project_file`~~ you probably want `:help 'exrc'`
+- [ ] Add a github action to sync queries and parser's revision
