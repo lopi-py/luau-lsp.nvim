@@ -79,7 +79,11 @@ local function get_args()
     add_documentation_file(file)
   end
 
-  local current_fflags = {}
+  if not c.get().fflags.enable_by_default then
+    table.insert(args, "--no-flags-enabled")
+  end
+
+  local fflags = {}
 
   if c.get().fflags.sync then
     compat
@@ -91,18 +95,14 @@ local function get_args()
         return name:sub(6), value
       end)
       :each(function(name, value)
-        current_fflags[name] = value
+        fflags[name] = value
       end)
   end
 
-  local fflags = vim.tbl_extend("force", current_fflags, c.get().fflags.override)
+  fflags = vim.tbl_extend("force", fflags, c.get().fflags.override)
 
   for name, value in pairs(fflags) do
     table.insert(args, string.format("--flag:%s=%s", name, value))
-  end
-
-  if not c.get().fflags.enable_by_default then
-    table.insert(args, "--no-flags-enabled")
   end
 
   return args
@@ -113,8 +113,10 @@ M.setup = void(function()
   opts.cmd = vim.list_extend(opts.cmd, get_args())
 
   scheduler()
+  local bufnr = vim.api.nvim_get_current_buf()
+
   require("lspconfig").luau_lsp.setup(opts)
-  require("lspconfig").luau_lsp.manager.try_add()
+  require("lspconfig").luau_lsp.manager.try_add_wrapper(bufnr)
 end)
 
 return M
