@@ -34,6 +34,9 @@ Note that nvim-treesitter has its own luau parser but causes some [conflicts](ht
 require("luau-lsp").treesitter() -- required
 
 -- treesitter configs here
+require("nvim-treesitter.configs").setup {
+  ...
+}
 ```
 `:TSInstall luau`
 
@@ -72,7 +75,7 @@ require("luau-lsp").setup {
 ```
 
 ## Server-specific settings
-All the previous settings are plugin-specific (should be specified under `setup`, also note that all keys here should be in `lower_case`), server-specific settings should be specified under `server.settings["luau-lsp"]`:
+All the previous settings are plugin-specific (should be specified under `setup`, also note that all keys there should be in `lower_case`), server-specific settings should be specified under `server.settings["luau-lsp"]` and in `camelCase`:
 ```lua
 require("luau-lsp").setup {
   server = {
@@ -116,16 +119,18 @@ require("luau-lsp").setup {
   ---@type table<string, any>
   server = {
     cmd = { "luau-lsp", "lsp" },
-    root_pattern = function(path)
-      return vim.find({
-        ".git",
-        ".luaurc",
-        "selene.toml",
-        "stylua.toml",
-        "aftman.toml",
-        "wally.toml",
-        "*.project.json",
-      }, { path = path })
+    root_dir = function(path)
+      local util = require "lspconfig.util"
+      return util.find_git_ancestor(path)
+        or util.root_pattern(
+          ".luaurc",
+          "selene.toml",
+          "stylua.toml",
+          "aftman.toml",
+          "wally.toml",
+          "mantle.yml",
+          "*.project.json"
+        )(path)
     end,
     -- see https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
     settings = {},
