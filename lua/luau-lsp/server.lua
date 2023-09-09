@@ -127,7 +127,7 @@ M.setup = void(function(old_opts)
   local bufnr = vim.api.nvim_get_current_buf()
 
   require("lspconfig").luau_lsp.setup(opts)
-  require("lspconfig").luau_lsp.manager.try_add_wrapper(bufnr)
+  require("lspconfig").luau_lsp.manager:try_add_wrapper(bufnr)
 end)
 
 return M
