@@ -1,4 +1,5 @@
 local Job = require "plenary.job"
+local Path = require "plenary.path"
 local c = require "luau-lsp.config"
 local log = require "luau-lsp.log"
 
@@ -7,28 +8,25 @@ local job = nil
 local M = {}
 
 local function select_project(callback)
-  local function on_fail()
-    log.error "Rojo project not found"
-  end
-
   local projects = vim.split(vim.fn.glob "*.project.json", "\n")
   if #projects > 1 then
-    vim.ui.select(projects, { prompt = "Rojo project" }, function(project)
-      if project then
-        callback(project)
-      else
-        on_fail()
-      end
-    end)
-    return
-  elseif #projects == 1 then
-    callback(projects[1])
+    vim.ui.select(projects, { prompt = "Rojo project" }, callback)
   else
-    on_fail()
+    callback(projects[1])
   end
 end
 
 local function start(project_file)
+  if not project_file then
+    log.error "Rojo project not found"
+    return
+  end
+
+  if not Path:new(project_file):is_file() then
+    log.error("%s is not a file", project_file)
+    return
+  end
+
   local args = {
     "sourcemap",
     "--watch",
@@ -92,7 +90,11 @@ function M.watch()
     return
   end
 
-  select_project(start)
+  if c.get().sourcemap.select_project_file then
+    start(c.get().sourcemap.select_project_file())
+  else
+    select_project(start)
+  end
 end
 
 return M

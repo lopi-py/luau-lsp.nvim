@@ -6,6 +6,8 @@ local defaults = {
     enabled = true,
     rojo_path = "rojo",
     include_non_scripts = true,
+    ---@type fun():string?
+    select_project_file = nil,
   },
   types = {
     ---@type string[]
