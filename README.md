@@ -53,6 +53,9 @@ require("luau-lsp").setup {
 }
 ```
 
+Select rojo project for sourcemap generation with
+`:RojoSourcemap`
+
 ## Adding definition files
 ```lua
 require("luau-lsp").setup {
@@ -100,7 +103,6 @@ require("luau-lsp").setup {
   sourcemap = {
     enabled = true,
     rojo_path = "rojo",
-    rojo_project_file = "default.project.json",
     include_non_scripts = true,
   },
   types = {

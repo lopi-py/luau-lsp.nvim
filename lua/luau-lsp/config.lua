@@ -5,7 +5,6 @@ local defaults = {
   sourcemap = {
     enabled = true,
     rojo_path = "rojo",
-    rojo_project_file = "default.project.json",
     include_non_scripts = true,
   },
   types = {
