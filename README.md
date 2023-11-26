@@ -16,6 +16,7 @@ require("mason-lspconfig").setup_handlers {
     require("luau-lsp").setup {
       server = { -- options passed to `require("lspconfig").luau_lsp.setup`
         filetypes = { "lua", "luau" }, -- default is { "luau" }
+        capabilities = vim.lsp.protocol.make_client_capabilities(), -- just an example
         settings = {
           ["luau-lsp"] = {
             ...,
@@ -29,9 +30,9 @@ require("mason-lspconfig").setup_handlers {
 </details>
 
 ## Treesitter
-Note that nvim-treesitter has its own luau parser but causes some [conflicts](https://github.com/polychromatist/tree-sitter-luau#note-on-the-neovim-case), so the following line is required
+Note that nvim-treesitter has its own luau parser but causes some [conflicts](https://github.com/polychromatist/tree-sitter-luau#note-on-the-neovim-case), so you can opt in for the custom parser:
 ```lua
-require("luau-lsp").treesitter() -- required
+require("luau-lsp").treesitter() -- optional
 
 -- treesitter configs here
 require("nvim-treesitter.configs").setup {
@@ -39,6 +40,8 @@ require("nvim-treesitter.configs").setup {
 }
 ```
 `:TSInstall luau`
+It is important that you call `require("luau-lsp").treesitter()` BEFORE your actual treesitter config, you need to reinstall the parser every time you switch between luau parsers.
+If you want to only use the default parser, just ignore this step.
 
 ## Roblox
 This plugin also supports roblox environment:

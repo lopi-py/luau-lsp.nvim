@@ -16,7 +16,7 @@ function M.parser_revision()
 end
 
 function M.get_query(query_type)
-  return (M.plugin_path() / "queries" / "luau" / (query_type .. ".scm")):read()
+  return (M.plugin_path() / "_queries" / "luau" / (query_type .. ".scm")):read()
 end
 
 return M
