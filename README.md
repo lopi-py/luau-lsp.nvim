@@ -107,7 +107,7 @@ require("luau-lsp").setup {
     enabled = true,
     rojo_path = "rojo",
     include_non_scripts = true,
-    ---@type fun():string
+    ---@type fun():string?
     select_project_file = nil,
   },
   types = {
