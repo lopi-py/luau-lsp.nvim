@@ -8,6 +8,14 @@ function M.setup(opts)
   require("luau-lsp.config").setup(opts)
 end
 
+function M.compute_bytecode()
+  require("luau-lsp.bytecode").compute_bytecode()
+end
+
+function M.compiler_remarks()
+  require("luau-lsp.bytecode").compiler_remarks()
+end
+
 function M.treesitter()
   local success, parsers = pcall(require, "nvim-treesitter.parsers")
   if not success then
