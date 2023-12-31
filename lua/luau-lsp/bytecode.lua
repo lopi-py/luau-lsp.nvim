@@ -103,7 +103,7 @@ local function set_bytecode_text(text)
   end
 
   vim.api.nvim_win_call(get_bytecode_window(), function()
-    local view = vim.fn.winsaveview() --[[ @as vim.fn.winsaveview.ret ]]
+    local view = vim.fn.winsaveview() --[[@as vim.fn.winsaveview.ret]]
     local lines = vim.split(text, "\n")
 
     vim.bo[bufnr].modifiable = true
