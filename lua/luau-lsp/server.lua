@@ -108,18 +108,7 @@ local function get_args()
   return args
 end
 
-M.setup = void(function(old_opts)
-  if old_opts then
-    vim.deprecate(
-      'require("luau-lsp.server").setup {...}',
-      'require("luau-lsp").setup {...}',
-      "1.2.0",
-      "luau-lsp.nvim",
-      false
-    )
-    return
-  end
-
+M.setup = void(function()
   local opts = vim.deepcopy(c.get().server)
   opts.cmd = vim.list_extend(opts.cmd, get_args())
 
