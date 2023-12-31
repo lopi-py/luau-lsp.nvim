@@ -99,6 +99,9 @@ require("luau-lsp").setup {
 }
 ```
 
+## Bytecode generation
+`:LuauBytecode` and `:LuauCompilerRemarks` open a new window and show the current Luau file bytecode and compiler remarks. It will automatically update if you change the file or edit it. Close with `q`.
+
 ### Configuration
 `luau-lsp.nvim` comes with the following defaults
 ```lua
