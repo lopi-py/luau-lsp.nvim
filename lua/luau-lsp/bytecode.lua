@@ -4,7 +4,6 @@ local log = require "luau-lsp.log"
 local M = {}
 M._method = "luau-lsp/bytecode"
 M._optlevel = 0
-M._cancel = nil
 
 local function is_attached(bufnr)
   local clients = vim.lsp.get_clients { name = "luau_lsp", bufnr = bufnr }
@@ -81,8 +80,8 @@ end
 
 local function get_bytecode_buffer()
   for _, bufnr in pairs(vim.api.nvim_list_bufs()) do
-    local success, result = pcall(vim.api.nvim_buf_get_var, bufnr, "luau-bytecode")
-    if success and result then
+    local success, value = pcall(vim.api.nvim_buf_get_var, bufnr, "luau-bytecode")
+    if success and value then
       return bufnr
     end
   end
@@ -90,11 +89,28 @@ end
 
 local function get_bytecode_window()
   for _, winnr in pairs(vim.api.nvim_list_wins()) do
-    local success, result = pcall(vim.api.nvim_win_get_var, winnr, "luau-bytecode")
-    if success and result then
+    local success, value = pcall(vim.api.nvim_win_get_var, winnr, "luau-bytecode")
+    if success and value then
       return winnr
     end
   end
+end
+
+local function set_bytecode_text(text)
+  local bufnr = get_bytecode_buffer()
+  if not bufnr then
+    return
+  end
+
+  vim.api.nvim_win_call(get_bytecode_window(), function()
+    local view = vim.fn.winsaveview() --[[ @as vim.fn.winsaveview.ret ]]
+    local lines = vim.split(text, "\n")
+
+    vim.bo[bufnr].modifiable = true
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    vim.bo[bufnr].modifiable = false
+    vim.fn.winrestview(view)
+  end)
 end
 
 local function show_bytecode_info(method, scheme, filename)
@@ -125,17 +141,8 @@ local function show_bytecode_info(method, scheme, filename)
 end
 
 function M.update_buffer(bufnr)
-  local bt_bufnr = get_bytecode_buffer()
-  if not bt_bufnr then
-    return
-  end
-
   if not is_attached(bufnr) then
     return
-  end
-
-  if M._cancel then
-    M._cancel()
   end
 
   local params = {
@@ -143,21 +150,14 @@ function M.update_buffer(bufnr)
     optimizationLevel = M._optlevel,
   }
 
-  local _, cancel = vim.lsp.buf_request(bufnr, M._method, params, function(err, result)
+  vim.lsp.buf_request(bufnr, M._method, params, function(err, result)
     if err then
       log.error(err.message)
       return
     end
 
-    local lines = vim.split(result:gsub("[\n\r]+$", ""), "\n")
-
-    vim.bo[bt_bufnr].modifiable = true
-    vim.api.nvim_buf_set_lines(bt_bufnr, 0, -1, false, lines)
-    vim.bo[bt_bufnr].modifiable = false
-    M._cancel = nil
+    set_bytecode_text(result:gsub("[\n]+$", ""))
   end)
-
-  M._cancel = cancel
 end
 
 function M.close()
@@ -169,11 +169,6 @@ function M.close()
   local winnr = get_bytecode_window()
   if winnr then
     vim.api.nvim_win_close(winnr, true)
-  end
-
-  if M._cancel then
-    M._cancel()
-    M._cancel = nil
   end
 end
 
