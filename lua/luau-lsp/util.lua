@@ -8,7 +8,10 @@ function M.plugin_path()
 end
 
 function M.storage_file(key)
-  return tostring(M.plugin_path() / "storage" / key)
+  local storage = Path:new(vim.fn.stdpath "data") / "luau-lsp"
+  storage:mkdir()
+
+  return tostring(storage / key)
 end
 
 function M.parser_revision()
