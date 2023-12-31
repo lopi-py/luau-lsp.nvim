@@ -6,6 +6,9 @@ local M = {}
 ---@param opts? LuauLspConfig
 function M.setup(opts)
   require("luau-lsp.config").setup(opts)
+
+  vim.api.nvim_create_user_command("LuauBytecode", M.compute_bytecode, {})
+  vim.api.nvim_create_user_command("LuauCompilerRemarks", M.compiler_remarks, {})
 end
 
 function M.compute_bytecode()
