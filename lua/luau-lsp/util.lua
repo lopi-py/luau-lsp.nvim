@@ -27,6 +27,18 @@ function M.fcounter(amount, callback)
   end
 end
 
+---@param t table
+---@param value any
+---@return boolean
+function M.list_contains(t, value)
+  for _, v in ipairs(t) do
+    if v == value then
+      return true
+    end
+  end
+  return false
+end
+
 function M.parser_revision()
   return (M.plugin_path() / "parser.revision"):read()
 end

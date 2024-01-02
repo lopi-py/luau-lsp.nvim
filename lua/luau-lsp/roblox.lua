@@ -34,7 +34,7 @@ M.download_api = async.wrap(function(callback)
   local security_level = c.get().types.roblox_security_level
 
   assert(
-    vim.list_contains(SECURITY_LEVELS, security_level),
+    util.list_contains(SECURITY_LEVELS, security_level),
     "invalid security level: " .. security_level
   )
 
@@ -53,6 +53,6 @@ M.download_api = async.wrap(function(callback)
     callback = on_download,
     compressed = false,
   })
-end, 2)
+end, 1)
 
 return M
