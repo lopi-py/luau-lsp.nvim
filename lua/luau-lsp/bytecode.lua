@@ -71,8 +71,12 @@ end
 local function create_bytecode_window()
   local winnr = vim.api.nvim_get_current_win()
   local bufnr = create_bytecode_buffer()
+  local splitright = vim.o.splitright
 
+  vim.o.splitright = true
   vim.cmd "vsplit"
+  vim.o.splitright = splitright
+
   vim.api.nvim_win_set_var(vim.api.nvim_get_current_win(), "luau-bytecode", true)
   vim.api.nvim_set_current_buf(bufnr)
   vim.api.nvim_set_current_win(winnr)
