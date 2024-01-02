@@ -7,12 +7,12 @@ local M = {}
 function M.setup(opts)
   require("luau-lsp.config").setup(opts)
 
-  vim.api.nvim_create_user_command("LuauBytecode", M.compute_bytecode, {})
+  vim.api.nvim_create_user_command("LuauBytecode", M.bytecode, {})
   vim.api.nvim_create_user_command("LuauCompilerRemarks", M.compiler_remarks, {})
 end
 
-function M.compute_bytecode()
-  require("luau-lsp.bytecode").compute_bytecode()
+function M.bytecode()
+  require("luau-lsp.bytecode").bytecode()
 end
 
 function M.compiler_remarks()

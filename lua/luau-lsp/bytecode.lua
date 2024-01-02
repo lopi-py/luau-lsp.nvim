@@ -176,7 +176,7 @@ function M.close()
   end
 end
 
-function M.compute_bytecode()
+function M.bytecode()
   show_bytecode_info("luau-lsp/bytecode", "luau-bytecode", "bytecode")
 end
 
