@@ -17,13 +17,13 @@ local function select_project(callback)
 end
 
 local function start(project_file)
-  if not project_file then
-    log.error "Rojo project not found"
+  if not project_file or project_file == "" then
+    log.error "Unable to find Rojo project file"
     return
   end
 
   if not Path:new(project_file):is_file() then
-    log.error("%s is not a file", project_file)
+    log.error("'%s' is not a Rojo project file", project_file)
     return
   end
 
@@ -39,22 +39,35 @@ local function start(project_file)
     table.insert(args, "--include-non-scripts")
   end
 
+  ---@param err string
+  local function on_error(err)
+    local message = err
+    if err:find "Found argument 'sourcemap' which wasn't expected" then
+      message = "Your Rojo version doesn't have sourcemap support"
+    elseif err:find "Found argument '--watch' which wasn't expected" then
+      message = "Your Rojo version doesn't have sourcemap watching support"
+    elseif err:find "is not recognized" or err:find "ENOENT" then
+      message = "Rojo not found. Please install Rojo or disable sourcemap autogeneration"
+    end
+
+    log.error("Failed to update sourcemap for '%s': %s", project_file, message)
+  end
+
   job = Job:new {
     command = c.get().sourcemap.rojo_path or "rojo",
     args = args,
-    on_exit = function(self, code)
+    on_exit = vim.schedule_wrap(function(self, code)
       if code and code ~= 0 then
-        vim.schedule(function()
-          log.error(table.concat(self:stderr_result(), "\n"))
-        end)
+        local err = table.concat(self:stderr_result(), "\n")
+        on_error(err)
       end
 
       job = nil
-    end,
+    end),
   }
   job:start()
 
-  log.info("Sourcemap generation started for %s", project_file)
+  log.info("Starting sourcemap generation for '%s'", project_file)
 end
 
 function M.setup()
