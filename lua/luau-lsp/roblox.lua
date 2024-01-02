@@ -1,4 +1,5 @@
 local async = require "plenary.async"
+local c = require "luau-lsp.config"
 local curl = require "plenary.curl"
 local util = require "luau-lsp.util"
 
@@ -28,8 +29,10 @@ end
 
 local M = {}
 
----@type fun(security_level:string):string,string
-M.download_api = async.wrap(function(security_level, callback)
+---@type fun():string,string
+M.download_api = async.wrap(function(callback)
+  local security_level = c.get().types.roblox_security_level
+
   assert(
     vim.list_contains(SECURITY_LEVELS, security_level),
     "invalid security level: " .. security_level

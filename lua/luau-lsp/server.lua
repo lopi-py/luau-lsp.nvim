@@ -69,8 +69,7 @@ local function get_args()
 
   if c.get().types.roblox then
     local roblox = require "luau-lsp.roblox"
-    local definition_file, documentation_file =
-      roblox.download_api(c.get().types.roblox_security_level)
+    local definition_file, documentation_file = roblox.download_api()
 
     add_definition_file(definition_file)
     add_documentation_file(documentation_file)
