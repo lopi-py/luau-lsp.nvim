@@ -7,8 +7,6 @@ local curl = require "plenary.curl"
 local CURRENT_FFLAGS =
   "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCDesktopClient"
 
-local M = {}
-
 local get_fflags = async.wrap(function(callback)
   curl.get {
     url = CURRENT_FFLAGS,
@@ -81,16 +79,31 @@ local function get_args()
   return args
 end
 
-M.setup = async.void(function()
-  local opts = vim.deepcopy(c.get().server)
-  opts.cmd = vim.list_extend(opts.cmd, get_args())
+local M = {}
 
-  async.util.scheduler()
+function M.setup()
+  local filetypes = c.get().server.filetypes or { "luau" }
 
-  local bufnr = vim.api.nvim_get_current_buf()
+  local function setup_server()
+    local opts = vim.deepcopy(c.get().server)
+    local bufnr = vim.api.nvim_get_current_buf()
 
-  require("lspconfig").luau_lsp.setup(opts)
-  require("lspconfig").luau_lsp.manager:try_add_wrapper(bufnr)
-end)
+    vim.list_extend(opts.cmd, get_args())
+    async.util.scheduler()
+
+    require("lspconfig").luau_lsp.setup(opts)
+    require("lspconfig").luau_lsp.manager:try_add_wrapper(bufnr)
+  end
+
+  vim.api.nvim_create_autocmd("BufReadPost", {
+    once = true,
+    pattern = vim.tbl_map(function(filetype)
+      return "*." .. filetype
+    end, filetypes),
+    callback = function()
+      async.run(setup_server)
+    end,
+  })
+end
 
 return M
