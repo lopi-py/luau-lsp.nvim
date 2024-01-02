@@ -15,6 +15,7 @@ local defaults = {
     ---@type string[]
     documentation_files = {},
     roblox = true,
+    roblox_security_level = "PluginSecurity",
   },
   fflags = {
     enable_by_default = false,

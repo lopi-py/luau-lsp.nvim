@@ -3,42 +3,13 @@ local async = require "plenary.async"
 local c = require "luau-lsp.config"
 local compat = require "luau-lsp.compat"
 local curl = require "plenary.curl"
-local util = require "luau-lsp.util"
-
-local channel = async.control.channel
-local run = async.run
-local scheduler = async.util.scheduler
-local void = async.void
-local wrap = async.wrap
 
 local CURRENT_FFLAGS =
   "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCDesktopClient"
 
 local M = {}
 
-local download = function(url, output, callback)
-  curl.get(url, {
-    output = output,
-    callback = function()
-      callback(output)
-    end,
-    compressed = false,
-  })
-end
-
-local download_types = wrap(function(name, callback)
-  local data = require("luau-lsp.types." .. name)
-  local tx, rx = channel.mpsc()
-
-  download(data.types, util.storage_file(name .. ".d.luau"), tx.send)
-  download(data.docs, util.storage_file(name .. ".json"), tx.send)
-
-  run(function()
-    callback(rx.recv(), rx.recv())
-  end)
-end, 2)
-
-local get_fflags = wrap(function(callback)
+local get_fflags = async.wrap(function(callback)
   curl.get {
     url = CURRENT_FFLAGS,
     accept = "application/json",
@@ -62,13 +33,6 @@ local function get_args()
     if Path:new(file):is_file() then
       table.insert(args, "--docs=" .. file)
     end
-  end
-
-  if c.get().types.roblox then
-    local definition_file, documentation_file = download_types "roblox"
-
-    add_definition_file(definition_file)
-    add_documentation_file(documentation_file)
   end
 
   for _, file in ipairs(c.get().types.definition_files) do
@@ -105,14 +69,24 @@ local function get_args()
     table.insert(args, string.format("--flag:%s=%s", name, value))
   end
 
+  if c.get().types.roblox then
+    local roblox = require "luau-lsp.roblox"
+    local definition_file, documentation_file =
+      roblox.download_api(c.get().types.roblox_security_level)
+
+    add_definition_file(definition_file)
+    add_documentation_file(documentation_file)
+  end
+
   return args
 end
 
-M.setup = void(function()
+M.setup = async.void(function()
   local opts = vim.deepcopy(c.get().server)
   opts.cmd = vim.list_extend(opts.cmd, get_args())
 
-  scheduler()
+  async.util.scheduler()
+
   local bufnr = vim.api.nvim_get_current_buf()
 
   require("lspconfig").luau_lsp.setup(opts)

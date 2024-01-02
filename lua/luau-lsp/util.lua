@@ -14,6 +14,19 @@ function M.storage_file(key)
   return tostring(storage / key)
 end
 
+---@param amount number
+---@param callback function
+---@return function
+function M.fcounter(amount, callback)
+  local counter = 0
+  return function()
+    counter = counter + 1
+    if counter == amount then
+      callback()
+    end
+  end
+end
+
 function M.parser_revision()
   return (M.plugin_path() / "parser.revision"):read()
 end
