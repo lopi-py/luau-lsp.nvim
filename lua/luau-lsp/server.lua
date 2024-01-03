@@ -81,8 +81,6 @@ end
 local M = {}
 
 function M.setup()
-  local filetypes = c.get().server.filetypes or { "luau" }
-
   local function setup_server()
     local opts = vim.deepcopy(c.get().server)
     local bufnr = vim.api.nvim_get_current_buf()
@@ -94,11 +92,9 @@ function M.setup()
     require("lspconfig").luau_lsp.manager:try_add_wrapper(bufnr)
   end
 
-  vim.api.nvim_create_autocmd("BufReadPost", {
+  vim.api.nvim_create_autocmd("FileType", {
     once = true,
-    pattern = vim.tbl_map(function(filetype)
-      return "*." .. filetype
-    end, filetypes),
+    pattern = c.get().server.filetypes or { "luau" },
     callback = function()
       async.run(setup_server)
     end,
