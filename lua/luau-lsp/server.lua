@@ -3,6 +3,7 @@ local async = require "plenary.async"
 local c = require "luau-lsp.config"
 local compat = require "luau-lsp.compat"
 local curl = require "plenary.curl"
+local util = require "luau-lsp.util"
 
 local CURRENT_FFLAGS =
   "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCDesktopClient"
@@ -73,6 +74,16 @@ local function get_args()
 
     add_definition_file(definition_file)
     add_documentation_file(documentation_file)
+  end
+
+  if not c.get().sourcemap.enabled then
+    -- hide luau lsp messages when sourcemap is disabled
+    local no_sourcemap = Path:new(util.storage_file "no-sourcemap-enabled.json")
+    if not no_sourcemap:is_file() then
+      no_sourcemap:write(vim.json.encode { ["luau-lsp.sourcemap.enabled"] = false }, "w")
+    end
+    table.insert(args, "--settings")
+    table.insert(args, tostring(no_sourcemap))
   end
 
   return args
