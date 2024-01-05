@@ -51,7 +51,7 @@ local function validate_config(opts)
   local function verify_server_client_setting(path)
     if vim.tbl_get(opts, "server", "settings", "luau-lsp", unpack(path)) ~= nil then
       log.warn(
-        "Server setting '%s' will not take effect. Check the README.md for more info",
+        "Server setting `%s' will not take effect. Check the README.md for more info",
         table.concat(path, ".")
       )
     end
@@ -110,7 +110,11 @@ function M.config(options)
 
   -- sourcemap.rojo_project_file has changed so update the generation if needed
   local sourcemap = require "luau-lsp.sourcemap"
-  if has_changed { "sourcemap", "rojo_project_file" } and sourcemap.is_running() then
+  if
+    has_changed { "sourcemap", "rojo_project_file" }
+    and M.options.sourcemap.autogenerate
+    and sourcemap.is_running()
+  then
     sourcemap.stop()
     sourcemap.start()
   end
@@ -121,7 +125,7 @@ function M.setup(options)
   validate_config(options or {})
 
   if M.options then
-    -- .config was called first, so prefer give them more priority
+    -- .config was called first, so give them more priority
     M.options = vim.tbl_deep_extend("force", options or {}, M.options)
   else
     -- fresh options setup

@@ -8,16 +8,16 @@ local levels = vim.deepcopy(vim.log.levels)
 vim.tbl_add_reverse_lookup(levels)
 
 local function create_logger(level)
-  return function(message, ...)
+  return vim.schedule_wrap(function(message, ...)
     local timestr = vim.fn.strftime "%H:%M:%S"
     message = string.format(message, ...)
 
     LOG_FILE:write(string.format("%s[%s]: %s\n", timestr, levels[level], message), "a")
 
     if level >= levels.WARN then
-      vim.schedule_wrap(vim.notify)(message, level, { title = PLUGIN_NAME })
+      vim.notify(message, level, { title = PLUGIN_NAME })
     end
-  end
+  end)
 end
 
 local M = {}

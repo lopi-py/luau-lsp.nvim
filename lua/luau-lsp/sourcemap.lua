@@ -56,10 +56,10 @@ local function start(project_file)
       message = "Rojo not found. Please install Rojo or disable sourcemap autogeneration"
     end
 
-    log.error("Failed to update sourcemap for '%s': %s", project_file, message)
+    log.error("Failed to update sourcemap for `%s`: %s", project_file, message)
   end
 
-  log.info("Starting sourcemap generation for '%s'", project_file)
+  log.info("Starting sourcemap generation for `%s`", project_file)
 
   job = Job:new {
     command = c.get().sourcemap.rojo_path or "rojo",
@@ -67,7 +67,7 @@ local function start(project_file)
     on_exit = function(self, code)
       if code and code ~= 0 then
         local err = table.concat(self:stderr_result(), "\n")
-        vim.schedule_wrap(on_error)(err)
+        on_error(err)
       end
 
       job = nil
@@ -83,7 +83,7 @@ function M.stop()
 end
 
 function M.start()
-  if not c.get().sourcemap.enabled or not c.get().sourcemap.autogenerate then
+  if not c.get().sourcemap.enabled then
     return
   end
 
@@ -107,8 +107,10 @@ function M.setup()
       callback = function(event)
         local client = vim.lsp.get_client_by_id(event.data.client_id)
         if client and client.name == "luau_lsp" then
-          M.start()
-          return true
+          if c.get().sourcemap.enabled and c.get().sourcemap.autogenerate then
+            M.start()
+            return true
+          end
         end
       end,
     })
