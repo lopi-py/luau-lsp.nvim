@@ -19,6 +19,10 @@ function M.compiler_remarks()
   require("luau-lsp.bytecode").compiler_remarks()
 end
 
+function M.open_logs()
+  vim.cmd.edit(log.log_file)
+end
+
 function M.treesitter()
   local success, parsers = pcall(require, "nvim-treesitter.parsers")
   if not success then
