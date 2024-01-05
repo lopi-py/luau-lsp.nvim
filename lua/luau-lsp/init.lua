@@ -11,6 +11,11 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("LuauCompilerRemarks", M.compiler_remarks, {})
 end
 
+---@param opts LuauLspConfig
+function M.config(opts)
+  require("luau-lsp.config").config(opts)
+end
+
 function M.bytecode()
   require("luau-lsp.bytecode").bytecode()
 end

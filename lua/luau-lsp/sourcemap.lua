@@ -16,17 +16,32 @@ local function select_project(callback)
   end
 end
 
+local function get_rojo_project_file(callback)
+  local project_file = c.get().sourcemap.rojo_project_file
+  if Path:new(project_file):is_file() then
+    callback(project_file)
+    return
+  end
+
+  local foundProjectFiles = vim.split(vim.fn.glob "*.project.json", "\n")
+  if #foundProjectFiles == 0 then
+    log.warn("Unable to find project file `%s`", project_file)
+    callback()
+  elseif #foundProjectFiles == 1 then
+    log.info("Unable to find project file `%s`. We found `%s`", project_file, foundProjectFiles[1])
+    callback(foundProjectFiles[1])
+  else
+    vim.ui.select(foundProjectFiles, { prompt = "Select project file" }, function(choice)
+      if choice and choice ~= "" then
+        callback(choice)
+      else
+        callback()
+      end
+    end)
+  end
+end
+
 local function start(project_file)
-  if not project_file or project_file == "" then
-    log.error "Unable to find Rojo project file"
-    return
-  end
-
-  if not Path:new(project_file):is_file() then
-    log.error("'%s' is not a Rojo project file", project_file)
-    return
-  end
-
   local args = {
     "sourcemap",
     "--watch",
@@ -53,6 +68,8 @@ local function start(project_file)
     log.error("Failed to update sourcemap for '%s': %s", project_file, message)
   end
 
+  log.info("Starting sourcemap generation for '%s'", project_file)
+
   job = Job:new {
     command = c.get().sourcemap.rojo_path or "rojo",
     args = args,
@@ -66,8 +83,6 @@ local function start(project_file)
     end),
   }
   job:start()
-
-  log.info("Starting sourcemap generation for '%s'", project_file)
 end
 
 function M.setup()
@@ -78,15 +93,21 @@ function M.setup()
       group = group,
       callback = function(event)
         local client = vim.lsp.get_client_by_id(event.data.client_id)
-        if not client or client.name ~= "luau_lsp" then
-          return
+        if client and client.name == "luau_lsp" then
+          M.watch()
+          return true
         end
-        M.watch()
       end,
     })
   end
 
   vim.api.nvim_create_user_command("RojoSourcemap", function()
+    -- c.config {
+    --   sourcemap = {
+    --     -- TODO: set the actual rojo project file
+    --     rojo_project_file = c.get().sourcemap.rojo_project_file,
+    --   },
+    -- }
     M.stop()
     M.watch()
   end, {})
@@ -99,15 +120,19 @@ function M.stop()
 end
 
 function M.watch()
-  if not c.get().sourcemap.enabled or job then
+  if not c.get().sourcemap.enabled or not c.get().sourcemap.autogenerate or job then
     return
   end
 
-  if c.get().sourcemap.select_project_file then
-    start(c.get().sourcemap.select_project_file())
-  else
-    select_project(start)
-  end
+  get_rojo_project_file(function(project_file)
+    if project_file then
+      start(project_file)
+    end
+  end)
+end
+
+function M.is_running()
+  return job ~= nil
 end
 
 return M
