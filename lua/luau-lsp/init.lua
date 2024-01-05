@@ -3,19 +3,6 @@ local util = require "luau-lsp.util"
 
 local M = {}
 
----@param opts? LuauLspConfig
-function M.setup(opts)
-  require("luau-lsp.config").setup(opts)
-
-  vim.api.nvim_create_user_command("LuauBytecode", M.bytecode, {})
-  vim.api.nvim_create_user_command("LuauCompilerRemarks", M.compiler_remarks, {})
-end
-
----@param opts LuauLspConfig
-function M.config(opts)
-  require("luau-lsp.config").config(opts)
-end
-
 function M.bytecode()
   require("luau-lsp.bytecode").bytecode()
 end
@@ -54,6 +41,19 @@ function M.treesitter()
   override_query "indents"
   override_query "injections"
   override_query "locals"
+end
+
+---@param opts LuauLspConfig
+function M.config(opts)
+  require("luau-lsp.config").config(opts)
+end
+
+---@param opts? LuauLspConfig
+function M.setup(opts)
+  require("luau-lsp.config").setup(opts)
+
+  vim.api.nvim_create_user_command("LuauBytecode", M.bytecode, {})
+  vim.api.nvim_create_user_command("LuauCompilerRemarks", M.compiler_remarks, {})
 end
 
 return M

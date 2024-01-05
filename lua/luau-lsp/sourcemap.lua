@@ -7,15 +7,6 @@ local job = nil
 
 local M = {}
 
-local function select_project(callback)
-  local projects = vim.split(vim.fn.glob "*.project.json", "\n")
-  if #projects > 1 then
-    vim.ui.select(projects, { prompt = "Rojo project" }, callback)
-  else
-    callback(projects[1])
-  end
-end
-
 local function get_rojo_project_file(callback)
   local project_file = c.get().sourcemap.rojo_project_file
   if Path:new(project_file):is_file() then
@@ -85,6 +76,28 @@ local function start(project_file)
   job:start()
 end
 
+function M.stop()
+  if job then
+    job:shutdown()
+  end
+end
+
+function M.watch()
+  if not c.get().sourcemap.enabled or not c.get().sourcemap.autogenerate or job then
+    return
+  end
+
+  get_rojo_project_file(function(project_file)
+    if project_file then
+      start(project_file)
+    end
+  end)
+end
+
+function M.is_running()
+  return job ~= nil
+end
+
 function M.setup()
   local group = vim.api.nvim_create_augroup("luau-lsp.sourcemap", { clear = true })
 
@@ -111,28 +124,6 @@ function M.setup()
     M.stop()
     M.watch()
   end, {})
-end
-
-function M.stop()
-  if job then
-    job:shutdown()
-  end
-end
-
-function M.watch()
-  if not c.get().sourcemap.enabled or not c.get().sourcemap.autogenerate or job then
-    return
-  end
-
-  get_rojo_project_file(function(project_file)
-    if project_file then
-      start(project_file)
-    end
-  end)
-end
-
-function M.is_running()
-  return job ~= nil
 end
 
 return M

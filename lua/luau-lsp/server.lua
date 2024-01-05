@@ -99,6 +99,8 @@ end
 
 local M = {}
 
+-- TODO: add start, stop and restart functions
+
 function M.setup()
   local function setup_server()
     local opts = vim.deepcopy(c.get().server)

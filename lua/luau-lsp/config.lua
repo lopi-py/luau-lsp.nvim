@@ -72,20 +72,9 @@ end
 ---@type LuauLspConfig
 M.options = nil
 
----@param options? LuauLspConfig
-function M.setup(options)
-  validate_config(options or {})
-
-  if M.options then
-    -- .config was called first, so prefer give them more priority
-    M.options = vim.tbl_deep_extend("force", options or {}, M.options)
-  else
-    -- fresh options setup
-    M.options = vim.tbl_deep_extend("force", defaults, options or {})
-  end
-
-  require("luau-lsp.sourcemap").setup()
-  require("luau-lsp.server").setup()
+---@return LuauLspConfig
+function M.get()
+  return M.options
 end
 
 ---@param options LuauLspConfig
@@ -126,9 +115,20 @@ function M.config(options)
   end
 end
 
----@return LuauLspConfig
-function M.get()
-  return M.options
+---@param options? LuauLspConfig
+function M.setup(options)
+  validate_config(options or {})
+
+  if M.options then
+    -- .config was called first, so prefer give them more priority
+    M.options = vim.tbl_deep_extend("force", options or {}, M.options)
+  else
+    -- fresh options setup
+    M.options = vim.tbl_deep_extend("force", defaults, options or {})
+  end
+
+  require("luau-lsp.sourcemap").setup()
+  require("luau-lsp.server").setup()
 end
 
 return M
