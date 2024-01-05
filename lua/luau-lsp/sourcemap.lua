@@ -64,14 +64,14 @@ local function start(project_file)
   job = Job:new {
     command = c.get().sourcemap.rojo_path or "rojo",
     args = args,
-    on_exit = vim.schedule_wrap(function(self, code)
+    on_exit = function(self, code)
       if code and code ~= 0 then
         local err = table.concat(self:stderr_result(), "\n")
-        on_error(err)
+        vim.schedule_wrap(on_error)(err)
       end
 
       job = nil
-    end),
+    end,
   }
   job:start()
 end
@@ -82,8 +82,8 @@ function M.stop()
   end
 end
 
-function M.watch()
-  if not c.get().sourcemap.enabled or not c.get().sourcemap.autogenerate or job then
+function M.start()
+  if not c.get().sourcemap.enabled or not c.get().sourcemap.autogenerate then
     return
   end
 
@@ -107,7 +107,7 @@ function M.setup()
       callback = function(event)
         local client = vim.lsp.get_client_by_id(event.data.client_id)
         if client and client.name == "luau_lsp" then
-          M.watch()
+          M.start()
           return true
         end
       end,
@@ -122,7 +122,7 @@ function M.setup()
     --   },
     -- }
     M.stop()
-    M.watch()
+    M.start()
   end, {})
 end
 

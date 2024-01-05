@@ -49,8 +49,7 @@ local defaults = {
 ---@param opts LuauLspConfig
 local function validate_config(opts)
   local function verify_server_client_setting(path)
-    path = type(path) == "table" and path or { path }
-    if vim.tbl_get(opts, "server", "settings", "luau-lsp", unpack(path)) then
+    if vim.tbl_get(opts, "server", "settings", "luau-lsp", unpack(path)) ~= nil then
       log.warn(
         "Server setting '%s' will not take effect. Check the README.md for more info",
         table.concat(path, ".")
@@ -64,9 +63,9 @@ local function validate_config(opts)
 
   -- luau-lsp doesn't really listen to those, they are passed in the command line so restart is
   -- needed
-  verify_server_client_setting "fflags"
-  verify_server_client_setting "sourcemap"
-  verify_server_client_setting "types"
+  verify_server_client_setting { "fflags" }
+  verify_server_client_setting { "sourcemap" }
+  verify_server_client_setting { "types" }
 end
 
 ---@type LuauLspConfig
@@ -81,16 +80,18 @@ end
 function M.config(options)
   validate_config(options)
 
-  options = vim.tbl_deep_extend("force", M.options or defaults, options)
+  local old_options = M.options or defaults
+  local new_options = vim.tbl_deep_extend("force", old_options, options)
+
+  local function has_changed(path)
+    return not vim.deep_equal(
+      vim.tbl_get(old_options, unpack(path)) or {},
+      vim.tbl_get(new_options, unpack(path)) or {}
+    )
+  end
 
   local function verify_if_restart_needed(path)
-    path = type(path) == "table" and path or { path }
-    if
-      not vim.deep_equal(
-        vim.tbl_get(M.options, unpack(path)) or {},
-        vim.tbl_get(options, unpack(path)) or {}
-      )
-    then
+    if has_changed(path) then
       log.warn(
         "`%s` has changed, restart the server for this to take effect",
         table.concat(path, ".")
@@ -100,18 +101,18 @@ function M.config(options)
 
   -- setup has already been called so we're trying to override previous options
   if M.options then
-    verify_if_restart_needed "fflags"
+    verify_if_restart_needed { "fflags" }
     verify_if_restart_needed { "sourcemap", "enabled" }
-    verify_if_restart_needed "types"
+    verify_if_restart_needed { "types" }
   end
 
-  M.options = options
+  M.options = new_options
 
   -- sourcemap.rojo_project_file has changed so update the generation if needed
   local sourcemap = require "luau-lsp.sourcemap"
-  if vim.tbl_get(options, "sourcemap", "rojo_project_file") and sourcemap.is_running() then
+  if has_changed { "sourcemap", "rojo_project_file" } and sourcemap.is_running() then
     sourcemap.stop()
-    sourcemap.watch()
+    sourcemap.start()
   end
 end
 
