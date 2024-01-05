@@ -3,6 +3,7 @@ local async = require "plenary.async"
 local c = require "luau-lsp.config"
 local compat = require "luau-lsp.compat"
 local curl = require "plenary.curl"
+local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
 local CURRENT_FFLAGS =
@@ -25,12 +26,19 @@ local function get_args()
   local function add_definition_file(file)
     if Path:new(file):is_file() then
       table.insert(args, "--definitions=" .. file)
+    else
+      log.warn(
+        "Definitions file at `%s` does not exist, types will not be provided from this file",
+        file
+      )
     end
   end
 
   local function add_documentation_file(file)
     if Path:new(file):is_file() then
       table.insert(args, "--docs=" .. file)
+    else
+      log.warn("Documentations file at `%s` does not exist", file)
     end
   end
 
