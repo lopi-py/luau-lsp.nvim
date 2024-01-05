@@ -114,7 +114,7 @@ function M.setup()
     })
   end
 
-  vim.api.nvim_create_user_command("RojoSourcemap", function(data)
+  vim.api.nvim_create_user_command("LuauRegenerateSourcemap", function(data)
     if data.args ~= "" then
       if not Path:new(data.args):is_file() then
         log.error "Invalid project file provided"
