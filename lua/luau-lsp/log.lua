@@ -15,7 +15,7 @@ local function create_logger(level)
     LOG_FILE:write(string.format("%s[%s]: %s\n", timestr, levels[level], message), "a")
 
     if level >= levels.WARN then
-      vim.notify(message, level, { title = PLUGIN_NAME })
+      vim.schedule_wrap(vim.notify)(message, level, { title = PLUGIN_NAME })
     end
   end
 end
