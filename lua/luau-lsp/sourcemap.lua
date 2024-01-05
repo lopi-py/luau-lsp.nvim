@@ -114,16 +114,23 @@ function M.setup()
     })
   end
 
-  vim.api.nvim_create_user_command("RojoSourcemap", function()
-    -- c.config {
-    --   sourcemap = {
-    --     -- TODO: set the actual rojo project file
-    --     rojo_project_file = c.get().sourcemap.rojo_project_file,
-    --   },
-    -- }
+  vim.api.nvim_create_user_command("RojoSourcemap", function(data)
+    if data.args ~= "" then
+      if not Path:new(data.args):is_file() then
+        log.error "Invalid project file provided"
+        return
+      end
+
+      if c.get().sourcemap.rojo_project_file == data.args then
+        return
+      end
+
+      c.get().sourcemap.rojo_project_file = data.args
+    end
+
     M.stop()
     M.start()
-  end, {})
+  end, { complete = "file", nargs = "?" })
 end
 
 return M
