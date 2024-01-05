@@ -14,15 +14,19 @@ local function get_rojo_project_file(callback)
     return
   end
 
-  local foundProjectFiles = vim.split(vim.fn.glob "*.project.json", "\n")
-  if #foundProjectFiles == 0 then
+  local found_project_files = vim.split(vim.fn.glob "*.project.json", "\n")
+  if #found_project_files == 0 then
     log.warn("Unable to find project file `%s`", project_file)
     callback()
-  elseif #foundProjectFiles == 1 then
-    log.info("Unable to find project file `%s`. We found `%s`", project_file, foundProjectFiles[1])
-    callback(foundProjectFiles[1])
+  elseif #found_project_files == 1 then
+    log.info(
+      "Unable to find project file `%s`. We found `%s`",
+      project_file,
+      found_project_files[1]
+    )
+    callback(found_project_files[1])
   else
-    vim.ui.select(foundProjectFiles, { prompt = "Select project file" }, function(choice)
+    vim.ui.select(found_project_files, { prompt = "Select project file" }, function(choice)
       if choice and choice ~= "" then
         callback(choice)
       else
