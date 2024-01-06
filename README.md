@@ -1,36 +1,126 @@
 # Luau LSP
-Luau lsp extension with fully luau support!
 
-![](https://i.gyazo.com/c91af237f64ca4c81f4732334050dd0e.gif)
+A [luau-lsp](https://github.com/JohnnyMorganz/luau-lsp/) extension to improve your experience in neovim.
 
-## Usage
+# Installation
+
+## [lazy.nvim](https://github.com/folke/lazy.nvim)
+
 ```lua
-require("luau-lsp").setup { ... }
+{
+  "lopi-py/luau-lsp.nvim",
+  ft = { "luau" }
+  opts = {
+    ...
+  },
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+  }
+}
 ```
-<details>
-<summary>mason-lspconfig.nvim</summary>
+
+## [Packer](https://github.com/wbthomason/packer.nvim)
+
+```lua
+use {
+  "lopi-py/luau-lsp.nvim",
+  ft = { "luau" },
+  config = function()
+    require("luau-lsp").setup {
+      ...
+    }
+  end,
+  requires = {
+    "nvim-lua/plenary.nvim",
+  },
+}
+```
+
+# Setup
+
+## [mason-lspconfig.nvim](https://github.com/williamboman/mason-lspconfig.nvim)
 
 ```lua
 require("mason-lspconfig").setup_handlers {
   luau_lsp = function()
     require("luau-lsp").setup {
-      server = { -- options passed to `require("lspconfig").luau_lsp.setup`
-        filetypes = { "lua", "luau" }, -- default is { "luau" }
-        capabilities = vim.lsp.protocol.make_client_capabilities(), -- just an example
-        settings = {
-          ["luau-lsp"] = {
-            ...,
-          },
-        },
-      },
+      ...
     }
   end,
 }
 ```
-</details>
 
-## Treesitter
+# Roblox
+
+Roblox types and sourcemap generation are supported:
+
+```lua
+require("luau-lsp").setup {
+  sourcemap = {
+    enable = true,
+    autogenerate = true, -- automatic generation when the server is attached
+    rojo_project_file = "default.project.json"
+  },
+  types = {
+    roblox = true,
+    roblox_security_level = "PluginSecurity",
+  },
+}
+```
+
+`:LuauRegenerateSourcemap` is provided to start sourcemap generation with the project file passed as argument or the one configured in `sourcemap.rojo_project_file`, will stop the current job and start a new one if required.
+
+# Definition files
+
+```lua
+require("luau-lsp").setup {
+  types = {
+    definition_files = { "path/to/definitions/file" },
+    documentation_files = { "path/to/documentation/file" },
+  },
+}
+```
+
+# Luau FFLags
+
+```lua
+require("luau-lsp").setup {
+  fflags = {
+    sync = true, -- sync currently enabled fflags with roblox's published fflags
+    override = {
+      LuauTarjanChildLimit = 0,
+    },
+  },
+}
+```
+
+# Bytecode generation
+
+`:LuauBytecode` and `:LuauCompilerRemarks` open a new window and show the current Luau file bytecode and compiler remarks. It will automatically update if you change the file or edit it. Close with `q`.
+
+# Server settings
+
+```lua
+require("luau-lsp").setup {
+  server = {
+    settings = {
+      -- https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
+      ["luau-lsp"] = {
+        completion = {
+          imports = {
+            enabled = true, -- enable auto imports
+          },
+        },
+      },
+    },
+  },
+}
+```
+
+# Treesitter
+
 Note that nvim-treesitter has its own luau parser but causes some [conflicts](https://github.com/polychromatist/tree-sitter-luau#note-on-the-neovim-case), so you can opt in for the custom parser:
+
 ```lua
 require("luau-lsp").treesitter() -- optional
 
@@ -39,79 +129,39 @@ require("nvim-treesitter.configs").setup {
   ...
 }
 ```
+
 `:TSInstall luau`
 It is important that you call `require("luau-lsp").treesitter()` BEFORE your actual treesitter config, you need to reinstall the parser every time you switch between luau parsers.
 If you want to only use the default parser, just ignore this step.
 
-## Roblox
-This plugin also supports roblox environment:
+# Project configuration
+
+It is allowed to config a project with `:h 'exrc'`
+
 ```lua
-require("luau-lsp").setup {
-  sourcemap = {
-    enable = true, -- enable sourcemap generation
-  },
-  types = {
-    roblox = true, -- enable roblox api
-  },
+vim.o.exrc = true
+```
+
+```lua
+-- .nvim.lua
+require("luau-lsp").config {
+  ...
 }
 ```
 
-Select rojo project for sourcemap generation with
-`:RojoSourcemap`
+## Configuration
 
-## Adding definition files
+`luau-lsp.nvim` comes with the following defaults:
+
 ```lua
-require("luau-lsp").setup {
-  types = {
-    definition_files = { "testez.d.luau", "path/to/definition/file" },
-    documentation_files = { "path/to/documentation/file" },
-  },
-}
-```
-
-## Override Luau FFLags
-```lua
-require("luau-lsp").setup {
-  fflags = {
-    override = {
-      LuauTarjanChildLimit = 0,
-    },
-  },
-}
-```
-
-## Server-specific settings
-All the previous settings are plugin-specific (should be specified under `setup`, also note that all keys there should be in `lower_case`), server-specific settings should be specified under `server.settings["luau-lsp"]` and in `camelCase`:
-```lua
-require("luau-lsp").setup {
-  server = {
-    settings = {
-      ["luau-lsp"] = {
-        -- enable auto imports
-        completion = {
-          imports = {
-            enabled = true,
-          },
-        },
-      },
-    },
-  },
-}
-```
-
-## Bytecode generation
-`:LuauBytecode` and `:LuauCompilerRemarks` open a new window and show the current Luau file bytecode and compiler remarks. It will automatically update if you change the file or edit it. Close with `q`.
-
-### Configuration
-`luau-lsp.nvim` comes with the following defaults
-```lua
-require("luau-lsp").setup {
+---@class LuauLspConfig
+local defaults = {
   sourcemap = {
     enabled = true,
+    autogenerate = true,
     rojo_path = "rojo",
+    rojo_project_file = "default.project.json",
     include_non_scripts = true,
-    ---@type fun():string?
-    select_project_file = nil,
   },
   types = {
     ---@type string[]
@@ -119,6 +169,7 @@ require("luau-lsp").setup {
     ---@type string[]
     documentation_files = {},
     roblox = true,
+    roblox_security_level = "PluginSecurity",
   },
   fflags = {
     enable_by_default = false,
@@ -130,28 +181,24 @@ require("luau-lsp").setup {
   server = {
     cmd = { "luau-lsp", "lsp" },
     root_dir = function(path)
-      local util = require "lspconfig.util"
-      return util.find_git_ancestor(path)
-        or util.root_pattern(
-          ".luaurc",
-          "selene.toml",
-          "stylua.toml",
-          "aftman.toml",
-          "wally.toml",
-          "mantle.yml",
-          "*.project.json"
-        )(path)
+      local util = require "luau-lsp.util"
+      return vim.fs.dirname(vim.fs.find(function(name)
+        return name:match ".*%.project.json$"
+          or util.list_contains({
+            ".git",
+            ".luaurc",
+            ".stylua.toml",
+            "stylua.toml",
+            "selene.toml",
+            "selene.yml",
+          }, name)
+      end, {
+        upward = true,
+        path = path,
+      })[1])
     end,
     -- see https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
     settings = {},
   },
 }
 ```
-
-### Credits
-* [luau language server](https://github.com/JohnnyMorganz/luau-lsp/)
-* [tree sitter luau](https://github.com/polychromatist/tree-sitter-luau)
-
-### TODO
-- [x] ~~Add some way to set local configs, might be useful for `types` or `sourcemap.rojo_project_file`~~ you probably want `:help 'exrc'`
-- [ ] Add a github action to sync queries and parser's revision
