@@ -2,6 +2,8 @@
 
 A [luau-lsp](https://github.com/JohnnyMorganz/luau-lsp/) extension to improve your experience in neovim.
 
+https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/4fa6d3b1-44fe-414f-96ff-b2d58e840080
+
 # Installation
 
 ## [lazy.nvim](https://github.com/folke/lazy.nvim)
@@ -97,6 +99,8 @@ require("luau-lsp").setup {
 # Bytecode generation
 
 `:LuauBytecode` and `:LuauCompilerRemarks` open a new window and show the current Luau file bytecode and compiler remarks. It will automatically update if you change the file or edit it. Close with `q`.
+
+https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/f9d45153-47f0-4565-a2ed-3769153732a0
 
 # Server settings
 
