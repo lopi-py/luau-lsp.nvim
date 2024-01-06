@@ -40,6 +40,16 @@ use {
 
 # Setup
 
+> [!CAUTION]
+> Calling lspconfig's setup may result in problems where the server is not properly set up
+> ```lua
+> require("lspconfig").luau_lsp.setup { ... }
+> ```
+> Use `luau-lsp.nvim`'s setup instead
+> ```lua
+> require("luau-lsp").setup { ... }
+> ```
+
 ## [mason-lspconfig.nvim](https://github.com/williamboman/mason-lspconfig.nvim)
 
 ```lua
