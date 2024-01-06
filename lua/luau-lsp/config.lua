@@ -29,17 +29,21 @@ local defaults = {
   server = {
     cmd = { "luau-lsp", "lsp" },
     root_dir = function(path)
-      local util = require "lspconfig.util"
-      return util.find_git_ancestor(path)
-        or util.root_pattern(
-          ".luaurc",
-          "selene.toml",
-          "stylua.toml",
-          "aftman.toml",
-          "wally.toml",
-          "mantle.yml",
-          "*.project.json"
-        )(path)
+      local util = require "luau-lsp.util"
+      return vim.fs.dirname(vim.fs.find(function(name)
+        return name:match ".*%.project.json$"
+          or util.list_contains({
+            ".git",
+            ".luaurc",
+            ".stylua.toml",
+            "stylua.toml",
+            "selene.toml",
+            "selene.yml",
+          }, name)
+      end, {
+        upward = true,
+        path = path,
+      })[1])
     end,
     -- see https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
     settings = {},

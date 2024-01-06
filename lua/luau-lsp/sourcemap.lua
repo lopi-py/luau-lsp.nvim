@@ -15,7 +15,7 @@ local function get_rojo_project_file(callback)
   end
 
   local found_project_files = vim.split(vim.fn.glob "*.project.json", "\n")
-  if #found_project_files == 0 then
+  if #found_project_files == 0 or #found_project_files[1] == "" then
     log.warn("Unable to find project file `%s`", project_file)
     callback()
   elseif #found_project_files == 1 then
