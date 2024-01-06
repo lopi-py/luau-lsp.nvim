@@ -135,8 +135,6 @@ end
 
 local M = {}
 
--- TODO: add start, stop and restart functions
-
 function M.setup()
   patch_notify()
 

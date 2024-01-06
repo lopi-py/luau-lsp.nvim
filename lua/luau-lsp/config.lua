@@ -96,10 +96,7 @@ function M.config(options)
 
   local function verify_if_restart_needed(path)
     if has_changed(path) then
-      log.warn(
-        "`%s` has changed, restart the server for this to take effect",
-        table.concat(path, ".")
-      )
+      log.warn("`%s` has changed, restart neovim for this to take effect", table.concat(path, "."))
     end
   end
 
