@@ -135,6 +135,7 @@ require("nvim-treesitter.configs").setup {
 ```
 
 `:TSInstall luau`
+
 It is important that you call `require("luau-lsp").treesitter()` BEFORE your actual treesitter config, you need to reinstall the parser every time you switch between luau parsers.
 If you want to only use the default parser, just ignore this step.
 
@@ -153,7 +154,7 @@ require("luau-lsp").config {
 }
 ```
 
-## Configuration
+# Configuration
 
 `luau-lsp.nvim` comes with the following defaults:
 
