@@ -84,6 +84,7 @@ local function get_args()
     add_documentation_file(documentation_file)
   end
 
+  -- HACK: not required once luau-lsp v1.27.0+ is released
   if not c.get().sourcemap.enabled then
     -- hide luau lsp messages when sourcemap is disabled
     local no_sourcemap = Path:new(util.storage_file "no-sourcemap-enabled.json")
@@ -97,21 +98,47 @@ local function get_args()
   return args
 end
 
+-- patch shared settings between the client extension and server
+local function patch_server_settings(settings)
+  return vim.tbl_deep_extend("force", settings, {
+    ["luau-lsp"] = {
+      sourcemap = {
+        enabled = c.get().sourcemap.enabled,
+      },
+    },
+  })
+end
+
+-- HACK: neovim is not handling ServerCancelled, see https://github.com/neovim/neovim/issues/26926
+local function patch_notify()
+  local notify = vim.notify
+  ---@diagnostic disable-next-line: duplicate-set-field
+  vim.notify = function(message, ...)
+    if message == "luau_lsp: -32802: server not yet received configuration for diagnostics" then
+      return
+    end
+    notify(message, ...)
+  end
+end
+
+local function setup_server()
+  local opts = vim.deepcopy(c.get().server)
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  opts.cmd = vim.list_extend(opts.cmd, get_args())
+  opts.settings = patch_server_settings(opts.settings)
+
+  async.util.scheduler()
+  require("lspconfig").luau_lsp.setup(opts)
+  require("lspconfig").luau_lsp.manager:try_add_wrapper(bufnr)
+end
+
 local M = {}
 
 -- TODO: add start, stop and restart functions
 
 function M.setup()
-  local function setup_server()
-    local opts = vim.deepcopy(c.get().server)
-    local bufnr = vim.api.nvim_get_current_buf()
-
-    vim.list_extend(opts.cmd, get_args())
-    async.util.scheduler()
-
-    require("lspconfig").luau_lsp.setup(opts)
-    require("lspconfig").luau_lsp.manager:try_add_wrapper(bufnr)
-  end
+  patch_notify()
 
   vim.api.nvim_create_autocmd("FileType", {
     once = true,
