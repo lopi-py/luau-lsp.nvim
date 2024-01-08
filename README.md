@@ -40,6 +40,16 @@ use {
 
 # Setup
 
+> [!CAUTION]
+> Calling lspconfig's setup may result in problems where the server is not properly set up
+> ```lua
+> require("lspconfig").luau_lsp.setup { ... }
+> ```
+> Use `luau-lsp.nvim`'s setup instead
+> ```lua
+> require("luau-lsp").setup { ... }
+> ```
+
 ## [mason-lspconfig.nvim](https://github.com/williamboman/mason-lspconfig.nvim)
 
 ```lua
@@ -135,6 +145,7 @@ require("nvim-treesitter.configs").setup {
 ```
 
 `:TSInstall luau`
+
 It is important that you call `require("luau-lsp").treesitter()` BEFORE your actual treesitter config, you need to reinstall the parser every time you switch between luau parsers.
 If you want to only use the default parser, just ignore this step.
 
@@ -153,7 +164,7 @@ require("luau-lsp").config {
 }
 ```
 
-## Configuration
+# Configuration
 
 `luau-lsp.nvim` comes with the following defaults:
 
