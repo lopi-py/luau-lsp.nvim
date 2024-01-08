@@ -22,6 +22,8 @@ function M.treesitter()
     return
   end
 
+  local installed_parsers = require("nvim-treesitter.info").installed_parsers()
+
   parsers.get_parser_configs().luau = {
     install_info = {
       url = "https://github.com/polychromatist/tree-sitter-luau",
@@ -30,6 +32,10 @@ function M.treesitter()
       revision = util.parser_revision(),
     },
   }
+
+  if not util.list_contains(installed_parsers, "luau") then
+    return
+  end
 
   -- HACK: override the given query just in case of treesitter's queries are found first
   local function override_query(query_type)
