@@ -69,7 +69,7 @@ Roblox types and sourcemap generation are supported:
 ```lua
 require("luau-lsp").setup {
   sourcemap = {
-    enable = true,
+    enabled = true,
     autogenerate = true, -- automatic generation when the server is attached
     rojo_project_file = "default.project.json"
   },
