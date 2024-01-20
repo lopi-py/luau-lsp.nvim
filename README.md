@@ -11,7 +11,7 @@ https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/4fa6d3b1-44fe-414f-96ff
 ```lua
 {
   "lopi-py/luau-lsp.nvim",
-  ft = { "luau" }
+  ft = { "luau" },
   opts = {
     ...
   },
@@ -69,7 +69,7 @@ Roblox types and sourcemap generation are supported:
 ```lua
 require("luau-lsp").setup {
   sourcemap = {
-    enable = true,
+    enabled = true,
     autogenerate = true, -- automatic generation when the server is attached
     rojo_project_file = "default.project.json"
   },
