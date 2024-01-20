@@ -110,17 +110,24 @@ local function patch_server_settings(settings)
 end
 
 -- HACK: neovim is not handling ServerCancelled, see https://github.com/neovim/neovim/issues/26926
-local function patch_notify()
-  local notify = vim.notify
-  ---@diagnostic disable-next-line: duplicate-set-field
-  vim.notify = function(message, ...)
-    if
-      message:match "luau_lsp"
-      and message:match "server not yet received configuration for diagnostics"
-    then
-      return
+local function patch_configuration_error()
+  local function create_patch(fn)
+    return function(message, ...)
+      if
+        message:match "luau_lsp"
+        and message:match "server not yet received configuration for diagnostics"
+      then
+        return
+      end
+      fn(message, ...)
     end
-    notify(message, ...)
+  end
+
+  -- neovim uses vim.notify to show the error in api level 12+
+  if vim.version().api_level >= 12 then
+    vim.notify = create_patch(vim.notify)
+  else
+    vim.api.nvim_err_writeln = create_patch(vim.api.nvim_err_writeln)
   end
 end
 
@@ -139,7 +146,7 @@ end
 local M = {}
 
 function M.setup()
-  patch_notify()
+  patch_configuration_error()
 
   vim.api.nvim_create_autocmd("FileType", {
     once = true,
