@@ -114,7 +114,10 @@ local function patch_notify()
   local notify = vim.notify
   ---@diagnostic disable-next-line: duplicate-set-field
   vim.notify = function(message, ...)
-    if message == "luau_lsp: -32802: server not yet received configuration for diagnostics" then
+    if
+      message:match "luau_lsp"
+      and message:match "server not yet received configuration for diagnostics"
+    then
       return
     end
     notify(message, ...)
