@@ -1,12 +1,14 @@
 local c = require "luau-lsp.config"
 local log = require "luau-lsp.log"
 
+local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
+
 local M = {}
 M._method = "luau-lsp/bytecode"
 M._optlevel = 0
 
 local function is_attached(bufnr)
-  local clients = vim.lsp.get_clients { name = "luau_lsp", bufnr = bufnr }
+  local clients = get_clients { name = "luau_lsp", bufnr = bufnr }
   return #clients > 0
 end
 
