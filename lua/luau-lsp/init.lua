@@ -1,5 +1,4 @@
 local log = require "luau-lsp.log"
-local util = require "luau-lsp.util"
 
 local M = {}
 
@@ -16,37 +15,7 @@ function M.open_logs()
 end
 
 function M.treesitter()
-  local success, parsers = pcall(require, "nvim-treesitter.parsers")
-  if not success then
-    log.error "nvim-treesitter not found"
-    return
-  end
-
-  local installed_parsers = require("nvim-treesitter.info").installed_parsers()
-
-  parsers.get_parser_configs().luau = {
-    install_info = {
-      url = "https://github.com/polychromatist/tree-sitter-luau",
-      files = { "src/parser.c", "src/scanner.c" },
-      -- HACK: manually set the revision since treesitter has its own parser & revision for luau
-      revision = util.parser_revision(),
-    },
-  }
-
-  if not util.list_contains(installed_parsers, "luau") then
-    return
-  end
-
-  -- HACK: override the given query just in case of treesitter's queries are found first
-  local function override_query(query_type)
-    vim.treesitter.query.set("luau", query_type, util.get_query(query_type))
-  end
-
-  override_query "folds"
-  override_query "highlights"
-  override_query "indents"
-  override_query "injections"
-  override_query "locals"
+  log.warn "A custom treesitter parser is not longer required at all"
 end
 
 ---@param opts LuauLspConfig

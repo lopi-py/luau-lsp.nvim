@@ -129,24 +129,6 @@ require("luau-lsp").setup {
 }
 ```
 
-# Treesitter
-
-Note that nvim-treesitter has its own luau parser but causes some [conflicts](https://github.com/polychromatist/tree-sitter-luau#note-on-the-neovim-case), so you can opt in for the custom parser:
-
-```lua
-require("luau-lsp").treesitter() -- optional
-
--- treesitter configs here
-require("nvim-treesitter.configs").setup {
-  ...
-}
-```
-
-`:TSInstall luau`
-
-It is important that you call `require("luau-lsp").treesitter()` BEFORE your actual treesitter config, you need to reinstall the parser every time you switch between luau parsers.
-If you want to only use the default parser, just ignore this step.
-
 # Project configuration
 
 It is allowed to config a project with `:h 'exrc'`
@@ -229,3 +211,6 @@ vim.filetype.add {
 
 ### What is "server not yet received configuration for diagnostics" error?
 Because neovim is asking for diagnostics to the server but it hasn't loaded the configuration yet, you can just ignore this error. This is monkey patched but may not work on v0.9.x
+
+### Why my files aren't getting highlighted?
+Try installing the `luau` treesitter parser (`:TSInstall luau`)
