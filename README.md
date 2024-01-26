@@ -16,7 +16,7 @@ https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/4fa6d3b1-44fe-414f-96ff
   },
   dependencies = {
     "nvim-lua/plenary.nvim",
-  }
+  },
 }
 ```
 
@@ -199,18 +199,30 @@ local defaults = {
 ```
 
 # FAQ
-### Why luau-lsp isn't attaching to luau buffers?
+### Why isn't luau-lsp attaching to luau buffers?
 If you are on neovim v0.9.x, put this snippet in your config:
 ```lua
 vim.filetype.add {
   extension = {
     luau = "luau",
-  }
+  },
 }
 ```
 
-### What is "server not yet received configuration for diagnostics" error?
-Because neovim is asking for diagnostics to the server but it hasn't loaded the configuration yet, you can just ignore this error. This is monkey patched but may not work on v0.9.x
+### What is the error "server not yet received configuration for diagnostics"?
+Neovim is asking for diagnostics to the server but it hasn't loaded the configuration yet, you can just ignore this error. This is monkey patched but may not work on v0.9.x
 
-### Why my files aren't getting highlighted?
+### Why aren't my luau highlighted?
 Try installing the `luau` treesitter parser (`:TSInstall luau`)
+
+### How to use luau-lsp on a lua codebase without messing with lua_ls?
+Enable `:help 'exrc'` and add this into `.nvim.lua`:
+```lua
+vim.filetype.add {
+  extension = {
+    lua = function(path)
+      return path:match ".nvim.lua$" and "lua" or "luau"
+    end,
+  },
+}
+```

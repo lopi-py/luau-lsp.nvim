@@ -55,7 +55,7 @@ local function validate_config(opts)
   local function verify_server_client_setting(path)
     if vim.tbl_get(opts, "server", "settings", "luau-lsp", unpack(path)) ~= nil then
       log.warn(
-        "Server setting `%s' will not take effect. Check the README.md for more info",
+        "Server setting `%s` will not take effect. Check the README.md for more info",
         table.concat(path, ".")
       )
     end
