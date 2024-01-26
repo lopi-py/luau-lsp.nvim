@@ -212,7 +212,7 @@ vim.filetype.add {
 ### What is the error "server not yet received configuration for diagnostics"?
 Neovim is asking for diagnostics to the server but it hasn't loaded the configuration yet, you can just ignore this error. This is monkey patched but may not work on v0.9.x
 
-### Why aren't my luau highlighted?
+### Why aren't my luau files highlighted?
 Try installing the `luau` treesitter parser (`:TSInstall luau`)
 
 ### How to use luau-lsp on a lua codebase without messing with lua_ls?
