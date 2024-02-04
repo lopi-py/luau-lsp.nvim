@@ -1,7 +1,11 @@
 local log = require "luau-lsp.log"
 
+local callbacks = {}
+
 local M = {}
-M._callbacks = {}
+
+---@type LuauLspConfig
+M.options = nil
 
 ---@class LuauLspConfig
 local defaults = {
@@ -51,10 +55,10 @@ local defaults = {
   },
 }
 
----@param opts LuauLspConfig
-local function validate_config(opts)
-  local function verify_server_client_setting(path)
-    if vim.tbl_get(opts, "server", "settings", "luau-lsp", unpack(path)) ~= nil then
+---@param options LuauLspConfig
+local function validate_config(options)
+  local function check_server_setting(path)
+    if vim.tbl_get(options, "server", "settings", "luau-lsp", path) ~= nil then
       log.warn(
         "Server setting `%s` will not take effect. Check the README.md for more info",
         table.concat(path, ".")
@@ -62,19 +66,16 @@ local function validate_config(opts)
     end
   end
 
-  if vim.tbl_get(opts, "sourcemap", "select_project_file") then
+  if vim.tbl_get(options, "sourcemap", "select_project_file") then
     log.warn "`sourcemap.select_project_file` is deprecated, use `sourcemap.rojo_project` instead"
   end
 
   -- luau-lsp doesn't really listen to those, they are passed in the command line so they won't
   -- take effect
-  verify_server_client_setting { "fflags" }
-  verify_server_client_setting { "sourcemap" }
-  verify_server_client_setting { "types" }
+  check_server_setting "fflags"
+  check_server_setting "sourcemap"
+  check_server_setting "types"
 end
-
----@type LuauLspConfig
-M.options = nil
 
 ---@return LuauLspConfig
 function M.get()
@@ -90,38 +91,25 @@ function M.config(options)
 
   local function has_changed(path)
     return not vim.deep_equal(
-      vim.tbl_get(old_options, vim.split(path, ".")),
-      vim.tbl_get(new_options, vim.split(path, "."))
+      vim.tbl_get(old_options, unpack(vim.split(path, "%."))),
+      vim.tbl_get(new_options, unpack(vim.split(path, "%.")))
     )
   end
 
-  local function cannot_be_changed(path)
-    if has_changed(path) then
-      log.warn("`%s` has changed, restart neovim for this to take effect", path)
-    end
-  end
-
-  -- already configured
-  if M.options then
-    cannot_be_changed "fflags"
-    cannot_be_changed "sourcemap.enabled"
-    cannot_be_changed "types"
-  end
-
-  M.options = new_options
-
-  for _, data in ipairs(M._callbacks) do
-    if has_changed(data.trigger) then
+  for _, data in ipairs(callbacks) do
+    if has_changed(data.path) then
       data.callback()
     end
   end
+
+  M.options = new_options
 end
 
----@param trigger string
+---@param path string
 ---@param callback function
-function M.on(trigger, callback)
-  table.insert(M._callbacks, {
-    path = trigger,
+function M.on(path, callback)
+  table.insert(callbacks, {
+    path = path,
     callback = callback,
   })
 end

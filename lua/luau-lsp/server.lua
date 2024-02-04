@@ -142,6 +142,18 @@ local function setup_server()
   require("lspconfig").luau_lsp.manager:try_add_wrapper(bufnr)
 end
 
+local function lock_config()
+  local function cannot_be_changed(path)
+    config.on(path, function()
+      log.warn("`%s` cannot be changed once the server is started", path)
+    end)
+  end
+
+  cannot_be_changed "fflags"
+  cannot_be_changed "sourcemap.enabled"
+  cannot_be_changed "types"
+end
+
 local M = {}
 
 function M.setup()
@@ -151,6 +163,7 @@ function M.setup()
     once = true,
     pattern = config.get().server.filetypes or { "luau" },
     callback = function()
+      lock_config()
       async.run(setup_server)
     end,
   })
