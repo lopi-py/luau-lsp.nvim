@@ -1,4 +1,4 @@
-local c = require "luau-lsp.config"
+local config = require "luau-lsp.config"
 local log = require "luau-lsp.log"
 
 local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
@@ -44,6 +44,7 @@ local function create_bytecode_buffer()
   vim.keymap.set("n", "q", M.close, {
     silent = true,
     buffer = bufnr,
+    desc = "Close the window",
   })
 
   local id = vim.api.nvim_create_autocmd(
@@ -51,7 +52,7 @@ local function create_bytecode_buffer()
     {
       pattern = vim.tbl_map(function(ft)
         return "*." .. ft
-      end, c.get().server.filetypes or { "luau" }),
+      end, config.get().server.filetypes or { "luau" }),
 
       callback = function(ev)
         M.update_buffer(ev.buf)

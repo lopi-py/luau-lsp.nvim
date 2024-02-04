@@ -1,6 +1,7 @@
 local log = require "luau-lsp.log"
 
 local M = {}
+M._callbacks = {}
 
 ---@class LuauLspConfig
 local defaults = {
@@ -29,10 +30,10 @@ local defaults = {
   server = {
     cmd = { "luau-lsp", "lsp" },
     root_dir = function(path)
-      local util = require "luau-lsp.util"
+      local compat = require "luau-lsp.compat"
       return vim.fs.dirname(vim.fs.find(function(name)
         return name:match ".*%.project.json$"
-          or util.list_contains({
+          or compat.list_contains({
             ".git",
             ".luaurc",
             ".stylua.toml",
@@ -65,8 +66,8 @@ local function validate_config(opts)
     log.warn "`sourcemap.select_project_file` is deprecated, use `sourcemap.rojo_project` instead"
   end
 
-  -- luau-lsp doesn't really listen to those, they are passed in the command line so restart is
-  -- needed
+  -- luau-lsp doesn't really listen to those, they are passed in the command line so they won't
+  -- take effect
   verify_server_client_setting { "fflags" }
   verify_server_client_setting { "sourcemap" }
   verify_server_client_setting { "types" }
@@ -89,52 +90,40 @@ function M.config(options)
 
   local function has_changed(path)
     return not vim.deep_equal(
-      vim.tbl_get(old_options, unpack(path)) or {},
-      vim.tbl_get(new_options, unpack(path)) or {}
+      vim.tbl_get(old_options, vim.split(path, ".")),
+      vim.tbl_get(new_options, vim.split(path, "."))
     )
   end
 
-  local function verify_if_restart_needed(path)
+  local function cannot_be_changed(path)
     if has_changed(path) then
-      log.warn("`%s` has changed, restart neovim for this to take effect", table.concat(path, "."))
+      log.warn("`%s` has changed, restart neovim for this to take effect", path)
     end
   end
 
-  -- setup has already been called so we're trying to override previous options
+  -- already configured
   if M.options then
-    verify_if_restart_needed { "fflags" }
-    verify_if_restart_needed { "sourcemap", "enabled" }
-    verify_if_restart_needed { "types" }
+    cannot_be_changed "fflags"
+    cannot_be_changed "sourcemap.enabled"
+    cannot_be_changed "types"
   end
 
   M.options = new_options
 
-  -- sourcemap.rojo_project_file has changed so update the generation if needed
-  local sourcemap = require "luau-lsp.sourcemap"
-  if
-    has_changed { "sourcemap", "rojo_project_file" }
-    and M.options.sourcemap.autogenerate
-    and sourcemap.is_running()
-  then
-    sourcemap.stop()
-    sourcemap.start()
+  for _, data in ipairs(M._callbacks) do
+    if has_changed(data.trigger) then
+      data.callback()
+    end
   end
 end
 
----@param options? LuauLspConfig
-function M.setup(options)
-  validate_config(options or {})
-
-  if M.options then
-    -- .config was called first, so give them more priority
-    M.options = vim.tbl_deep_extend("force", options or {}, M.options)
-  else
-    -- fresh options setup
-    M.options = vim.tbl_deep_extend("force", defaults, options or {})
-  end
-
-  require("luau-lsp.sourcemap").setup()
-  require("luau-lsp.server").setup()
+---@param trigger string
+---@param callback function
+function M.on(trigger, callback)
+  table.insert(M._callbacks, {
+    path = trigger,
+    callback = callback,
+  })
 end
 
 return M

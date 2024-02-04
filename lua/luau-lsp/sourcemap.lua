@@ -1,14 +1,15 @@
 local Job = require "plenary.job"
 local Path = require "plenary.path"
-local c = require "luau-lsp.config"
+local async = require "plenary.async"
+local config = require "luau-lsp.config"
 local log = require "luau-lsp.log"
 
 local job = nil
 
 local M = {}
 
-local function get_rojo_project_file(callback)
-  local project_file = c.get().sourcemap.rojo_project_file
+local get_rojo_project_file = async.wrap(function(callback)
+  local project_file = config.get().sourcemap.rojo_project_file
   if Path:new(project_file):is_file() then
     callback(project_file)
     return
@@ -34,7 +35,7 @@ local function get_rojo_project_file(callback)
       end
     end)
   end
-end
+end, 1)
 
 local function start(project_file)
   local args = {
@@ -45,7 +46,7 @@ local function start(project_file)
     "sourcemap.json",
   }
 
-  if c.get().sourcemap.include_non_scripts then
+  if config.get().sourcemap.include_non_scripts then
     table.insert(args, "--include-non-scripts")
   end
 
@@ -66,7 +67,7 @@ local function start(project_file)
   log.info("Starting sourcemap generation for `%s`", project_file)
 
   job = Job:new {
-    command = c.get().sourcemap.rojo_path or "rojo",
+    command = config.get().sourcemap.rojo_path or "rojo",
     args = args,
     on_exit = function(self, code)
       if code and code ~= 0 then
@@ -86,57 +87,43 @@ function M.stop()
   end
 end
 
-function M.start()
-  if not c.get().sourcemap.enabled then
-    return
-  end
+M.start = async.void(function(project_file)
+  project_file = project_file or get_rojo_project_file()
 
-  get_rojo_project_file(function(project_file)
-    if project_file then
-      start(project_file)
-    end
-  end)
-end
+  if project_file then
+    start(project_file)
+  end
+end)
 
 function M.is_running()
   return job ~= nil
 end
 
 function M.setup()
-  local group = vim.api.nvim_create_augroup("luau-lsp.sourcemap", { clear = true })
+  local group = vim.api.nvim_create_augroup("luau-lsp.sourcemap", {})
 
-  if c.get().sourcemap.enabled then
-    vim.api.nvim_create_autocmd("LspAttach", {
-      group = group,
-      callback = function(event)
-        local client = vim.lsp.get_client_by_id(event.data.client_id)
-        if client and client.name == "luau_lsp" then
-          if c.get().sourcemap.enabled and c.get().sourcemap.autogenerate then
-            M.start()
-            return true
-          end
+  vim.api.nvim_create_autocmd("LspAttach", {
+    group = group,
+    callback = function(event)
+      local client = vim.lsp.get_client_by_id(event.data.client_id)
+      if client and client.name == "luau_lsp" then
+        if config.get().sourcemap.enabled and config.get().sourcemap.autogenerate then
+          M.stop()
+          M.start()
+          return true
         end
-      end,
-    })
-  end
-
-  vim.api.nvim_create_user_command("LuauRegenerateSourcemap", function(data)
-    if data.args ~= "" then
-      if not Path:new(data.args):is_file() then
-        log.error "Invalid project file provided"
-        return
       end
+    end,
+  })
 
-      if c.get().sourcemap.rojo_project_file == data.args then
-        return
-      end
-
-      c.get().sourcemap.rojo_project_file = data.args
+  config.on("sourcemap.rojo_project_file", function()
+    if config.get().sourcemap.enabled and config.get().sourcemap.autogenerate then
+      M.stop()
+      M.start()
+    else
+      M.stop()
     end
-
-    M.stop()
-    M.start()
-  end, { complete = "file", nargs = "?" })
+  end)
 end
 
 return M

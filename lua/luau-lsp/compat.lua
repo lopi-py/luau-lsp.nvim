@@ -3,14 +3,34 @@
 
 local M = {}
 
+---@diagnostic disable-next-line: deprecated
+M.get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
+
+---@param t table
+---@param value any
+---@return boolean
+function M.list_contains(t, value)
+  if vim.list_contains then
+    return vim.list_contains(t, value)
+  end
+
+  for _, v in ipairs(t) do
+    if v == value then
+      return true
+    end
+  end
+  return false
+end
+
+---@param t table
+---@return Iter
 function M.iter(t)
   if vim.iter then
     return vim.iter(t)
   end
 
-  local iter = {
-    t = vim.deepcopy(t),
-  }
+  local iter = {}
+  iter.t = vim.deepcopy(t)
 
   function iter:filter(f)
     local result = {}

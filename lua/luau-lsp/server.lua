@@ -1,7 +1,7 @@
 local Path = require "plenary.path"
 local async = require "plenary.async"
-local c = require "luau-lsp.config"
 local compat = require "luau-lsp.compat"
+local config = require "luau-lsp.config"
 local curl = require "plenary.curl"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
@@ -42,27 +42,28 @@ local function get_args()
     end
   end
 
-  for _, file in ipairs(c.get().types.definition_files) do
+  for _, file in ipairs(config.get().types.definition_files) do
     add_definition_file(file)
   end
 
-  for _, file in ipairs(c.get().types.documentation_files) do
+  for _, file in ipairs(config.get().types.documentation_files) do
     add_documentation_file(file)
   end
 
-  if not c.get().fflags.enable_by_default then
+  if not config.get().fflags.enable_by_default then
     table.insert(args, "--no-flags-enabled")
   end
 
   local fflags = {}
 
-  if c.get().fflags.sync then
+  if config.get().fflags.sync then
     compat
       .iter(get_fflags())
       :filter(function(name)
         return name:match "^FFlagLuau"
       end)
       :map(function(name, value)
+        ---@diagnostic disable-next-line: redundant-return-value
         return name:sub(6), value
       end)
       :each(function(name, value)
@@ -70,13 +71,13 @@ local function get_args()
       end)
   end
 
-  fflags = vim.tbl_extend("force", fflags, c.get().fflags.override)
+  fflags = vim.tbl_extend("force", fflags, config.get().fflags.override)
 
   for name, value in pairs(fflags) do
     table.insert(args, string.format("--flag:%s=%s", name, value))
   end
 
-  if c.get().types.roblox then
+  if config.get().types.roblox then
     local roblox = require "luau-lsp.roblox"
     local definition_file, documentation_file = roblox.download_api()
 
@@ -85,7 +86,7 @@ local function get_args()
   end
 
   -- HACK: not required once luau-lsp v1.27.0+ is released
-  if not c.get().sourcemap.enabled then
+  if not config.get().sourcemap.enabled then
     -- hide luau lsp messages when sourcemap is disabled
     local no_sourcemap = Path:new(util.storage_file "no-sourcemap-enabled.json")
     if not no_sourcemap:is_file() then
@@ -103,7 +104,7 @@ local function patch_server_settings(settings)
   return vim.tbl_deep_extend("force", settings, {
     ["luau-lsp"] = {
       sourcemap = {
-        enabled = c.get().sourcemap.enabled,
+        enabled = config.get().sourcemap.enabled,
       },
     },
   })
@@ -123,16 +124,14 @@ local function patch_configuration_error()
     end
   end
 
-  -- neovim uses vim.notify to show the error in api level 12+
+  -- neovim uses vim.notify to show the error since api level 12+
   if vim.version().api_level >= 12 then
     vim.notify = create_patch(vim.notify)
-  else
-    vim.api.nvim_err_writeln = create_patch(vim.api.nvim_err_writeln)
   end
 end
 
 local function setup_server()
-  local opts = vim.deepcopy(c.get().server)
+  local opts = vim.deepcopy(config.get().server)
   local bufnr = vim.api.nvim_get_current_buf()
 
   opts.cmd = vim.list_extend(opts.cmd, get_args())
@@ -150,7 +149,7 @@ function M.setup()
 
   vim.api.nvim_create_autocmd("FileType", {
     once = true,
-    pattern = c.get().server.filetypes or { "luau" },
+    pattern = config.get().server.filetypes or { "luau" },
     callback = function()
       async.run(setup_server)
     end,

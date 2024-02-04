@@ -1,5 +1,6 @@
 local async = require "plenary.async"
-local c = require "luau-lsp.config"
+local compat = require "luau-lsp.compat"
+local config = require "luau-lsp.config"
 local curl = require "plenary.curl"
 local util = require "luau-lsp.util"
 
@@ -31,10 +32,10 @@ local M = {}
 
 ---@type fun():string,string
 M.download_api = async.wrap(function(callback)
-  local security_level = c.get().types.roblox_security_level
+  local security_level = config.get().types.roblox_security_level
 
   assert(
-    util.list_contains(SECURITY_LEVELS, security_level),
+    compat.list_contains(SECURITY_LEVELS, security_level),
     "invalid security level: " .. security_level
   )
 

@@ -176,10 +176,10 @@ local defaults = {
   server = {
     cmd = { "luau-lsp", "lsp" },
     root_dir = function(path)
-      local util = require "luau-lsp.util"
+      local compat = require "luau-lsp.compat"
       return vim.fs.dirname(vim.fs.find(function(name)
         return name:match ".*%.project.json$"
-          or util.list_contains({
+          or compat.list_contains({
             ".git",
             ".luaurc",
             ".stylua.toml",
