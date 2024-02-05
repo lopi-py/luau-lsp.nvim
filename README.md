@@ -200,14 +200,7 @@ local defaults = {
 
 # FAQ
 ### Why isn't luau-lsp attaching to luau buffers?
-If you are on neovim v0.9.x, put this snippet in your config:
-```lua
-vim.filetype.add {
-  extension = {
-    luau = "luau",
-  },
-}
-```
+Don't lazy load the plugin if you are on neovim v0.9.x
 
 ### What is the error "server not yet received configuration for diagnostics"?
 Neovim is asking for diagnostics to the server but it hasn't loaded the configuration yet, you can just ignore this error. This is monkey patched but may not work on v0.9.x
