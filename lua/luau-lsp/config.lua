@@ -59,10 +59,7 @@ local defaults = {
 local function validate_config(options)
   local function check_server_setting(path)
     if vim.tbl_get(options, "server", "settings", "luau-lsp", path) ~= nil then
-      log.warn(
-        "Server setting `%s` will not take effect. Check the README.md for more info",
-        table.concat(path, ".")
-      )
+      log.warn("Server setting `%s` will not take effect. Check the README.md for more info", path)
     end
   end
 
