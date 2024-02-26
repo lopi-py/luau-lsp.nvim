@@ -1,3 +1,4 @@
+local compat = require "luau-lsp.compat"
 local log = require "luau-lsp.log"
 
 local M = {}
@@ -16,7 +17,7 @@ function M.setup()
   end, {})
 
   vim.api.nvim_create_user_command("LuauRegenerateSourcemap", function(data)
-    local stat = vim.uv.fs_stat(data.args)
+    local stat = compat.uv.fs_stat(data.args)
     if not stat or stat.type ~= "file" then
       log.error "Invalid project file provided"
       return

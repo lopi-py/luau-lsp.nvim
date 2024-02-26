@@ -3,6 +3,9 @@
 
 local M = {}
 
+---@type uv
+M.uv = vim.loop or vim.uv
+
 ---@diagnostic disable-next-line: deprecated
 M.get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
 
