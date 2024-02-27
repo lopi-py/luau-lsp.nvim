@@ -17,17 +17,22 @@ function M.setup()
   end, {})
 
   vim.api.nvim_create_user_command("LuauRegenerateSourcemap", function(data)
-    local stat = compat.uv.fs_stat(data.args)
-    if not stat or stat.type ~= "file" then
-      log.error "Invalid project file provided"
-      return
-    end
+    if data.args ~= "" then
+      local stat = compat.uv.fs_stat(data.args)
+      if not stat or stat.type ~= "file" then
+        log.error "Invalid project file provided"
+        return
+      end
 
-    require("luau-lsp").config {
-      sourcemap = {
-        rojo_project_file = data.args,
-      },
-    }
+      require("luau-lsp").config {
+        sourcemap = {
+          rojo_project_file = data.args,
+        },
+      }
+    else
+      require("luau-lsp.sourcemap").stop()
+      require("luau-lsp.sourcemap").start()
+    end
   end, {
     complete = "file",
     nargs = "?",
