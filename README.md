@@ -199,8 +199,21 @@ local defaults = {
 ```
 
 # FAQ
-### Why isn't luau-lsp attaching to luau buffers?
+### Why doesn't the luau filetype detection work?
 Don't lazy load the plugin if you are on neovim v0.9.x
+
+### Why doesn't the autocompletion detect changes in the sourcemap?
+Make sure to pass the client capabilities in the server settings
+```lua
+local capabilities = vim.lsp.procotol.make_client_capabilities()
+
+require("luau-lsp").setup {
+  server = {
+    capabilities = capabilities,
+  },
+}
+```
+If you are using [nvim-cmp](https://github.com/hrsh7th/nvim-cmp), check [this guide](https://github.com/hrsh7th/cmp-nvim-lsp?tab=readme-ov-file#setup)
 
 ### What is the error "server not yet received configuration for diagnostics"?
 Neovim is asking for diagnostics to the server but it hasn't loaded the configuration yet, you can just ignore this error. This is monkey patched but may not work on v0.9.x
