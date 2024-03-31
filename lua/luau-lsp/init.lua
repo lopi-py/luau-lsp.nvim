@@ -2,7 +2,7 @@ local M = {}
 
 function M.treesitter()
   local log = require "luau-lsp.log"
-  log.warn "A custom treesitter parser is not longer required at all"
+  log.warn "Luau-lsp no longer requires a custom treesitter parser"
 end
 
 ---@param opts LuauLspConfig
