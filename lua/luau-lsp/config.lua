@@ -30,6 +30,10 @@ local defaults = {
     ---@type table<string, "True"|"False"|number>
     override = {},
   },
+  companion = {
+    enabled = true,
+    port = 3667,
+  },
   ---@type table<string, any>
   server = {
     cmd = { "luau-lsp", "lsp" },
