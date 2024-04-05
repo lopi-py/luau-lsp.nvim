@@ -85,7 +85,7 @@ You can install the companion plugin [here](https://create.roblox.com/store/asse
 
 ```lua
 require("luau-lsp").setup {
-  companion = {
+  plugin = {
     enabled = true,
     port = 3667,
   },

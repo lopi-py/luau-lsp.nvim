@@ -1,12 +1,13 @@
-local compat = require "luau-lsp.compat"
-local config = require "luau-lsp.config"
-local http = require "luau-lsp.http"
-local uv = compat.uv
-
 -- Acknowledgements:
 -- https://github.com/zilibobi/luau-tree.nvim/tree/main
 -- https://github.com/JohnnyMorganz/luau-lsp/blob/main/editors/code/src/extension.ts
 -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/rpc.lua
+
+local compat = require "luau-lsp.compat"
+local config = require "luau-lsp.config"
+local http = require "luau-lsp.http"
+local log = require "luau-lsp.log"
+local uv = compat.uv
 
 local is_listening = false
 
@@ -14,6 +15,7 @@ local server
 local socket
 
 local data_model
+local current_port = config.get().plugin.port
 
 local function send_status(target_socket, status, body)
   local response = http.create_response({}, body or "", status)
@@ -22,11 +24,12 @@ end
 
 local M = {}
 
-local start_server = function(port)
+local function start_server(port)
   assert(type(port) == "number", "Port must be a number")
   assert(is_listening == false, "This server object is already bound to http://localhost:" .. port)
 
   is_listening = true
+  current_port = port
 
   server = uv.new_tcp()
 
@@ -35,7 +38,7 @@ local start_server = function(port)
   server:listen(128, function(listen_err)
     assert(not listen_err, listen_err)
 
-    print("Luau Language Server Studio Plugin is now listening on port " .. port)
+    log.info("Now listening on port " .. port)
 
     socket = uv.new_tcp()
 
@@ -97,23 +100,23 @@ local function stop_server()
     end
 
     is_listening = false
-    print "Luau Language Server Studio Plugin has disconnected"
+    log.info("Disconnecting on port " .. current_port)
   end
 end
 
 local function restart_server()
   stop_server()
-  start_server(config:get().companion.port)
+  start_server(config.get().plugin.port)
 end
 
 M.setup = function()
-  if config.get().companion.enabled then
-    start_server(config.get().companion.port)
+  if config.get().plugin.enabled then
+    restart_server()
   end
 
   vim.api.nvim_create_autocmd("LspAttach", {
     callback = function(args)
-      local client = compat.get_clients({ id = args.data.client_id })[1]
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
 
       if not client or client.name ~= "luau_lsp" then
         return
@@ -127,15 +130,15 @@ M.setup = function()
     end,
   })
 
-  config.on("companion.enabled", function()
-    if config.get().companion.enabled and not is_listening then
+  config.on("plugin.enabled", function()
+    if config.get().plugin.enabled and not is_listening then
       restart_server()
-    elseif not config.get().companion.enabled and is_listening then
+    elseif not config.get().plugin.enabled and is_listening then
       stop_server()
     end
   end)
 
-  config.on("companion.port", restart_server)
+  config.on("plugin.port", restart_server)
 end
 
 return M
