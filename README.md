@@ -184,8 +184,8 @@ local defaults = {
     ---@type table<string, "True"|"False"|number>
     override = {},
   },
-  companion = {
-    enabled = true,
+  plugin = {
+    enabled = false,
     port = 3667,
   },
   ---@type table<string, any>
