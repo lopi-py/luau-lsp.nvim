@@ -80,6 +80,18 @@ require("luau-lsp").setup {
 
 `:LuauRegenerateSourcemap` is provided to start sourcemap generation with the project file passed as argument or the one configured in `sourcemap.rojo_project_file`, will stop the current job and start a new one if required.
 
+## Companion plugin
+You can install the companion plugin [here](https://create.roblox.com/store/asset/10913122509/Luau-Language-Server-Companion?externalSource=www).
+
+```lua
+require("luau-lsp").setup {
+  plugin = {
+    enabled = true,
+    port = 3667,
+  },
+}
+```
+
 # Definition files
 
 ```lua
@@ -171,6 +183,10 @@ local defaults = {
     sync = true,
     ---@type table<string, "True"|"False"|number>
     override = {},
+  },
+  plugin = {
+    enabled = false,
+    port = 3667,
   },
   ---@type table<string, any>
   server = {

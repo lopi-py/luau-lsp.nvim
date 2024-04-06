@@ -30,6 +30,10 @@ local defaults = {
     ---@type table<string, "True"|"False"|number>
     override = {},
   },
+  plugin = {
+    enabled = false,
+    port = 3667,
+  },
   ---@type table<string, any>
   server = {
     cmd = { "luau-lsp", "lsp" },
