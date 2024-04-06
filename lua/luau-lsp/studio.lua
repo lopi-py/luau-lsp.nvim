@@ -35,10 +35,10 @@ local function start_server(port)
 
   server:bind("127.0.0.1", port)
 
+  log.info("Now listening on port " .. port)
+
   server:listen(128, function(listen_err)
     assert(not listen_err, listen_err)
-
-    log.info("Now listening on port " .. port)
 
     socket = uv.new_tcp()
 
@@ -49,6 +49,8 @@ local function start_server(port)
 
     socket:read_start(function(read_err, chunk)
       assert(not read_err, read_err)
+
+      log.info("Studio connected on port " .. port)
 
       if chunk then
         while true do
