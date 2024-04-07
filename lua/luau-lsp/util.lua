@@ -22,4 +22,12 @@ function M.fcounter(amount, callback)
   end
 end
 
+---@param bufnr number?
+---@return vim.lsp.Client?
+function M.get_client(bufnr)
+  local compat = require "luau-lsp.compat"
+  local client = compat.get_clients({ name = "luau_lsp", bufnr = bufnr })[1]
+  return client
+end
+
 return M

@@ -1,15 +1,16 @@
-local compat = require "luau-lsp.compat"
 local config = require "luau-lsp.config"
 local log = require "luau-lsp.log"
+local util = require "luau-lsp.util"
+
+local UPDATE_EVENTS = { "BufEnter", "BufNewFile", "InsertLeave", "TextChanged" }
 
 local M = {}
-M._method = "luau-lsp/bytecode"
-M._optlevel = 0
 
-local function is_attached(bufnr)
-  local clients = compat.get_clients { name = "luau_lsp", bufnr = bufnr }
-  return #clients > 0
-end
+local current_method = "luau-lsp/bytecode"
+local current_optlevel = 0
+
+local bytecode_bufnr = -1
+local bytecode_winnr = -1
 
 local function get_optimization_level(callback)
   local optimization_levels = { "02", "01", "None" }
@@ -28,162 +29,127 @@ local function get_optimization_level(callback)
   end)
 end
 
-local function create_bytecode_buffer()
-  local bufnr = vim.api.nvim_create_buf(false, true)
+local function is_view_valid()
+  return vim.api.nvim_win_is_valid(bytecode_winnr) and vim.api.nvim_buf_is_valid(bytecode_bufnr)
+end
 
-  vim.bo[bufnr].filetype = "luau"
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].bufhidden = "wipe"
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].modifiable = false
+local function close_view()
+  if vim.api.nvim_win_is_valid(bytecode_winnr) then
+    vim.api.nvim_win_close(bytecode_winnr, true)
+  end
 
-  vim.api.nvim_buf_set_var(bufnr, "luau-bytecode", true)
+  if vim.api.nvim_buf_is_valid(bytecode_bufnr) then
+    vim.api.nvim_buf_delete(bytecode_bufnr, { force = true })
+  end
+end
 
-  vim.keymap.set("n", "q", M.close, {
+local function create_view()
+  vim.cmd "belowright vsplit +enew"
+
+  local augroup = vim.api.nvim_create_augroup("luau-lsp.bytecode", {})
+
+  bytecode_bufnr = vim.api.nvim_get_current_buf()
+  bytecode_winnr = vim.api.nvim_get_current_win()
+
+  vim.bo[bytecode_bufnr].buflisted = false
+  vim.bo[bytecode_bufnr].buftype = "nofile"
+  vim.bo[bytecode_bufnr].bufhidden = "wipe"
+  vim.bo[bytecode_bufnr].swapfile = false
+  vim.bo[bytecode_bufnr].modifiable = false
+
+  -- treesitter is too slow to parse luau bytecode (freezes neovim), we could wait for
+  -- https://github.com/neovim/neovim/pull/22420
+  vim.bo[bytecode_bufnr].syntax = "luau"
+
+  vim.keymap.set("n", "q", close_view, {
     silent = true,
-    buffer = bufnr,
+    buffer = bytecode_bufnr,
     desc = "Close the window",
   })
 
-  local id = vim.api.nvim_create_autocmd(
-    { "BufEnter", "BufNewFile", "InsertLeave", "TextChanged" },
-    {
-      pattern = vim.tbl_map(function(ft)
-        return "*." .. ft
-      end, config.get().server.filetypes or { "luau" }),
+  vim.api.nvim_create_autocmd(UPDATE_EVENTS, {
+    group = augroup,
 
-      callback = function(ev)
-        M.update_buffer(ev.buf)
-      end,
-    }
-  )
+    pattern = vim.tbl_map(function(filetype)
+      return "*." .. filetype
+    end, config.get().server.filetypes or { "luau" }),
 
-  vim.api.nvim_create_autocmd("BufWipeout", {
-    once = true,
-    buffer = bufnr,
-    callback = function()
-      vim.api.nvim_del_autocmd(id)
+    callback = function(ev)
+      M.update_buffer(ev.buf)
     end,
   })
 
-  return bufnr
+  vim.api.nvim_create_autocmd("BufWipeout", {
+    group = augroup,
+    buffer = bytecode_bufnr,
+    callback = function()
+      vim.api.nvim_del_augroup_by_id(augroup)
+    end,
+  })
+
+  vim.cmd.wincmd "p"
 end
 
-local function create_bytecode_window()
-  local winnr = vim.api.nvim_get_current_win()
-  local bufnr = create_bytecode_buffer()
-  local splitright = vim.o.splitright
-
-  vim.o.splitright = true
-  vim.cmd "vsplit"
-  vim.o.splitright = splitright
-
-  vim.api.nvim_win_set_var(vim.api.nvim_get_current_win(), "luau-bytecode", true)
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_set_current_win(winnr)
-end
-
-local function get_bytecode_buffer()
-  for _, bufnr in pairs(vim.api.nvim_list_bufs()) do
-    local success, value = pcall(vim.api.nvim_buf_get_var, bufnr, "luau-bytecode")
-    if success and value then
-      return bufnr
-    end
-  end
-end
-
-local function get_bytecode_window()
-  for _, winnr in pairs(vim.api.nvim_list_wins()) do
-    local success, value = pcall(vim.api.nvim_win_get_var, winnr, "luau-bytecode")
-    if success and value then
-      return winnr
-    end
-  end
-end
-
-local function set_bytecode_text(text)
-  local bufnr = get_bytecode_buffer()
-  if not bufnr then
+local function render_view_text(text)
+  if not is_view_valid() then
     return
   end
 
-  vim.api.nvim_win_call(get_bytecode_window(), function()
-    local view = vim.fn.winsaveview() --[[@as vim.fn.winsaveview.ret]]
+  vim.api.nvim_win_call(bytecode_winnr, function()
     local lines = vim.split(text, "\n")
 
-    vim.bo[bufnr].modifiable = true
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-    vim.bo[bufnr].modifiable = false
-    vim.fn.winrestview(view)
+    vim.bo[bytecode_bufnr].modifiable = true
+    vim.api.nvim_buf_set_lines(bytecode_bufnr, 0, -1, false, lines)
+    vim.bo[bytecode_bufnr].modifiable = false
   end)
 end
 
-local function show_bytecode_info(method, scheme, filename)
+local function show_bytecode_info(method, filename)
   local bufnr = vim.api.nvim_get_current_buf()
-  if not is_attached(bufnr) then
+  if not util.get_client(bufnr) then
     return
   end
 
   get_optimization_level(function(optlevel)
-    M._optlevel = optlevel
-    M._method = method
+    current_optlevel = optlevel
+    current_method = method
 
-    if not get_bytecode_window() then
-      create_bytecode_window()
+    if not is_view_valid() then
+      close_view()
+      create_view()
     end
 
-    if not get_bytecode_buffer() then
-      vim.api.nvim_win_set_buf(get_bytecode_window(), create_bytecode_buffer())
-    end
-
-    vim.api.nvim_buf_set_name(
-      get_bytecode_buffer(),
-      string.format("%s://bytecode/%s.luau", scheme, filename)
-    )
-
-    M.update_buffer(bufnr)
+    vim.api.nvim_buf_set_name(bytecode_bufnr, string.format("%s.luau", filename))
   end)
 end
 
 function M.update_buffer(bufnr)
-  if not is_attached(bufnr) then
+  local client = util.get_client(bufnr)
+  if not client then
     return
   end
 
   local params = {
     textDocument = vim.lsp.util.make_text_document_params(bufnr),
-    optimizationLevel = M._optlevel,
+    optimizationLevel = current_optlevel,
   }
 
-  vim.lsp.buf_request(bufnr, M._method, params, function(err, result)
+  client.request(current_method, params, function(err, result)
     if err then
       log.error(err.message)
       return
     end
 
-    set_bytecode_text(result:gsub("[\n]+$", ""))
-  end)
-end
-
-function M.close()
-  local bufnr = get_bytecode_buffer()
-  if bufnr then
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end
-
-  local winnr = get_bytecode_window()
-  if winnr then
-    vim.api.nvim_win_close(winnr, true)
-  end
+    render_view_text(result:gsub("[\n]+$", ""))
+  end, bufnr)
 end
 
 function M.bytecode()
-  show_bytecode_info("luau-lsp/bytecode", "luau-bytecode", "bytecode")
+  show_bytecode_info("luau-lsp/bytecode", "bytecode")
 end
 
 function M.compiler_remarks()
-  show_bytecode_info("luau-lsp/compilerRemarks", "luau-remarks", "compiler-remarks")
+  show_bytecode_info("luau-lsp/compilerRemarks", "compiler-remarks")
 end
 
 return M

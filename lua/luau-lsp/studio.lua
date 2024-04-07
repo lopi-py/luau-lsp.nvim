@@ -7,6 +7,7 @@ local compat = require "luau-lsp.compat"
 local config = require "luau-lsp.config"
 local http = require "luau-lsp.http"
 local log = require "luau-lsp.log"
+local util = require "luau-lsp.util"
 local uv = compat.uv
 
 local is_listening = false
@@ -52,8 +53,7 @@ local function start_server(port)
       if chunk then
         while true do
           local metadata, _, body = parse_chunk(chunk)
-
-          local client = compat.get_clients({ name = "luau_lsp" })[1]
+          local client = util.get_client()
 
           if not metadata then
             return
