@@ -245,12 +245,17 @@ local defaults = {
 
 Don't lazy load the plugin if you are on Neovim v0.9
 
-### Why doesn't the autocompletion detect changes in the sourcemap?
+### Why doesn't the server detect changes in the sourcemap on Neovim 0.9?
 
-Make sure to pass the client capabilities in the server settings
+Make sure to enable the file watcher capability and pass it in the server settings
 
 ```lua
+-- there are couple ways to get the default capabilities, it depends on your distribution or what completion plugins are you using
 local capabilities = vim.lsp.procotol.make_client_capabilities()
+
+-- manually enable the file watcher capability so luau-lsp will know when the sourcemap changes.
+-- do NOT do this if you are running Neovim 0.10+, it is only required for 0.9.
+capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
 
 require("luau-lsp").setup {
   server = {
