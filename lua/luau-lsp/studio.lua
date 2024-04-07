@@ -32,7 +32,6 @@ local function start_server(port)
   current_port = port
 
   server = uv.new_tcp()
-
   server:bind("127.0.0.1", port)
 
   log.info("Now listening on port " .. port)
@@ -49,8 +48,6 @@ local function start_server(port)
 
     socket:read_start(function(read_err, chunk)
       assert(not read_err, read_err)
-
-      log.info("Studio connected on port " .. port)
 
       if chunk then
         while true do
@@ -102,7 +99,7 @@ local function stop_server()
     end
 
     is_listening = false
-    log.info("Disconnecting on port " .. current_port)
+    log.info("Disconnecting from port " .. current_port)
   end
 end
 
@@ -111,7 +108,7 @@ local function restart_server()
   start_server(config.get().plugin.port)
 end
 
-M.setup = function()
+function M.setup()
   if config.get().plugin.enabled then
     restart_server()
   end
@@ -119,7 +116,6 @@ M.setup = function()
   vim.api.nvim_create_autocmd("LspAttach", {
     callback = function(args)
       local client = vim.lsp.get_client_by_id(args.data.client_id)
-
       if not client or client.name ~= "luau_lsp" then
         return
       end
