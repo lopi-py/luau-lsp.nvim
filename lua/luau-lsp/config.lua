@@ -76,6 +76,7 @@ local function validate_config(options)
   check_server_setting "fflags"
   check_server_setting "sourcemap"
   check_server_setting "types"
+  check_server_setting "plugin"
 end
 
 ---@return LuauLspConfig
