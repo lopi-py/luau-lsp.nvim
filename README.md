@@ -53,15 +53,16 @@ use {
 
 ## Quick start
 
+> [!CAUTION]
+> `lspconfig.luau_lsp.setup` should **NOT** be called as the plugin does it internally
+
 ```lua
 require("luau-lsp").setup {
   ...
 }
 ```
 
-<details>
-
-<summary>mason-lspconfig.nvim</summary>
+### Using mason-lspconfig.nvim
 
 ```lua
 require("mason-lspconfig").setup_handlers {
@@ -72,18 +73,6 @@ require("mason-lspconfig").setup_handlers {
   end,
 }
 ```
-
-</details>
-
-> [!CAUTION]
-> lspconfig's setup should **NOT** be called as the plugin does it internally
-> ```lua
-> require("lspconfig").luau_lsp.setup { ... }
-> ```
-> Use `luau-lsp.nvim`'s setup instead
-> ```lua
-> require("luau-lsp").setup { ... }
-> ```
 
 ## Roblox
 
@@ -157,7 +146,7 @@ require("luau-lsp").setup {
 
 https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/f9d45153-47f0-4565-a2ed-3769153732a0
 
-## Server settings
+## Server configuration
 
 ```lua
 require("luau-lsp").setup {
@@ -190,7 +179,9 @@ For more info about `.nvim.lua`, check `:help 'exrc'`
 
 ## Configuration
 
-`luau-lsp.nvim` comes with the following defaults:
+<details>
+
+<summary>Defaults</summary>
 
 ```lua
 ---@class LuauLspConfig
@@ -246,11 +237,13 @@ local defaults = {
 }
 ```
 
+</details>
+
 ## FAQ
 
 ### Why doesn't the luau filetype detection work?
 
-Don't lazy load the plugin if you are on neovim v0.9.x
+Don't lazy load the plugin if you are on Neovim v0.9
 
 ### Why doesn't the autocompletion detect changes in the sourcemap?
 
@@ -270,13 +263,9 @@ If you are using [nvim-cmp](https://github.com/hrsh7th/nvim-cmp), check [this gu
 
 ### What is the error "server not yet received configuration for diagnostics"?
 
-Neovim is asking for diagnostics to the server but it hasn't loaded the configuration yet, you can just ignore this error. This is monkey patched but may not work on v0.9.x
+Neovim is asking for diagnostics to the server but it hasn't loaded the configuration yet, you can just ignore this error. This is monkey patched on Neovim 0.10+
 
-### Why aren't my luau files highlighted?
-
-Try installing the `luau` treesitter parser (`:TSInstall luau`)
-
-### How to use luau-lsp on a lua codebase without messing with lua_ls?
+### How to use luau-lsp on a lua codebase without messing it up with lua_ls?
 
 Enable `:help 'exrc'` and add the following to your `.nvim.lua`:
 
