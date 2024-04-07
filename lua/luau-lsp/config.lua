@@ -97,22 +97,19 @@ function M.config(options)
     )
   end
 
-  for _, data in ipairs(callbacks) do
-    if has_changed(data.path) then
-      data.callback()
+  M.options = new_options
+
+  for callback, path in pairs(callbacks) do
+    if has_changed(path) then
+      callback()
     end
   end
-
-  M.options = new_options
 end
 
 ---@param path string
 ---@param callback function
 function M.on(path, callback)
-  table.insert(callbacks, {
-    path = path,
-    callback = callback,
-  })
+  callbacks[callback] = path
 end
 
 return M
