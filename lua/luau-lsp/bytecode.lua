@@ -95,13 +95,11 @@ local function render_view_text(text)
     return
   end
 
-  vim.api.nvim_win_call(bytecode_winnr, function()
-    local lines = vim.split(text, "\n")
+  local lines = vim.split(text, "\n")
 
-    vim.bo[bytecode_bufnr].modifiable = true
-    vim.api.nvim_buf_set_lines(bytecode_bufnr, 0, -1, false, lines)
-    vim.bo[bytecode_bufnr].modifiable = false
-  end)
+  vim.bo[bytecode_bufnr].modifiable = true
+  vim.api.nvim_buf_set_lines(bytecode_bufnr, 0, -1, false, lines)
+  vim.bo[bytecode_bufnr].modifiable = false
 end
 
 local function show_bytecode_info(method, filename)
