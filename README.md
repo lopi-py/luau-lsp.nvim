@@ -25,6 +25,7 @@ Use your favourite plugin manager to install luau-lsp.nvim
   },
   dependencies = {
     "nvim-lua/plenary.nvim",
+    "neovim/nvim-lspconfig",
   },
 }
 ```
@@ -45,6 +46,7 @@ use {
   end,
   requires = {
     "nvim-lua/plenary.nvim",
+    "neovim/nvim-lspconfig",
   },
 }
 ```
