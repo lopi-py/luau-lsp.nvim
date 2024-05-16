@@ -41,7 +41,6 @@ local function start_server(port)
     assert(not listen_err, listen_err)
 
     socket = uv.new_tcp()
-
     server:accept(socket)
 
     local parse_chunk = coroutine.wrap(http.request_parser_loop)
@@ -98,6 +97,11 @@ local function stop_server()
       socket:shutdown()
     end
 
+    local client = util.get_client()
+    if client then
+      client.notify "$/plugin/clear"
+    end
+
     is_listening = false
     log.info("Disconnecting from port " .. current_port)
   end
@@ -109,10 +113,6 @@ local function restart_server()
 end
 
 function M.setup()
-  if config.get().plugin.enabled then
-    restart_server()
-  end
-
   vim.api.nvim_create_autocmd("LspAttach", {
     callback = function(args)
       local client = vim.lsp.get_client_by_id(args.data.client_id)
@@ -136,7 +136,11 @@ function M.setup()
     end
   end)
 
-  config.on("plugin.port", restart_server)
+  config.on("plugin.port", function()
+    if config.get().plugin.enabled then
+      restart_server()
+    end
+  end)
 end
 
 return M
