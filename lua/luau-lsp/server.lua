@@ -4,7 +4,6 @@ local compat = require "luau-lsp.compat"
 local config = require "luau-lsp.config"
 local curl = require "plenary.curl"
 local log = require "luau-lsp.log"
-local util = require "luau-lsp.util"
 
 local CURRENT_FFLAGS =
   "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCDesktopClient"
@@ -24,7 +23,7 @@ local get_fflags = async.wrap(function(callback)
   }
 end, 1)
 
-local function get_args()
+local function get_server_args()
   local args = {}
 
   local function add_definition_file(file)
@@ -91,21 +90,10 @@ local function get_args()
     end
   end
 
-  -- HACK: not required once luau-lsp v1.27.0+ is released
-  if not config.get().sourcemap.enabled then
-    -- hide luau lsp messages when sourcemap is disabled
-    local no_sourcemap = Path:new(util.storage_file "no-sourcemap-enabled.json")
-    if not no_sourcemap:is_file() then
-      no_sourcemap:write(vim.json.encode { ["luau-lsp.sourcemap.enabled"] = false }, "w")
-    end
-    table.insert(args, "--settings")
-    table.insert(args, tostring(no_sourcemap))
-  end
-
   return args
 end
 
--- patch shared settings between the client extension and server
+-- patch shared settings between the client extension and the server
 local function patch_server_settings(settings)
   return vim.tbl_deep_extend("force", settings, {
     ["luau-lsp"] = {
@@ -116,36 +104,46 @@ local function patch_server_settings(settings)
   })
 end
 
--- HACK: neovim is not handling ServerCancelled, see https://github.com/neovim/neovim/issues/26926
-local function patch_configuration_error()
-  local function create_patch(fn)
-    return function(message, ...)
-      if
-        message:match "luau_lsp"
-        and message:match "server not yet received configuration for diagnostics"
-      then
+--- neovim does not support diagnostic's relatedDocuments, but push-based diagnostics should work
+--- fine, this should also avoid the error "server not yet received configuration for diagnostics"
+local function force_push_diagnostics(opts)
+  opts.capabilities = vim.tbl_deep_extend("force", opts.capabilities or {}, {
+    textDocument = {
+      diagnostic = vim.NIL,
+    },
+  })
+
+  local on_init = opts.on_init
+  opts.on_init = function(client, result)
+    if on_init then
+      on_init(client, result)
+    end
+
+    local write_error = client.write_error
+    client.write_error = function(self, code, err)
+      if err.error.message == "server not yet received configuration for diagnostics" then
         return
       end
-      fn(message, ...)
+      write_error(self, code, err)
     end
-  end
 
-  -- neovim uses vim.notify to show the error since api level 12+
-  if vim.version().api_level >= 12 then
-    vim.notify = create_patch(vim.notify)
+    client.server_capabilities.diagnosticProvider = nil
   end
 end
 
 local function setup_server()
-  local opts = vim.deepcopy(config.get().server)
   local bufnr = vim.api.nvim_get_current_buf()
+  local opts = vim.deepcopy(config.get().server)
 
-  opts.cmd = vim.list_extend(opts.cmd, get_args())
+  opts.cmd = vim.list_extend(opts.cmd, get_server_args())
   opts.settings = patch_server_settings(opts.settings)
 
-  async.util.scheduler()
-  require("lspconfig").luau_lsp.setup(opts)
-  require("lspconfig").luau_lsp.manager:try_add_wrapper(bufnr)
+  force_push_diagnostics(opts)
+
+  vim.schedule(function()
+    require("lspconfig").luau_lsp.setup(opts)
+    require("lspconfig").luau_lsp.manager:try_add_wrapper(bufnr)
+  end)
 end
 
 local function lock_config()
@@ -179,8 +177,6 @@ function M.find_root(path, marker)
 end
 
 function M.setup()
-  patch_configuration_error()
-
   vim.api.nvim_create_autocmd("FileType", {
     once = true,
     pattern = config.get().server.filetypes or { "luau" },
