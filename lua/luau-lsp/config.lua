@@ -38,21 +38,16 @@ local defaults = {
   server = {
     cmd = { "luau-lsp", "lsp" },
     root_dir = function(path)
-      local compat = require "luau-lsp.compat"
-      return vim.fs.dirname(vim.fs.find(function(name)
+      local server = require "luau-lsp.server"
+      return server.find_root(path, function(name)
         return name:match ".*%.project.json$"
-          or compat.list_contains({
-            ".git",
-            ".luaurc",
-            ".stylua.toml",
-            "stylua.toml",
-            "selene.toml",
-            "selene.yml",
-          }, name)
-      end, {
-        upward = true,
-        path = path,
-      })[1])
+      end) or server.find_root(path, {
+        ".git",
+        ".luaurc",
+        "stylua.toml",
+        "selene.toml",
+        "selene.yml",
+      })
     end,
     -- see https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
     settings = {},

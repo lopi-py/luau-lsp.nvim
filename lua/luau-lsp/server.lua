@@ -156,6 +156,21 @@ end
 
 local M = {}
 
+---@param path string
+---@param marker string[]|fun(name: string): boolean
+function M.find_root(path, marker)
+  local paths = vim.fs.find(marker, {
+    upward = true,
+    path = path,
+  })
+
+  if #paths == 0 then
+    return nil
+  end
+
+  return vim.fs.dirname(paths[1])
+end
+
 function M.setup()
   patch_configuration_error()
 
