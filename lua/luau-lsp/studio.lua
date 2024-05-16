@@ -120,10 +120,12 @@ function M.setup()
         return
       end
 
-      if data_model then
-        client.notify("$/plugin/full", data_model)
-      else
-        client.notify "$/plugin/clear"
+      if is_listening then
+        if data_model then
+          client.notify("$/plugin/full", data_model)
+        else
+          client.notify "$/plugin/clear"
+        end
       end
     end,
   })
