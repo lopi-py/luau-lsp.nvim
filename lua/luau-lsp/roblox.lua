@@ -2,6 +2,7 @@ local async = require "plenary.async"
 local compat = require "luau-lsp.compat"
 local config = require "luau-lsp.config"
 local curl = require "plenary.curl"
+local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
 local API_DOCS =
@@ -30,7 +31,7 @@ end
 
 local M = {}
 
----@type fun():string,string
+---@type fun():string?,string?
 M.download_api = async.wrap(function(callback)
   local security_level = config.get().types.roblox_security_level
 
@@ -43,15 +44,30 @@ M.download_api = async.wrap(function(callback)
     callback(global_types_file(security_level), api_docs_file())
   end)
 
+  local on_error = util.fcounter(2, function()
+    if
+      compat.uv.fs_stat(global_types_file(security_level)) and compat.uv.fs_stat(api_docs_file())
+    then
+      log.error "Could not download roblox types, using local files"
+      callback(global_types_file(security_level), api_docs_file())
+      return
+    end
+
+    log.error "Could not download roblox types, no local files found"
+    callback(nil, nil)
+  end)
+
   curl.get(API_DOCS, {
     output = api_docs_file(),
     callback = on_download,
+    on_error = on_error,
     compressed = false,
   })
 
   curl.get(global_types_url(security_level), {
     output = global_types_file(security_level),
     callback = on_download,
+    on_error = on_error,
     compressed = false,
   })
 end, 1)

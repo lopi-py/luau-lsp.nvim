@@ -16,6 +16,10 @@ local get_fflags = async.wrap(function(callback)
     callback = function(result)
       callback(vim.json.decode(result.body).applicationSettings)
     end,
+    on_error = function()
+      log.error "Could not fetch the latest Luau FFlags"
+      callback {}
+    end,
     compressed = false,
   }
 end, 1)
@@ -81,8 +85,10 @@ local function get_args()
     local roblox = require "luau-lsp.roblox"
     local definition_file, documentation_file = roblox.download_api()
 
-    add_definition_file(definition_file)
-    add_documentation_file(documentation_file)
+    if definition_file and documentation_file then
+      add_definition_file(definition_file)
+      add_documentation_file(documentation_file)
+    end
   end
 
   -- HACK: not required once luau-lsp v1.27.0+ is released
@@ -157,7 +163,8 @@ end
 local M = {}
 
 ---@param path string
----@param marker string[]|fun(name: string): boolean
+---@param marker string[]|fun(name:string):boolean
+---@return string?
 function M.find_root(path, marker)
   local paths = vim.fs.find(marker, {
     upward = true,
