@@ -49,7 +49,6 @@ local defaults = {
         "selene.yml",
       })
     end,
-    single_file_support = true,
     -- see https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
     settings = {},
   },
