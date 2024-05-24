@@ -24,14 +24,9 @@ function M.setup()
         return
       end
 
-      require("luau-lsp").config {
-        sourcemap = {
-          rojo_project_file = data.args,
-        },
-      }
+      require("luau-lsp.roblox.sourcemap").start(data.args)
     else
-      require("luau-lsp.sourcemap").stop()
-      require("luau-lsp.sourcemap").start()
+      require("luau-lsp.roblox.sourcemap").start()
     end
   end, {
     complete = "file",

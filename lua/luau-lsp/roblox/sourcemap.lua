@@ -37,12 +37,12 @@ local get_rojo_project_file = async.wrap(function(callback)
   end
 end, 1)
 
-local function start(project_file)
+local function start_sourcemap_generation(project_file)
   local args = {
     "sourcemap",
     "--watch",
     project_file,
-    "-o",
+    "--output",
     "sourcemap.json",
   }
 
@@ -81,47 +81,31 @@ local function start(project_file)
   job:start()
 end
 
-function M.stop()
+local function stop_sourcemap_generation()
   if job then
     job:shutdown()
   end
 end
 
 M.start = async.void(function(project_file)
-  project_file = project_file or get_rojo_project_file()
-
-  if project_file then
-    start(project_file)
-  end
+  stop_sourcemap_generation()
+  start_sourcemap_generation(project_file or get_rojo_project_file())
 end)
 
-function M.is_running()
-  return job ~= nil
-end
-
 function M.setup()
-  local group = vim.api.nvim_create_augroup("luau-lsp.sourcemap", {})
-
-  vim.api.nvim_create_autocmd("LspAttach", {
-    group = group,
-    callback = function(event)
-      local client = vim.lsp.get_client_by_id(event.data.client_id)
-      if client and client.name == "luau_lsp" then
-        if config.get().sourcemap.enabled and config.get().sourcemap.autogenerate then
-          M.stop()
-          M.start()
-          return true
-        end
-      end
-    end,
-  })
+  config.on("sourcemap.autogenerate", function()
+    if config.get().sourcemap.enabled and config.get().sourcemap.autogenerate then
+      M.start()
+    else
+      stop_sourcemap_generation()
+    end
+  end)
 
   config.on("sourcemap.rojo_project_file", function()
     if config.get().sourcemap.enabled and config.get().sourcemap.autogenerate then
-      M.stop()
       M.start()
     else
-      M.stop()
+      stop_sourcemap_generation()
     end
   end)
 end

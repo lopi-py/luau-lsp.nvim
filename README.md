@@ -83,8 +83,10 @@ Roblox types are downloaded from the luau-lsp repo and passed to the language se
 
 ```lua
 require("luau-lsp").setup {
+  platform = {
+    type = "roblox",
+  },
   types = {
-    roblox = true,
     roblox_security_level = "PluginSecurity",
   },
 }
@@ -189,6 +191,10 @@ For more info about `.nvim.lua`, check `:help 'exrc'`
 ```lua
 ---@class LuauLspConfig
 local defaults = {
+  platform = {
+    ---@type "standard"|"roblox"
+    type = "roblox",
+  },
   sourcemap = {
     enabled = true,
     autogenerate = true,
@@ -202,12 +208,13 @@ local defaults = {
     ---@type string[]
     documentation_files = {},
     roblox = true,
+    ---@type "None"|"LocalUserSecurity"|"PluginSecurity"|"RobloxScriptSecurity"
     roblox_security_level = "PluginSecurity",
   },
   fflags = {
     enable_by_default = false,
     sync = uv.os_uname().sysname ~= "Windows_NT",
-    ---@type table<string, "True"|"False"|number>
+    ---@type table<string, string>
     override = {},
   },
   plugin = {
@@ -219,9 +226,9 @@ local defaults = {
     cmd = { "luau-lsp", "lsp" },
     root_dir = function(path)
       local server = require "luau-lsp.server"
-      return server.find_root(path, function(name)
+      return server.root(path, function(name)
         return name:match ".*%.project.json$"
-      end) or server.find_root(path, {
+      end) or server.root(path, {
         ".git",
         ".luaurc",
         "stylua.toml",

@@ -1,6 +1,9 @@
 local compat = require "luau-lsp.compat"
 local log = require "luau-lsp.log"
 
+local PLATFORMS = { "standard", "roblox" }
+local SECURITY_LEVELS = { "None", "LocalUserSecurity", "PluginSecurity", "RobloxScriptSecurity" }
+
 local uv = compat.uv
 local callbacks = {}
 
@@ -11,6 +14,10 @@ M.options = nil
 
 ---@class LuauLspConfig
 local defaults = {
+  platform = {
+    ---@type "standard"|"roblox"
+    type = "roblox",
+  },
   sourcemap = {
     enabled = true,
     autogenerate = true,
@@ -24,12 +31,13 @@ local defaults = {
     ---@type string[]
     documentation_files = {},
     roblox = true,
+    ---@type "None"|"LocalUserSecurity"|"PluginSecurity"|"RobloxScriptSecurity"
     roblox_security_level = "PluginSecurity",
   },
   fflags = {
     enable_by_default = false,
     sync = uv.os_uname().sysname ~= "Windows_NT",
-    ---@type table<string, "True"|"False"|number>
+    ---@type table<string, string>
     override = {},
   },
   plugin = {
@@ -41,9 +49,9 @@ local defaults = {
     cmd = { "luau-lsp", "lsp" },
     root_dir = function(path)
       local server = require "luau-lsp.server"
-      return server.find_root(path, function(name)
+      return server.root(path, function(name)
         return name:match ".*%.project.json$"
-      end) or server.find_root(path, {
+      end) or server.root(path, {
         ".git",
         ".luaurc",
         "stylua.toml",
@@ -58,21 +66,41 @@ local defaults = {
 
 ---@param options LuauLspConfig
 local function validate_config(options)
+  if vim.tbl_get(options, "platform", "type") then
+    if not compat.list_contains(PLATFORMS, options.platform.type) then
+      log.error("Invalid option `platform.type` value: " .. options.platform.type)
+    end
+  end
+
+  if vim.tbl_get(options, "types", "roblox_security_level") then
+    if not compat.list_contains(SECURITY_LEVELS, options.types.roblox_security_level) then
+      log.error(
+        "Invalid option `types.roblox_security_level` value: "
+          .. options.types.roblox_security_level
+      )
+    end
+  end
+
+  if vim.tbl_get(options, "sourcemap", "select_project_file") ~= nil then
+    log.warn "`sourcemap.select_project_file` is deprecated, use `sourcemap.rojo_project` instead"
+  end
+
+  if vim.tbl_get(options, "types", "roblox") ~= nil then
+    log.warn "`types.roblox` is deprecated, use `platform.type` instead"
+  end
+
   local function check_server_setting(path)
     if vim.tbl_get(options, "server", "settings", "luau-lsp", path) ~= nil then
       log.warn("Server setting `%s` will not take effect. Check the README.md for more info", path)
     end
   end
 
-  if vim.tbl_get(options, "sourcemap", "select_project_file") then
-    log.warn "`sourcemap.select_project_file` is deprecated, use `sourcemap.rojo_project` instead"
-  end
-
-  -- luau-lsp doesn't really listen to those, they are passed in the command line so they won't
-  -- take effect
-  check_server_setting "fflags"
+  -- luau-lsp doesn't really listen to those, they are passed in the command line or are used to
+  -- start the server so they won't take effect
+  check_server_setting "platform"
   check_server_setting "sourcemap"
   check_server_setting "types"
+  check_server_setting "fflags"
   check_server_setting "plugin"
 end
 
