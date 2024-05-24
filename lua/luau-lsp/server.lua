@@ -183,14 +183,8 @@ function M.root(path, marker)
 end
 
 function M.setup()
-  vim.api.nvim_create_autocmd("FileType", {
-    once = true,
-    pattern = config.get().server.filetypes or { "luau" },
-    callback = function()
-      lock_config()
-      async.run(setup_server)
-    end,
-  })
+  lock_config()
+  async.run(setup_server)
 end
 
 return M

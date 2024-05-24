@@ -54,7 +54,7 @@ end, 1)
 local M = {}
 
 function M.is_enabled()
-  return config.get().types.roblox or config.get().platform.type == "roblox"
+  return config.get().platform.type == "roblox"
 end
 
 function M.start()
@@ -77,8 +77,10 @@ function M.setup(opts)
     return
   end
 
-  require("luau-lsp.roblox.sourcemap").setup()
-  require("luau-lsp.roblox.studio").setup()
+  vim.schedule(function()
+    require("luau-lsp.roblox.sourcemap").setup()
+    require("luau-lsp.roblox.studio").setup()
+  end)
 
   if not download_api() then
     if uv.fs_stat(global_types_file()) and uv.fs_stat(api_docs_file()) then

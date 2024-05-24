@@ -207,7 +207,6 @@ local defaults = {
     definition_files = {},
     ---@type string[]
     documentation_files = {},
-    roblox = true,
     ---@type "None"|"LocalUserSecurity"|"PluginSecurity"|"RobloxScriptSecurity"
     roblox_security_level = "PluginSecurity",
   },
@@ -250,16 +249,19 @@ local defaults = {
 
 Don't lazy load the plugin if you are on Neovim v0.9
 
-### Why doesn't the server detect changes in the sourcemap on Neovim 0.9?
+### Why doesn't the server detect changes in the sourcemap?
 
-Make sure to enable the file watcher capability and pass it in the server settings
+Make sure to enable the file watcher capability and pass it in the server options
 
 ```lua
 -- there are couple ways to get the default capabilities, it depends on your distribution or what completion plugins are you using
 local capabilities = vim.lsp.procotol.make_client_capabilities()
 
--- manually enable the file watcher capability so luau-lsp will know when the sourcemap changes.
--- do NOT do this if you are running Neovim 0.10+, it is only required for 0.9.
+-- example using nvim-cmp
+capabilities = vim.tbl_deep_extend("force", capabilities, require("nvim_cmp_lsp").default_capabilities())
+
+-- manually enable the file watcher capability so luau-lsp will know when the sourcemap changes
+-- only needed if you are running Neovim 0.9 or Linux
 capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
 
 require("luau-lsp").setup {
@@ -269,22 +271,27 @@ require("luau-lsp").setup {
 }
 ```
 
-If you are using [nvim-cmp](https://github.com/hrsh7th/nvim-cmp), check [this guide](https://github.com/hrsh7th/cmp-nvim-lsp?tab=readme-ov-file#setup)
-
 ### What is the error "server not yet received configuration for diagnostics"?
 
-Neovim is asking for diagnostics to the server but it hasn't loaded the configuration yet, you can just ignore this error. This is monkey patched on Neovim 0.10+
+Neovim is asking for diagnostics to the server but it hasn't loaded the configuration yet, you can just ignore this error. This is patched on Neovim 0.10+
 
-### How to use luau-lsp on a lua codebase without messing it up with lua_ls?
+### How to use luau-lsp in a roblox codebase using the .lua extension?
 
-Enable `:help 'exrc'` and add the following to your `.nvim.lua`:
+Add this to your config. Requires Neovim 0.10+
 
 ```lua
-vim.filetype.add {
-  extension = {
-    lua = function(path)
-      return path:match ".nvim.lua$" and "lua" or "luau"
-    end,
-  },
-}
+local cwd = assert(vim.uv.cwd())
+local rojo_file_found = vim.fs.root(cwd, function(name)
+  return name:match "%.project.json$"
+end)
+
+if rojo_file_found then
+  vim.filetype.add {
+    extension = {
+      lua = function(path)
+        return path:match ".nvim.lua$" and "lua" or "luau"
+      end,
+    },
+  }
+end
 ```

@@ -30,7 +30,6 @@ local defaults = {
     definition_files = {},
     ---@type string[]
     documentation_files = {},
-    roblox = true,
     ---@type "None"|"LocalUserSecurity"|"PluginSecurity"|"RobloxScriptSecurity"
     roblox_security_level = "PluginSecurity",
   },

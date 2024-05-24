@@ -10,22 +10,9 @@ function M.config(opts)
   require("luau-lsp.config").config(opts)
 end
 
----@param opts? LuauLspConfig
+---@param opts LuauLspConfig
 function M.setup(opts)
-  require("luau-lsp.config").config(opts or {})
-  require("luau-lsp.command").setup()
-  require("luau-lsp.server").setup()
-
-  if vim.version().minor < 10 then
-    vim.filetype.add {
-      extension = {
-        luau = "luau",
-      },
-      filename = {
-        [".luaurc"] = "jsonc",
-      },
-    }
-  end
+  require("luau-lsp.config").config(opts)
 end
 
 return M
