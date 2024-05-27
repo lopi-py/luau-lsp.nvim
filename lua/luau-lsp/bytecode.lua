@@ -109,7 +109,9 @@ local function show_bytecode_info(method, filename)
     current_optlevel = optlevel
     current_method = method
 
-    if not is_view_valid() then
+    if is_view_valid() then
+      M.update_buffer(bufnr)
+    else
       close_view()
       create_view()
     end
