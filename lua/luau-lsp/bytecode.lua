@@ -1,4 +1,3 @@
-local config = require "luau-lsp.config"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
@@ -69,13 +68,11 @@ local function create_view()
 
   vim.api.nvim_create_autocmd(UPDATE_EVENTS, {
     group = augroup,
-
-    pattern = vim.tbl_map(function(filetype)
-      return "*." .. filetype
-    end, config.get().server.filetypes or { "luau" }),
-
-    callback = function(ev)
-      M.update_buffer(ev.buf)
+    callback = function(event)
+      local bufnr = event.buf
+      if vim.bo[bufnr].filetype == "luau" then
+        M.update_buffer(bufnr)
+      end
     end,
   })
 
