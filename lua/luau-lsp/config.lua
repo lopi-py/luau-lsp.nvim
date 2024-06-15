@@ -35,7 +35,7 @@ local defaults = {
   },
   fflags = {
     enable_by_default = false,
-    sync = uv.os_uname().sysname ~= "Windows_NT",
+    sync = true,
     ---@type table<string, string>
     override = {},
   },
