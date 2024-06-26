@@ -4,15 +4,14 @@ local log = require "luau-lsp.log"
 local PLATFORMS = { "standard", "roblox" }
 local SECURITY_LEVELS = { "None", "LocalUserSecurity", "PluginSecurity", "RobloxScriptSecurity" }
 
-local uv = compat.uv
 local callbacks = {}
 
 local M = {}
 
----@type LuauLspConfig
+---@type luau-lsp.Config
 M.options = nil
 
----@class LuauLspConfig
+---@class luau-lsp.Config
 local defaults = {
   platform = {
     ---@type "standard"|"roblox"
@@ -63,7 +62,7 @@ local defaults = {
   },
 }
 
----@param options LuauLspConfig
+---@param options luau-lsp.Config
 local function validate_config(options)
   if vim.tbl_get(options, "platform", "type") then
     if not compat.list_contains(PLATFORMS, options.platform.type) then
@@ -103,12 +102,12 @@ local function validate_config(options)
   check_server_setting "plugin"
 end
 
----@return LuauLspConfig
+---@return luau-lsp.Config
 function M.get()
   return M.options
 end
 
----@param options LuauLspConfig
+---@param options luau-lsp.Config
 function M.config(options)
   validate_config(options)
 

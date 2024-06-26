@@ -5,12 +5,12 @@ function M.treesitter()
   log.warn "A custom luau treesitter parser is no longer required"
 end
 
----@param opts LuauLspConfig
+---@param opts luau-lsp.Config
 function M.config(opts)
   require("luau-lsp.config").config(opts)
 end
 
----@param opts LuauLspConfig
+---@param opts luau-lsp.Config
 function M.setup(opts)
   require("luau-lsp.config").config(opts)
 end
