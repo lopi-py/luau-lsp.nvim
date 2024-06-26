@@ -34,7 +34,7 @@ local function start_server(port)
   server = uv.new_tcp()
   server:bind("127.0.0.1", port)
 
-  log.info("Plugin server now listening on port " .. port)
+  log.info("Plugin server listening on port " .. port)
 
   server:listen(128, function(listen_err)
     assert(not listen_err, listen_err)

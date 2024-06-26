@@ -20,7 +20,7 @@ local get_rojo_project_file = async.wrap(function(callback)
 
   local found_project_files = vim.split(vim.fn.glob "*.project.json", "\n")
   if #found_project_files == 0 or found_project_files[1] == "" then
-    log.warn("Unable to find project file `%s`", project_file)
+    log.error("Unable to find project file `%s`", project_file)
     callback()
   elseif #found_project_files == 1 then
     log.info(
@@ -41,6 +41,10 @@ local get_rojo_project_file = async.wrap(function(callback)
 end, 1)
 
 local function start_sourcemap_generation(project_file)
+  if not project_file then
+    return
+  end
+
   local args = {
     "sourcemap",
     "--watch",
@@ -60,7 +64,7 @@ local function start_sourcemap_generation(project_file)
       message = "Your Rojo version doesn't have sourcemap support"
     elseif err:find "Found argument '--watch' which wasn't expected" then
       message = "Your Rojo version doesn't have sourcemap watching support"
-    elseif err:find "is not recognized" or err:find "ENOENT" then
+    elseif err:find "is not recognized" or err:find "not found" or err:find "ENOENT" then
       message = "Rojo not found. Please install Rojo or disable sourcemap autogeneration"
     end
 
