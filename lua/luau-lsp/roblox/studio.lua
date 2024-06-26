@@ -102,7 +102,7 @@ local function stop_server()
     end
 
     is_listening = false
-    log.info("Plugin server disconnecting from port " .. current_port)
+    log.info("Plugin server disconnected from port " .. current_port)
   end
 end
 
