@@ -8,14 +8,13 @@ local config = require "luau-lsp.config"
 local http = require "luau-lsp.http"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
-local uv = compat.uv
 
+local uv = compat.uv
 local is_listening = false
 
 local server
 local socket
 
-local data_model
 local current_port = config.get().plugin.port
 
 local function send_status(target_socket, status, body)
@@ -35,7 +34,7 @@ local function start_server(port)
   server = uv.new_tcp()
   server:bind("127.0.0.1", port)
 
-  log.info("Now listening on port " .. port)
+  log.info("Plugin server listening on port " .. port)
 
   server:listen(128, function(listen_err)
     assert(not listen_err, listen_err)
@@ -64,7 +63,7 @@ local function start_server(port)
           end
 
           if metadata.path == "/full" then
-            data_model = vim.json.decode(body).tree
+            local data_model = vim.json.decode(body).tree
 
             if not data_model then
               send_status(socket, 400)
@@ -103,40 +102,19 @@ local function stop_server()
     end
 
     is_listening = false
-    log.info("Disconnecting from port " .. current_port)
+    log.info("Plugin server disconnected from port " .. current_port)
   end
 end
 
-local function restart_server()
+function M.start()
   stop_server()
   start_server(config.get().plugin.port)
 end
 
 function M.setup()
-  if config.get().plugin.enabled then
-    restart_server()
-  end
-
-  vim.api.nvim_create_autocmd("LspAttach", {
-    callback = function(args)
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if not client or client.name ~= "luau_lsp" then
-        return
-      end
-
-      if is_listening then
-        if data_model then
-          client.notify("$/plugin/full", data_model)
-        else
-          client.notify "$/plugin/clear"
-        end
-      end
-    end,
-  })
-
   config.on("plugin.enabled", function()
     if config.get().plugin.enabled and not is_listening then
-      restart_server()
+      M.start()
     elseif not config.get().plugin.enabled and is_listening then
       stop_server()
     end
@@ -144,7 +122,7 @@ function M.setup()
 
   config.on("plugin.port", function()
     if config.get().plugin.enabled then
-      restart_server()
+      M.start()
     end
   end)
 end

@@ -1,3 +1,4 @@
+local Job = require "plenary.job"
 local Path = require "plenary.path"
 local async = require "plenary.async"
 local compat = require "luau-lsp.compat"
@@ -57,7 +58,13 @@ local function get_server_args()
     table.insert(args, "--no-flags-enabled")
   end
 
-  local fflags = {}
+  return args
+end
+
+local function get_init_options()
+  local options = {
+    fflags = {},
+  }
 
   if config.get().fflags.sync then
     compat
@@ -70,38 +77,24 @@ local function get_server_args()
         return name:sub(6), value
       end)
       :each(function(name, value)
-        fflags[name] = value
+        options.fflags[name] = value
       end)
   end
 
-  fflags = vim.tbl_extend("force", fflags, config.get().fflags.override)
-
-  for name, value in pairs(fflags) do
-    table.insert(args, string.format("--flag:%s=%s", name, value))
-  end
-
-  if config.get().types.roblox then
-    local roblox = require "luau-lsp.roblox"
-    local definition_file, documentation_file = roblox.download_api()
-
-    if definition_file and documentation_file then
-      add_definition_file(definition_file)
-      add_documentation_file(documentation_file)
-    end
-  end
-
-  return args
+  return vim.tbl_deep_extend("force", options, {
+    fflags = config.get().fflags.override,
+  })
 end
 
 -- patch shared settings between the client extension and the server
-local function patch_server_settings(settings)
-  return vim.tbl_deep_extend("force", settings, {
+local function get_settings()
+  return {
     ["luau-lsp"] = {
       sourcemap = {
         enabled = config.get().sourcemap.enabled,
       },
     },
-  })
+  }
 end
 
 --- neovim does not support diagnostic's relatedDocuments, but push-based diagnostics should work
@@ -135,14 +128,28 @@ local function setup_server()
   local bufnr = vim.api.nvim_get_current_buf()
   local opts = vim.deepcopy(config.get().server)
 
-  opts.cmd = vim.list_extend(opts.cmd, get_server_args())
-  opts.settings = patch_server_settings(opts.settings)
+  local on_init = opts.on_init
+
+  opts = vim.tbl_deep_extend("force", opts, {
+    cmd = vim.list_extend(opts.cmd, get_server_args()),
+    settings = get_settings(),
+    init_options = get_init_options(),
+
+    on_init = function(client, result)
+      if on_init then
+        on_init(client, result)
+      end
+      require("luau-lsp.roblox").start()
+    end,
+  })
 
   force_push_diagnostics(opts)
 
+  require("luau-lsp.roblox").setup(opts)
+
   vim.schedule(function()
     require("lspconfig").luau_lsp.setup(opts)
-    require("lspconfig").luau_lsp.manager:try_add_wrapper(bufnr)
+    require("lspconfig").luau_lsp.manager:try_add(bufnr)
   end)
 end
 
@@ -160,10 +167,18 @@ end
 
 local M = {}
 
+function M.version()
+  local result = Job:new({ command = "luau-lsp", args = { "--version" } }):sync()
+  local version = vim.version.parse(result[1])
+
+  assert(version, "could not parse luau-lsp version")
+  return version
+end
+
 ---@param path string
 ---@param marker string[]|fun(name:string):boolean
 ---@return string?
-function M.find_root(path, marker)
+function M.root(path, marker)
   local paths = vim.fs.find(marker, {
     upward = true,
     path = path,
@@ -177,14 +192,13 @@ function M.find_root(path, marker)
 end
 
 function M.setup()
-  vim.api.nvim_create_autocmd("FileType", {
-    once = true,
-    pattern = config.get().server.filetypes or { "luau" },
-    callback = function()
-      lock_config()
-      async.run(setup_server)
-    end,
-  })
+  if vim.version.lt(M.version(), "1.30.0") then
+    log.error "luau-lsp version is out of date, run `:checkhealth luau-lsp` for more info"
+    return
+  end
+
+  lock_config()
+  async.run(setup_server)
 end
 
 return M

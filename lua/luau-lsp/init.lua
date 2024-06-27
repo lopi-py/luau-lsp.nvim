@@ -5,29 +5,14 @@ function M.treesitter()
   log.warn "A custom luau treesitter parser is no longer required"
 end
 
----@param opts LuauLspConfig
+---@param opts luau-lsp.Config
 function M.config(opts)
   require("luau-lsp.config").config(opts)
 end
 
----@param opts? LuauLspConfig
+---@param opts luau-lsp.Config
 function M.setup(opts)
-  require("luau-lsp.config").config(opts or {})
-  require("luau-lsp.command").setup()
-  require("luau-lsp.server").setup()
-  require("luau-lsp.sourcemap").setup()
-  require("luau-lsp.studio").setup()
-
-  if vim.version().minor < 10 then
-    vim.filetype.add {
-      extension = {
-        luau = "luau",
-      },
-      filename = {
-        [".luaurc"] = "jsonc",
-      },
-    }
-  end
+  require("luau-lsp.config").config(opts)
 end
 
 return M
