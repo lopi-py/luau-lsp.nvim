@@ -1,3 +1,4 @@
+local Job = require "plenary.job"
 local Path = require "plenary.path"
 local async = require "plenary.async"
 local compat = require "luau-lsp.compat"
@@ -166,6 +167,14 @@ end
 
 local M = {}
 
+function M.version()
+  local result = Job:new({ command = "luau-lsp", args = { "--version" } }):sync()
+  local version = vim.version.parse(result[1])
+
+  assert(version, "could not parse luau-lsp version")
+  return version
+end
+
 ---@param path string
 ---@param marker string[]|fun(name:string):boolean
 ---@return string?
@@ -183,6 +192,11 @@ function M.root(path, marker)
 end
 
 function M.setup()
+  if vim.version.lt(M.version(), "1.30.0") then
+    log.error "luau-lsp version is out of date, run `:checkhealth luau-lsp` for more info"
+    return
+  end
+
   lock_config()
   async.run(setup_server)
 end
