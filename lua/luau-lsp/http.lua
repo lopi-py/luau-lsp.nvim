@@ -1,3 +1,5 @@
+local zzlib = require "zzlib"
+
 local M = {}
 
 local status_phrases = {
@@ -110,6 +112,12 @@ function M.create_response(headers, body, status)
   end
 
   return table.concat(data, "\r\n")
+end
+
+function M.decompress(body)
+  local result = zzlib.gunzip(body)
+
+  return vim.json.decode(result)
 end
 
 return M

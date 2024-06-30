@@ -50,7 +50,7 @@ local function start_server(port)
 
       if chunk then
         while true do
-          local metadata, _, body = parse_chunk(chunk)
+          local metadata, headers, body = parse_chunk(chunk)
           local client = util.get_client()
 
           if not metadata then
@@ -63,7 +63,8 @@ local function start_server(port)
           end
 
           if metadata.path == "/full" then
-            local data_model = vim.json.decode(body).tree
+            local data_model = headers.content_encoding == "gzip" and http.decompress(body).tree
+              or vim.json.decode(body).tree
 
             if not data_model then
               send_status(socket, 400)
