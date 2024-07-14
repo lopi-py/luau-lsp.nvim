@@ -9,7 +9,7 @@ local log = require "luau-lsp.log"
 local CURRENT_FFLAGS =
   "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCDesktopClient"
 
-local get_fflags = async.wrap(function(callback)
+local fetch_fflags = async.wrap(function(callback)
   curl.get {
     url = CURRENT_FFLAGS,
     accept = "application/json",
@@ -23,6 +23,27 @@ local get_fflags = async.wrap(function(callback)
     compressed = false,
   }
 end, 1)
+
+local function get_fflags()
+  local fflags = {}
+
+  if config.get().fflags.sync then
+    compat
+      .iter(fetch_fflags())
+      :filter(function(name)
+        return name:match "^FFlagLuau"
+      end)
+      :map(function(name, value)
+        ---@diagnostic disable-next-line: redundant-return-value
+        return name:sub(6), value
+      end)
+      :each(function(name, value)
+        fflags[name] = value
+      end)
+  end
+
+  return vim.tbl_deep_extend("force", fflags, config.get().fflags.override)
+end
 
 local function get_server_args()
   local args = {}
@@ -61,35 +82,13 @@ local function get_server_args()
   return args
 end
 
-local function get_init_options()
-  local options = {
-    fflags = {},
-  }
-
-  if config.get().fflags.sync then
-    compat
-      .iter(get_fflags())
-      :filter(function(name)
-        return name:match "^FFlagLuau"
-      end)
-      :map(function(name, value)
-        ---@diagnostic disable-next-line: redundant-return-value
-        return name:sub(6), value
-      end)
-      :each(function(name, value)
-        options.fflags[name] = value
-      end)
-  end
-
-  return vim.tbl_deep_extend("force", options, {
-    fflags = config.get().fflags.override,
-  })
-end
-
 -- patch shared settings between the client extension and the server
-local function get_settings()
+local function get_patched_settings()
   return {
     ["luau-lsp"] = {
+      platform = {
+        type = config.get().platform.type,
+      },
       sourcemap = {
         enabled = config.get().sourcemap.enabled,
       },
@@ -98,7 +97,7 @@ local function get_settings()
 end
 
 --- neovim does not support diagnostic's relatedDocuments, but push-based diagnostics should work
---- fine, this should also avoid the error "server not yet received configuration for diagnostics"
+--- fine
 local function force_push_diagnostics(opts)
   opts.capabilities = vim.tbl_deep_extend("force", opts.capabilities or {}, {
     textDocument = {
@@ -112,14 +111,6 @@ local function force_push_diagnostics(opts)
       on_init(client, result)
     end
 
-    local write_error = client.write_error
-    client.write_error = function(self, code, err)
-      if err.error.message == "server not yet received configuration for diagnostics" then
-        return
-      end
-      write_error(self, code, err)
-    end
-
     client.server_capabilities.diagnosticProvider = nil
   end
 end
@@ -128,23 +119,22 @@ local function setup_server()
   local bufnr = vim.api.nvim_get_current_buf()
   local opts = vim.deepcopy(config.get().server)
 
+  opts.cmd = vim.list_extend(opts.cmd, get_server_args())
+  opts.settings = vim.tbl_deep_extend("force", opts.settings, get_patched_settings())
+  opts.init_options = {
+    fflags = get_fflags(),
+  }
+
   local on_init = opts.on_init
+  opts.on_init = function(client, result)
+    if on_init then
+      on_init(client, result)
+    end
 
-  opts = vim.tbl_deep_extend("force", opts, {
-    cmd = vim.list_extend(opts.cmd, get_server_args()),
-    settings = get_settings(),
-    init_options = get_init_options(),
-
-    on_init = function(client, result)
-      if on_init then
-        on_init(client, result)
-      end
-      require("luau-lsp.roblox").start()
-    end,
-  })
+    require("luau-lsp.roblox").start()
+  end
 
   force_push_diagnostics(opts)
-
   require("luau-lsp.roblox").setup(opts)
 
   vim.schedule(function()
@@ -192,7 +182,7 @@ function M.root(path, marker)
 end
 
 function M.setup()
-  if vim.version.lt(M.version(), "1.30.0") then
+  if vim.version.lt(M.version(), "1.32.0") then
     log.error "luau-lsp version is out of date, run `:checkhealth luau-lsp` for more info"
     return
   end

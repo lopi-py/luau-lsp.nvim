@@ -6,10 +6,10 @@ function M.check()
   if vim.fn.executable "luau-lsp" == 1 then
     local version = require("luau-lsp.server").version()
 
-    if vim.version.ge(version, "1.30.0") then
+    if vim.version.ge(version, "1.32.0") then
       vim.health.ok("`luau-lsp` version is " .. tostring(version))
     else
-      vim.health.error("Required `luau-lsp` version is 1.30.0, found " .. tostring(version))
+      vim.health.error("Required `luau-lsp` version is 1.32.0, found " .. tostring(version))
     end
   else
     vim.health.error "`luau-lsp` is not an executable"
