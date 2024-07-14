@@ -271,10 +271,6 @@ require("luau-lsp").setup {
 }
 ```
 
-### What is the error "server not yet received configuration for diagnostics"?
-
-Neovim is asking for diagnostics to the server but it hasn't loaded the configuration yet, you can just ignore this error. This is patched on Neovim 0.10+
-
 ### How to use luau-lsp in a roblox codebase using the .lua extension?
 
 Add this to your config. Requires Neovim 0.10+
