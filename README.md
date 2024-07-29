@@ -8,7 +8,6 @@ https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/4fa6d3b1-44fe-414f-96ff
 
 * Neovim 0.9+ (0.10+ is recommended)
 * [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
-* [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig)
 
 ## Installation
 
@@ -26,7 +25,6 @@ Use your favourite plugin manager to install luau-lsp.nvim
   },
   dependencies = {
     "nvim-lua/plenary.nvim",
-    "neovim/nvim-lspconfig",
   },
 }
 ```
@@ -47,7 +45,6 @@ use {
   end,
   requires = {
     "nvim-lua/plenary.nvim",
-    "neovim/nvim-lspconfig",
   },
 }
 ```
@@ -57,7 +54,7 @@ use {
 ## Quick start
 
 > [!CAUTION]
-> `lspconfig.luau_lsp.setup` should **NOT** be called as the plugin does it internally
+> `lspconfig.luau_lsp.setup` should **NOT** be called, it may cause conflicts with the plugin
 
 ```lua
 require("luau-lsp").setup {
@@ -189,7 +186,7 @@ For more info about `.nvim.lua`, check `:help 'exrc'`
 <summary>Defaults</summary>
 
 ```lua
----@class LuauLspConfig
+---@class luau-lsp.Config
 local defaults = {
   platform = {
     ---@type "standard"|"roblox"

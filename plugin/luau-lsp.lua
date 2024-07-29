@@ -9,14 +9,6 @@ if vim.version().minor < 10 then
   }
 end
 
-vim.api.nvim_create_autocmd("FileType", {
-  once = true,
-  pattern = "luau",
-  callback = function()
-    require("luau-lsp.server").setup()
-  end,
-})
-
 vim.api.nvim_create_user_command("LuauLog", function()
   local log = require "luau-lsp.log"
   vim.cmd.tabnew(log.log_file)

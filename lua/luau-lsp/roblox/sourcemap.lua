@@ -1,19 +1,16 @@
 local Job = require "plenary.job"
 local async = require "plenary.async"
-local compat = require "luau-lsp.compat"
 local config = require "luau-lsp.config"
 local log = require "luau-lsp.log"
+local util = require "luau-lsp.util"
 
-local uv = compat.uv
 local job = nil
 
 local M = {}
 
 local get_rojo_project_file = async.wrap(function(callback)
   local project_file = config.get().sourcemap.rojo_project_file
-  local stat = uv.fs_stat(project_file)
-
-  if stat and stat.type == "file" then
+  if util.is_file(project_file) then
     callback(project_file)
     return
   end
@@ -102,8 +99,7 @@ end)
 function M.setup()
   vim.api.nvim_create_user_command("LuauRegenerateSourcemap", function(data)
     if data.args ~= "" then
-      local stat = uv.fs_stat(data.args)
-      if not stat or stat.type ~= "file" then
+      if not util.is_file(data.args) then
         log.error "Invalid project file provided"
         return
       end

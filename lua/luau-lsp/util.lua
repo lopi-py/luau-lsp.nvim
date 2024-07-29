@@ -2,6 +2,13 @@ local Path = require "plenary.path"
 
 local M = {}
 
+---@param path string
+---@return boolean
+function M.is_file(path)
+  local stat = vim.uv.fs_stat(path) or {}
+  return stat and stat.type == "file"
+end
+
 function M.storage_file(key)
   local storage = Path:new(vim.fn.stdpath "data") / "luau-lsp"
   storage:mkdir()
@@ -9,14 +16,14 @@ function M.storage_file(key)
   return tostring(storage / key)
 end
 
----@param amount number
 ---@param callback function
+---@param n number
 ---@return function
-function M.fcounter(amount, callback)
+function M.on_count(callback, n)
   local counter = 0
   return function()
     counter = counter + 1
-    if counter == amount then
+    if counter == n then
       callback()
     end
   end
@@ -26,7 +33,7 @@ end
 ---@return vim.lsp.Client?
 function M.get_client(bufnr)
   local compat = require "luau-lsp.compat"
-  local client = compat.get_clients({ name = "luau_lsp", bufnr = bufnr })[1]
+  local client = compat.get_clients({ name = "luau-lsp", bufnr = bufnr })[1]
   return client
 end
 

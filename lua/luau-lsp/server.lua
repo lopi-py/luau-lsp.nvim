@@ -1,13 +1,15 @@
 local Job = require "plenary.job"
-local Path = require "plenary.path"
 local async = require "plenary.async"
 local compat = require "luau-lsp.compat"
 local config = require "luau-lsp.config"
 local curl = require "plenary.curl"
 local log = require "luau-lsp.log"
+local util = require "luau-lsp.util"
 
 local CURRENT_FFLAGS =
   "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCDesktopClient"
+
+local pending_buffers = {}
 
 local fetch_fflags = async.wrap(function(callback)
   curl.get {
@@ -24,6 +26,8 @@ local fetch_fflags = async.wrap(function(callback)
   }
 end, 1)
 
+---@async
+---@return table<string, string>
 local function get_fflags()
   local fflags = {}
 
@@ -45,45 +49,44 @@ local function get_fflags()
   return vim.tbl_deep_extend("force", fflags, config.get().fflags.override)
 end
 
-local function get_server_args()
-  local args = {}
+---@return string[]
+local function get_cmd()
+  local cmd = vim.deepcopy(config.get().server.cmd)
 
-  local function add_definition_file(file)
-    if Path:new(file):is_file() then
-      table.insert(args, "--definitions=" .. file)
+  for _, path in ipairs(config.get().types.definition_files) do
+    if util.is_file(path) then
+      table.insert(cmd, "--definitions=" .. path)
     else
       log.warn(
         "Definitions file at `%s` does not exist, types will not be provided from this file",
-        file
+        path
       )
     end
   end
 
-  local function add_documentation_file(file)
-    if Path:new(file):is_file() then
-      table.insert(args, "--docs=" .. file)
+  for _, path in ipairs(config.get().types.documentation_files) do
+    if util.is_file(path) then
+      table.insert(cmd, "--docs=" .. path)
     else
-      log.warn("Documentations file at `%s` does not exist", file)
+      log.warn("Documentations file at `%s` does not exist", path)
     end
   end
 
-  for _, file in ipairs(config.get().types.definition_files) do
-    add_definition_file(file)
-  end
-
-  for _, file in ipairs(config.get().types.documentation_files) do
-    add_documentation_file(file)
-  end
-
   if not config.get().fflags.enable_by_default then
-    table.insert(args, "--no-flags-enabled")
+    table.insert(cmd, "--no-flags-enabled")
   end
 
-  return args
+  return cmd
 end
 
--- patch shared settings between the client extension and the server
-local function get_patched_settings()
+---@return string?
+local function get_root_dir()
+  local bufnr = vim.api.nvim_get_current_buf()
+  return config.get().server.root_dir(vim.api.nvim_buf_get_name(bufnr))
+end
+
+--- Patch shared settings between the client extension and the server
+local function get_settings()
   return {
     ["luau-lsp"] = {
       platform = {
@@ -96,8 +99,10 @@ local function get_patched_settings()
   }
 end
 
---- neovim does not support diagnostic's relatedDocuments, but push-based diagnostics should work
+--- Neovim does not support diagnostic's relatedDocuments, but push-based diagnostics should work
 --- fine
+---
+---@param opts vim.lsp.ClientConfig
 local function force_push_diagnostics(opts)
   opts.capabilities = vim.tbl_deep_extend("force", opts.capabilities or {}, {
     textDocument = {
@@ -115,54 +120,105 @@ local function force_push_diagnostics(opts)
   end
 end
 
-local function setup_server()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local opts = vim.deepcopy(config.get().server)
-
-  opts.cmd = vim.list_extend(opts.cmd, get_server_args())
-  opts.settings = vim.tbl_deep_extend("force", opts.settings, get_patched_settings())
-  opts.init_options = {
-    fflags = get_fflags(),
-  }
-
-  local on_init = opts.on_init
-  opts.on_init = function(client, result)
-    if on_init then
-      on_init(client, result)
-    end
-
-    require("luau-lsp.roblox").start()
-  end
+---@async
+---@return number
+local function start_language_server()
+  local opts = vim.tbl_deep_extend("force", config.get().server, {
+    name = "luau-lsp",
+    cmd = get_cmd(),
+    root_dir = get_root_dir(),
+    settings = get_settings(),
+    init_options = { fflags = get_fflags() },
+  })
 
   force_push_diagnostics(opts)
-  require("luau-lsp.roblox").setup(opts)
+  require("luau-lsp.roblox").pre_start(opts)
 
-  vim.schedule(function()
-    require("lspconfig").luau_lsp.setup(opts)
-    require("lspconfig").luau_lsp.manager:try_add(bufnr)
-  end)
+  local client_id = vim.lsp.start_client(opts)
+  assert(client_id, "could not start luau-lsp")
+
+  require("luau-lsp.roblox").post_start()
+
+  return client_id
 end
 
-local function lock_config()
-  local function cannot_be_changed(path)
-    config.on(path, function()
-      log.warn("`%s` cannot be changed once the server is started", path)
-    end)
+---@param client_id number
+local function attach_pending_buffers(client_id)
+  for _, bufnr in ipairs(pending_buffers) do
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.lsp.buf_attach_client(bufnr, client_id)
+    end
   end
 
-  cannot_be_changed "fflags"
-  cannot_be_changed "sourcemap.enabled"
-  cannot_be_changed "types"
+  pending_buffers = {}
+end
+
+---@param bufnr number
+---@return boolean
+local function is_luau_file(bufnr)
+  return vim.bo[bufnr].buftype == "" and vim.bo[bufnr].filetype == "luau"
 end
 
 local M = {}
 
+---@return vim.Version
 function M.version()
   local result = Job:new({ command = "luau-lsp", args = { "--version" } }):sync()
   local version = vim.version.parse(result[1])
 
   assert(version, "could not parse luau-lsp version")
   return version
+end
+
+---@param bufnr? number
+function M.start(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+
+  if not is_luau_file(bufnr) then
+    return
+  end
+
+  local client = util.get_client()
+  if client then
+    vim.lsp.buf_attach_client(bufnr, client.id)
+    return
+  end
+
+  if compat.list_contains(pending_buffers, bufnr) then
+    return
+  end
+
+  if #pending_buffers == 0 then
+    async.run(start_language_server, vim.schedule_wrap(attach_pending_buffers))
+  end
+
+  table.insert(pending_buffers, bufnr)
+end
+
+function M.stop()
+  local client = util.get_client()
+  if client then
+    client.stop(true)
+  end
+end
+
+function M.restart()
+  local client = util.get_client()
+  if not client then
+    return
+  end
+
+  client.stop(true)
+
+  local buffers = vim.lsp.get_buffers_by_client_id(client.id)
+
+  local timer = vim.uv.new_timer()
+  timer:start(500, 100, function()
+    if client.is_stopped() then
+      timer:stop()
+      vim.iter(buffers):each(vim.schedule_wrap(M.start))
+    end
+  end)
 end
 
 ---@param path string
@@ -179,16 +235,6 @@ function M.root(path, marker)
   end
 
   return vim.fs.dirname(paths[1])
-end
-
-function M.setup()
-  if vim.version.lt(M.version(), "1.32.0") then
-    log.error "luau-lsp version is out of date, run `:checkhealth luau-lsp` for more info"
-    return
-  end
-
-  lock_config()
-  async.run(setup_server)
 end
 
 return M

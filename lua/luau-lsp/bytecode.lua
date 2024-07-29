@@ -12,18 +12,17 @@ local bytecode_bufnr = -1
 local bytecode_winnr = -1
 
 local function get_optimization_level(callback)
-  local optimization_levels = { "02", "01", "None" }
-  local optimization_levels_map = {
+  local optimization_levels = {
     ["None"] = 0,
     ["01"] = 1,
     ["02"] = 2,
   }
 
-  vim.ui.select(optimization_levels, {
+  vim.ui.select({ "02", "01", "None" }, {
     prompt = "Select optimization level",
   }, function(choice)
-    if choice and optimization_levels_map[choice] then
-      callback(optimization_levels_map[choice])
+    if choice and optimization_levels[choice] then
+      callback(optimization_levels[choice])
     end
   end)
 end
@@ -45,7 +44,7 @@ end
 local function create_view()
   vim.cmd "belowright vsplit +enew"
 
-  local augroup = vim.api.nvim_create_augroup("luau-lsp.bytecode", {})
+  local augroup = vim.api.nvim_create_augroup("luau-lsp/bytecode", {})
 
   bytecode_bufnr = vim.api.nvim_get_current_buf()
   bytecode_winnr = vim.api.nvim_get_current_win()
@@ -69,10 +68,7 @@ local function create_view()
   vim.api.nvim_create_autocmd(UPDATE_EVENTS, {
     group = augroup,
     callback = function(event)
-      local bufnr = event.buf
-      if vim.bo[bufnr].filetype == "luau" then
-        M.update_buffer(bufnr)
-      end
+      M.update_buffer(event.buf)
     end,
   })
 
