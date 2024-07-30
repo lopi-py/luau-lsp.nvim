@@ -6,6 +6,8 @@ local util = require "luau-lsp.util"
 
 local job = nil
 
+local M = {}
+
 local get_rojo_project_file = async.wrap(function(callback)
   local project_file = config.get().sourcemap.rojo_project_file
   if util.is_file(project_file) then
@@ -13,8 +15,8 @@ local get_rojo_project_file = async.wrap(function(callback)
     return
   end
 
-  local found_project_files = vim.split(vim.fn.glob "*.project.json", "\n")
-  if #found_project_files == 0 or found_project_files[1] == "" then
+  local found_project_files = M.get_rojo_project_files()
+  if #found_project_files == 0 then
     log.error("Unable to find project file `%s`", project_file)
     callback()
   elseif #found_project_files == 1 then
@@ -25,16 +27,11 @@ local get_rojo_project_file = async.wrap(function(callback)
     )
     callback(found_project_files[1])
   else
-    vim.ui.select(found_project_files, { prompt = "Select project file" }, function(choice)
-      if choice and choice ~= "" then
-        callback(choice)
-      else
-        callback()
-      end
-    end)
+    vim.ui.select(found_project_files, { prompt = "Select project file" }, callback)
   end
 end, 1)
 
+---@param project_file? string
 local function start_sourcemap_generation(project_file)
   if not project_file then
     return
@@ -75,8 +72,6 @@ local function stop_sourcemap_generation()
   end
 end
 
-local M = {}
-
 ---@return vim.Version
 function M.version()
   local result = Job:new({
@@ -90,7 +85,20 @@ function M.version()
   return version
 end
 
+---@return string[]
+function M.get_rojo_project_files()
+  local project_files = vim.split(vim.fn.glob "*.project.json", "\n")
+  table.sort(project_files)
+
+  return vim.tbl_filter(util.is_file, project_files)
+end
+
 M.start = async.void(function(project_file)
+  if project_file and not util.is_file(project_file) then
+    log.error("Invalid project file `%s`", project_file)
+    return
+  end
+
   stop_sourcemap_generation()
   start_sourcemap_generation(project_file or get_rojo_project_file())
 end)

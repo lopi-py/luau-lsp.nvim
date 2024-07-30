@@ -103,7 +103,7 @@ require("luau-lsp").setup {
 }
 ```
 
-`:LuauRegenerateSourcemap {file}` is provided to start sourcemap generation with the project file passed as argument (optional).
+`:LuauLsp regenerate_sourcemap {file}` is provided to start sourcemap generation with the project file passed as argument (optional).
 
 ### Companion plugin
 
@@ -144,7 +144,7 @@ require("luau-lsp").setup {
 
 ## Bytecode generation
 
-`:LuauBytecode` and `:LuauCompilerRemarks` open a new window and show the current Luau file bytecode and compiler remarks. It will automatically update if you change the file or edit it. Close with `q`.
+`:LuauLsp bytecode` and `:LuauLsp compiler_remarks` open a new window and show the current Luau file bytecode and compiler remarks. It will automatically update if you change the file or edit it. Close with `q`.
 
 https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/f9d45153-47f0-4565-a2ed-3769153732a0
 

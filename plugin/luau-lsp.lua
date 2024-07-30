@@ -16,34 +16,29 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+vim.api.nvim_create_user_command("LuauLsp", function(opts)
+  require("luau-lsp.command").execute(opts.args)
+end, {
+  nargs = "+",
+  complete = function(...)
+    return require("luau-lsp.command").complete(...)
+  end,
+})
+
 vim.api.nvim_create_user_command("LuauLog", function()
-  local log = require "luau-lsp.log"
-  vim.cmd.tabnew(log.log_file)
+  require("luau-lsp.log").warn "`LuauLog` is deprecated, use `LuauLsp log` instead"
 end, {})
 
 vim.api.nvim_create_user_command("LuauBytecode", function()
-  require("luau-lsp.bytecode").bytecode()
+  require("luau-lsp.log").warn "`LuauBytecode` is deprecated, use `LuauLsp bytecode` instead"
 end, {})
 
 vim.api.nvim_create_user_command("LuauCompilerRemarks", function()
-  require("luau-lsp.bytecode").compiler_remarks()
+  require("luau-lsp.log").warn "`LuauCompilerRemarks` is deprecated, use `LuauLsp compiler_remarks` instead"
 end, {})
 
-vim.api.nvim_create_user_command("LuauRegenerateSourcemap", function(data)
-  local util = require "luau-lsp.util"
-  local log = require "luau-lsp.log"
-
-  if data.args ~= "" then
-    if not util.is_file(data.args) then
-      log.error "Invalid project file provided"
-      return
-    end
-
-    require("luau-lsp.sourcemap").start(data.args)
-  else
-    require("luau-lsp.sourcemap").start()
-  end
+vim.api.nvim_create_user_command("LuauRegenerateSourcemap", function()
+  require("luau-lsp.log").warn "`LuauRegenerateSourcemap` is deprecated, use `LuauLsp regenerate_sourcemap` instead"
 end, {
-  complete = "file",
   nargs = "?",
 })
