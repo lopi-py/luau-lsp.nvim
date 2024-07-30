@@ -14,6 +14,8 @@ local function supports_title()
   return success
 end
 
+---@param level number
+---@return fun(message: string, ...: any)
 local function create_logger(level)
   return vim.schedule_wrap(function(message, ...)
     local timestr = vim.fn.strftime "%H:%M:%S"

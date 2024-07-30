@@ -11,13 +11,14 @@ local current_optlevel = 0
 local bytecode_bufnr = -1
 local bytecode_winnr = -1
 
-local function get_optimization_level(callback)
-  local optimization_levels = {
-    ["None"] = 0,
-    ["01"] = 1,
-    ["02"] = 2,
-  }
+local optimization_levels = {
+  ["None"] = 0,
+  ["01"] = 1,
+  ["02"] = 2,
+}
 
+---@param callback fun(optlevel: number)
+local function get_optimization_level(callback)
   vim.ui.select({ "02", "01", "None" }, {
     prompt = "Select optimization level",
   }, function(choice)
@@ -83,6 +84,7 @@ local function create_view()
   vim.cmd.wincmd "p"
 end
 
+---@param text string
 local function render_view_text(text)
   if not is_view_valid() then
     return
@@ -95,6 +97,8 @@ local function render_view_text(text)
   vim.bo[bytecode_bufnr].modifiable = false
 end
 
+---@param method string
+---@param filename string
 local function show_bytecode_info(method, filename)
   local bufnr = vim.api.nvim_get_current_buf()
   if not util.get_client(bufnr) then
@@ -116,6 +120,7 @@ local function show_bytecode_info(method, filename)
   end)
 end
 
+---@param bufnr number
 function M.update_buffer(bufnr)
   local client = util.get_client(bufnr)
   if not client then

@@ -1,14 +1,17 @@
 local Path = require "plenary.path"
+local compat = require "luau-lsp.compat"
 
 local M = {}
 
 ---@param path string
 ---@return boolean
 function M.is_file(path)
-  local stat = vim.uv.fs_stat(path) or {}
+  local stat = compat.uv.fs_stat(path) or {}
   return stat and stat.type == "file"
 end
 
+---@param key string
+---@return string
 function M.storage_file(key)
   local storage = Path:new(vim.fn.stdpath "data") / "luau-lsp"
   storage:mkdir()
@@ -32,9 +35,7 @@ end
 ---@param bufnr number?
 ---@return vim.lsp.Client?
 function M.get_client(bufnr)
-  local compat = require "luau-lsp.compat"
-  local client = compat.get_clients({ name = "luau-lsp", bufnr = bufnr })[1]
-  return client
+  return compat.get_clients({ name = "luau-lsp", bufnr = bufnr })[1]
 end
 
 return M

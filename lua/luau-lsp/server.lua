@@ -215,7 +215,7 @@ function M.restart()
 
   local buffers = vim.lsp.get_buffers_by_client_id(client.id)
 
-  local timer = vim.uv.new_timer()
+  local timer = compat.uv.new_timer()
   timer:start(500, 100, function()
     if client.is_stopped() then
       timer:stop()
@@ -225,7 +225,7 @@ function M.restart()
 end
 
 ---@param path string
----@param marker string[]|fun(name:string):boolean
+---@param marker string[] | fun(name: string): boolean
 ---@return string?
 function M.root(path, marker)
   local paths = vim.fs.find(marker, {

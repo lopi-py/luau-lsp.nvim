@@ -17,6 +17,9 @@ local socket
 
 local current_port = config.get().plugin.port
 
+---@param target_socket uv_tcp_t
+---@param status number
+---@param body? string
 local function send_status(target_socket, status, body)
   local response = http.create_response({}, body or "", status)
   target_socket:write(response)
@@ -24,6 +27,7 @@ end
 
 local M = {}
 
+---@param port number
 local function start_server(port)
   assert(type(port) == "number", "Port must be a number")
   assert(is_listening == false, "This server object is already bound to http://localhost:" .. port)
