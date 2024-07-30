@@ -219,7 +219,7 @@ function M.restart()
   timer:start(500, 100, function()
     if client.is_stopped() then
       timer:stop()
-      vim.iter(buffers):each(vim.schedule_wrap(M.start))
+      compat.iter(buffers):each(vim.schedule_wrap(M.start))
     end
   end)
 end

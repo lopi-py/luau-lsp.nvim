@@ -77,6 +77,7 @@ end
 
 local M = {}
 
+---@return vim.Version
 function M.version()
   local result = Job:new({
     command = config.get().sourcemap.rojo_path,
