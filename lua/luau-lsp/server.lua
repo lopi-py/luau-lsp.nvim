@@ -53,22 +53,24 @@ end
 local function get_cmd()
   local cmd = vim.deepcopy(config.get().server.cmd)
 
-  for _, path in ipairs(config.get().types.definition_files) do
-    if util.is_file(path) then
-      table.insert(cmd, "--definitions=" .. path)
+  for _, definition_file in ipairs(config.get().types.definition_files) do
+    definition_file = vim.fs.normalize(definition_file)
+    if util.is_file(definition_file) then
+      table.insert(cmd, "--definitions=" .. definition_file)
     else
       log.warn(
         "Definitions file at `%s` does not exist, types will not be provided from this file",
-        path
+        definition_file
       )
     end
   end
 
-  for _, path in ipairs(config.get().types.documentation_files) do
-    if util.is_file(path) then
-      table.insert(cmd, "--docs=" .. path)
+  for _, documentation_file in ipairs(config.get().types.documentation_files) do
+    documentation_file = vim.fs.normalize(documentation_file)
+    if util.is_file(documentation_file) then
+      table.insert(cmd, "--docs=" .. documentation_file)
     else
-      log.warn("Documentations file at `%s` does not exist", path)
+      log.warn("Documentations file at `%s` does not exist", documentation_file)
     end
   end
 
