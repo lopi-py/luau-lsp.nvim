@@ -96,38 +96,4 @@ M.start = async.void(function(project_file)
   start_sourcemap_generation(project_file or get_rojo_project_file())
 end)
 
-function M.setup()
-  vim.api.nvim_create_user_command("LuauRegenerateSourcemap", function(data)
-    if data.args ~= "" then
-      if not util.is_file(data.args) then
-        log.error "Invalid project file provided"
-        return
-      end
-
-      M.start(data.args)
-    else
-      M.start()
-    end
-  end, {
-    complete = "file",
-    nargs = "?",
-  })
-
-  config.on("sourcemap.autogenerate", function()
-    if config.get().sourcemap.enabled and config.get().sourcemap.autogenerate then
-      M.start()
-    else
-      stop_sourcemap_generation()
-    end
-  end)
-
-  config.on("sourcemap.rojo_project_file", function()
-    if config.get().sourcemap.enabled and config.get().sourcemap.autogenerate then
-      M.start()
-    else
-      stop_sourcemap_generation()
-    end
-  end)
-end
-
 return M

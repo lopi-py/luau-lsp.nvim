@@ -112,20 +112,4 @@ function M.start()
   start_server(config.get().plugin.port)
 end
 
-function M.setup()
-  config.on("plugin.enabled", function()
-    if config.get().plugin.enabled and not is_listening then
-      M.start()
-    elseif not config.get().plugin.enabled and is_listening then
-      stop_server()
-    end
-  end)
-
-  config.on("plugin.port", function()
-    if config.get().plugin.enabled then
-      M.start()
-    end
-  end)
-end
-
 return M

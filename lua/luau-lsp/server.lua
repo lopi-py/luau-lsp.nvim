@@ -132,12 +132,14 @@ local function start_language_server()
   })
 
   force_push_diagnostics(opts)
-  require("luau-lsp.roblox").pre_start(opts)
+  require("luau-lsp.roblox").prepare(opts)
 
   local client_id = vim.lsp.start_client(opts)
   assert(client_id, "could not start luau-lsp")
 
-  require("luau-lsp.roblox").post_start()
+  vim.schedule(function()
+    require("luau-lsp.roblox").start()
+  end)
 
   return client_id
 end

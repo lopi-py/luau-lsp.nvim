@@ -52,7 +52,7 @@ local M = {}
 
 ---@async
 ---@param opts luau-lsp.ClientConfig
-function M.pre_start(opts)
+function M.prepare(opts)
   if config.get().platform.type ~= "roblox" then
     return
   end
@@ -70,7 +70,7 @@ function M.pre_start(opts)
   table.insert(opts.cmd, "--docs=" .. api_docs_file())
 end
 
-function M.post_start()
+function M.start()
   if config.get().sourcemap.enabled and config.get().sourcemap.autogenerate then
     require("luau-lsp.roblox.sourcemap").start()
   end
@@ -78,11 +78,6 @@ function M.post_start()
   if config.get().plugin.enabled then
     require("luau-lsp.roblox.studio").start()
   end
-end
-
-function M.setup()
-  require("luau-lsp.roblox.sourcemap").setup()
-  require("luau-lsp.roblox.studio").setup()
 end
 
 return M

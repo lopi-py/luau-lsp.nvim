@@ -61,7 +61,6 @@ local defaults = {
 }
 
 local options = defaults
-local callbacks = {}
 
 ---@param opts luau-lsp.Config
 local function validate(opts)
@@ -85,7 +84,7 @@ local function validate(opts)
 
   local function check_server_setting(path)
     if vim.tbl_get(opts, "server", "settings", "luau-lsp", path) ~= nil then
-      log.error("`%s` should not be pased as server setting", path)
+      log.error("`%s` should not be passed as server setting", path)
     end
   end
 
@@ -104,30 +103,7 @@ end
 ---@param opts luau-lsp.Config
 function M.config(opts)
   validate(opts)
-
-  local old_options = options
-  local new_options = vim.tbl_deep_extend("force", old_options, opts)
-
-  local function has_changed(path)
-    return not vim.deep_equal(
-      vim.tbl_get(old_options, unpack(vim.split(path, "%."))),
-      vim.tbl_get(new_options, unpack(vim.split(path, "%.")))
-    )
-  end
-
-  options = new_options
-
-  for callback, path in pairs(callbacks) do
-    if has_changed(path) then
-      callback()
-    end
-  end
-end
-
----@param path string
----@param callback function
-function M.on(path, callback)
-  callbacks[callback] = path
+  options = vim.tbl_deep_extend("force", options, opts)
 end
 
 return M
