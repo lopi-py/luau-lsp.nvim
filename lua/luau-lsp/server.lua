@@ -166,9 +166,10 @@ local M = {}
 ---@return vim.Version
 function M.version()
   local result = Job:new({ command = "luau-lsp", args = { "--version" } }):sync()
-  local version = vim.version.parse(result[1])
 
+  local version = vim.version.parse(result[1])
   assert(version, "could not parse luau-lsp version")
+
   return version
 end
 

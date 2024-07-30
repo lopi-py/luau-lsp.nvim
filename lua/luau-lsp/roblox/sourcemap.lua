@@ -6,8 +6,6 @@ local util = require "luau-lsp.util"
 
 local job = nil
 
-local M = {}
-
 local get_rojo_project_file = async.wrap(function(callback)
   local project_file = config.get().sourcemap.rojo_project_file
   if util.is_file(project_file) then
@@ -54,29 +52,15 @@ local function start_sourcemap_generation(project_file)
     table.insert(args, "--include-non-scripts")
   end
 
-  ---@param err string
-  local function on_error(err)
-    local message = err
-    if err:find "Found argument 'sourcemap' which wasn't expected" then
-      message = "Your Rojo version doesn't have sourcemap support"
-    elseif err:find "Found argument '--watch' which wasn't expected" then
-      message = "Your Rojo version doesn't have sourcemap watching support"
-    elseif err:find "is not recognized" or err:find "not found" or err:find "ENOENT" then
-      message = "Rojo not found. Please install Rojo or disable sourcemap autogeneration"
-    end
-
-    log.error("Failed to update sourcemap for `%s`: %s", project_file, message)
-  end
-
   log.info("Starting sourcemap generation for `%s`", project_file)
 
   job = Job:new {
-    command = config.get().sourcemap.rojo_path or "rojo",
+    command = config.get().sourcemap.rojo_path,
     args = args,
     on_exit = function(self, code)
       if code and code ~= 0 then
         local err = table.concat(self:stderr_result(), "\n")
-        on_error(err)
+        log.error("Failed to update sourcemap for `%s`: %s", project_file, err)
       end
 
       job = nil
@@ -89,6 +73,20 @@ local function stop_sourcemap_generation()
   if job then
     job:shutdown()
   end
+end
+
+local M = {}
+
+function M.version()
+  local result = Job:new({
+    command = config.get().sourcemap.rojo_path,
+    args = { "--version" },
+  }):sync()
+
+  local version = vim.version.parse(result[1])
+  assert(version, "could not parse rojo version")
+
+  return version
 end
 
 M.start = async.void(function(project_file)
