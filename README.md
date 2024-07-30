@@ -186,10 +186,13 @@ For more info about `.nvim.lua`, check `:help 'exrc'`
 <summary>Defaults</summary>
 
 ```lua
+---@alias luau-lsp.PlatformType "standard" | "roblox"
+---@alias luau-lsp.RobloxSecurityLevel "None" | "LocalUserSecurity" | "PluginSecurity" | "RobloxScriptSecurity"
+
 ---@class luau-lsp.Config
 local defaults = {
   platform = {
-    ---@type "standard"|"roblox"
+    ---@type luau-lsp.PlatformType
     type = "roblox",
   },
   sourcemap = {
@@ -204,7 +207,7 @@ local defaults = {
     definition_files = {},
     ---@type string[]
     documentation_files = {},
-    ---@type "None"|"LocalUserSecurity"|"PluginSecurity"|"RobloxScriptSecurity"
+    ---@type luau-lsp.RobloxSecurityLevel
     roblox_security_level = "PluginSecurity",
   },
   fflags = {
@@ -217,9 +220,11 @@ local defaults = {
     enabled = false,
     port = 3667,
   },
-  ---@type table<string, any>
+  ---@class luau-lsp.ClientConfig: vim.lsp.ClientConfig
   server = {
+    ---@type string[]
     cmd = { "luau-lsp", "lsp" },
+    ---@type fun(path: string): string?
     root_dir = function(path)
       local server = require "luau-lsp.server"
       return server.root(path, function(name)
@@ -232,8 +237,6 @@ local defaults = {
         "selene.yml",
       })
     end,
-    -- see https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
-    settings = {},
   },
 }
 ```

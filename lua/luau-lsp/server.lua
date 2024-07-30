@@ -102,7 +102,7 @@ end
 --- Neovim does not support diagnostic's relatedDocuments, but push-based diagnostics should work
 --- fine
 ---
----@param opts vim.lsp.ClientConfig
+---@param opts luau-lsp.ClientConfig
 local function force_push_diagnostics(opts)
   opts.capabilities = vim.tbl_deep_extend("force", opts.capabilities or {}, {
     textDocument = {

@@ -4,17 +4,15 @@ local log = require "luau-lsp.log"
 local PLATFORMS = { "standard", "roblox" }
 local SECURITY_LEVELS = { "None", "LocalUserSecurity", "PluginSecurity", "RobloxScriptSecurity" }
 
-local callbacks = {}
-
 local M = {}
 
----@type luau-lsp.Config
-M.options = nil
+---@alias luau-lsp.PlatformType "standard" | "roblox"
+---@alias luau-lsp.RobloxSecurityLevel "None" | "LocalUserSecurity" | "PluginSecurity" | "RobloxScriptSecurity"
 
 ---@class luau-lsp.Config
 local defaults = {
   platform = {
-    ---@type "standard"|"roblox"
+    ---@type luau-lsp.PlatformType
     type = "roblox",
   },
   sourcemap = {
@@ -29,7 +27,7 @@ local defaults = {
     definition_files = {},
     ---@type string[]
     documentation_files = {},
-    ---@type "None"|"LocalUserSecurity"|"PluginSecurity"|"RobloxScriptSecurity"
+    ---@type luau-lsp.RobloxSecurityLevel
     roblox_security_level = "PluginSecurity",
   },
   fflags = {
@@ -42,9 +40,11 @@ local defaults = {
     enabled = false,
     port = 3667,
   },
-  ---@type table<string, any>
+  ---@class luau-lsp.ClientConfig: vim.lsp.ClientConfig
   server = {
+    ---@type string[]
     cmd = { "luau-lsp", "lsp" },
+    ---@type fun(path: string): string?
     root_dir = function(path)
       local server = require "luau-lsp.server"
       return server.root(path, function(name)
@@ -57,44 +57,38 @@ local defaults = {
         "selene.yml",
       })
     end,
-    -- see https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
-    settings = {},
   },
 }
 
----@param options luau-lsp.Config
-local function validate_config(options)
-  if vim.tbl_get(options, "platform", "type") then
-    if not compat.list_contains(PLATFORMS, options.platform.type) then
-      log.error("Invalid option `platform.type` value: " .. options.platform.type)
+local options = defaults
+local callbacks = {}
+
+---@param opts luau-lsp.Config
+local function validate(opts)
+  if vim.tbl_get(opts, "platform", "type") then
+    if not compat.list_contains(PLATFORMS, opts.platform.type) then
+      log.error("Invalid option `platform.type` value: " .. opts.platform.type)
     end
   end
 
-  if vim.tbl_get(options, "types", "roblox_security_level") then
-    if not compat.list_contains(SECURITY_LEVELS, options.types.roblox_security_level) then
+  if vim.tbl_get(opts, "types", "roblox_security_level") then
+    if not compat.list_contains(SECURITY_LEVELS, opts.types.roblox_security_level) then
       log.error(
-        "Invalid option `types.roblox_security_level` value: "
-          .. options.types.roblox_security_level
+        "Invalid option `types.roblox_security_level` value: " .. opts.types.roblox_security_level
       )
     end
   end
 
-  if vim.tbl_get(options, "sourcemap", "select_project_file") ~= nil then
-    log.warn "`sourcemap.select_project_file` is deprecated, use `sourcemap.rojo_project` instead"
-  end
-
-  if vim.tbl_get(options, "types", "roblox") ~= nil then
+  if vim.tbl_get(opts, "types", "roblox") ~= nil then
     log.warn "`types.roblox` is deprecated, use `platform.type` instead"
   end
 
   local function check_server_setting(path)
-    if vim.tbl_get(options, "server", "settings", "luau-lsp", path) ~= nil then
-      log.warn("Server setting `%s` will not take effect. Check the README.md for more info", path)
+    if vim.tbl_get(opts, "server", "settings", "luau-lsp", path) ~= nil then
+      log.error("`%s` should not be pased as server setting", path)
     end
   end
 
-  -- luau-lsp doesn't really listen to those, they are passed in the command line or are used to
-  -- start the server so they won't take effect
   check_server_setting "platform"
   check_server_setting "sourcemap"
   check_server_setting "types"
@@ -104,15 +98,15 @@ end
 
 ---@return luau-lsp.Config
 function M.get()
-  return M.options
+  return options
 end
 
----@param options luau-lsp.Config
-function M.config(options)
-  validate_config(options)
+---@param opts luau-lsp.Config
+function M.config(opts)
+  validate(opts)
 
-  local old_options = M.options or defaults
-  local new_options = vim.tbl_deep_extend("force", old_options, options)
+  local old_options = options
+  local new_options = vim.tbl_deep_extend("force", old_options, opts)
 
   local function has_changed(path)
     return not vim.deep_equal(
@@ -121,7 +115,7 @@ function M.config(options)
     )
   end
 
-  M.options = new_options
+  options = new_options
 
   for callback, path in pairs(callbacks) do
     if has_changed(path) then

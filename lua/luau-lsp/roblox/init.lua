@@ -51,6 +51,7 @@ end, 1)
 local M = {}
 
 ---@async
+---@param opts luau-lsp.ClientConfig
 function M.pre_start(opts)
   if config.get().platform.type ~= "roblox" then
     return
