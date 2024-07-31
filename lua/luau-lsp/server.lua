@@ -53,6 +53,8 @@ end
 local function get_cmd()
   local cmd = vim.deepcopy(config.get().server.cmd)
 
+  util.expand_cmd(cmd)
+
   for _, definition_file in ipairs(config.get().types.definition_files) do
     definition_file = vim.fs.normalize(definition_file)
     if util.is_file(definition_file) then

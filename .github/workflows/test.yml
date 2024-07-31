@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        neovim_version: ["nightly", "stable", "v0.9.0"]
+        neovim-version: ["nightly", "stable", "v0.9.0"]
 
     steps:
       - uses: actions/checkout@v4
@@ -19,10 +19,10 @@ jobs:
       - name: Install luau-lsp
         run: |
           wget https://github.com/JohnnyMorganz/luau-lsp/releases/latest/download/luau-lsp-linux-arm64.zip
-          unzip luau-lsp*.zip
-          sudo mv luau-lsp /usr/local/bin/luau-lsp
+          unzip luau-lsp-linux-arm64.zip
+          mv luau-lsp $GITHUB_PATH
 
       - name: Run tests
         uses: nvim-neorocks/nvim-busted-action@v1
         with:
-          nvim_version: ${{ matrix.neovim_version }}
+          nvim_version: ${{ matrix.neovim-version }}

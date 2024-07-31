@@ -6,8 +6,8 @@ local M = {}
 ---@param path string
 ---@return boolean
 function M.is_file(path)
-  local stat = compat.uv.fs_stat(path) or {}
-  return stat and stat.type == "file"
+  local stat = compat.uv.fs_stat(path)
+  return stat and stat.type == "file" or false
 end
 
 ---@param key string
@@ -36,6 +36,14 @@ end
 ---@return vim.lsp.Client?
 function M.get_client(bufnr)
   return compat.get_clients({ name = "luau-lsp", bufnr = bufnr })[1]
+end
+
+---@param cmd string[]
+function M.expand_cmd(cmd)
+  local exepath = vim.fn.exepath(cmd[1])
+  if exepath ~= "" then
+    cmd[1] = exepath
+  end
 end
 
 return M
