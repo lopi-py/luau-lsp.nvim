@@ -79,7 +79,7 @@ describe("luau-lsp server", function()
     local client = wait_for_client()
 
     assert.stub(notify).called(0)
-    assert.same({ "luau-lsp", "lsp", "--no-flags-enabled" }, client.config.cmd)
+    assert.same({ vim.fn.exepath "luau-lsp", "lsp", "--no-flags-enabled" }, client.config.cmd)
 
     client.stop(true)
     vim.wait(100)
