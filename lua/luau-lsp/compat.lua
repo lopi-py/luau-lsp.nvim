@@ -9,6 +9,11 @@ M.uv = vim.loop or vim.uv
 ---@diagnostic disable-next-line: deprecated
 M.get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
 
+---@param client vim.lsp.Client
+function M.get_client_settings(client)
+  return client.settings or client.config.settings
+end
+
 ---@param t table
 ---@param value any
 ---@return boolean

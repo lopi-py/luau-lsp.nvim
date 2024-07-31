@@ -203,7 +203,7 @@ end
 function M.stop()
   local client = util.get_client()
   if client then
-    client.stop(true)
+    client.stop()
   end
 end
 
@@ -213,7 +213,7 @@ function M.restart()
     return
   end
 
-  client.stop(true)
+  client.stop()
 
   local buffers = vim.lsp.get_buffers_by_client_id(client.id)
 

@@ -14,7 +14,7 @@ end
 ---@return string
 function M.storage_file(key)
   local storage = Path:new(vim.fn.stdpath "data") / "luau-lsp"
-  storage:mkdir()
+  storage:mkdir { parents = true }
 
   return tostring(storage / key)
 end
