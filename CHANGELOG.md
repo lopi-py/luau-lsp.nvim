@@ -7,7 +7,7 @@
 ### Added
 
 - Error handling for curl when there is no internet connection
-- GZip decompression support for the studio plugin server (#23)
+- GZip decompression support for the studio plugin server ([#23](https://github.com/lopi-py/luau-lsp.nvim/pull/23))
 - Support for tilde (`~`) expansion in definition and documentation files
 - Health checks (`:checkhealth luau-lsp`)
 - `:LuauLsp` single command
@@ -29,7 +29,7 @@
 
 ### Added
 
-- Support for luau-lsp studio companion plugin (#17)
+- Support for luau-lsp studio companion plugin ([#17](https://github.com/lopi-py/luau-lsp.nvim/pull/17))
 
 ### Changed
 
