@@ -243,6 +243,16 @@ local defaults = {
 
 </details>
 
+## Troubleshooting
+
+### Health checks
+
+To verify the setup, run `:checkhealth luau-lsp`
+
+### Log file
+
+To open the `luau-lsp.nvim` log file, run `:LuauLsp log`
+
 ## FAQ
 
 ### Why doesn't the luau filetype detection work?

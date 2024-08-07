@@ -73,7 +73,7 @@ function M.complete(arglead, cmdline)
   table.sort(items)
 
   return vim.tbl_filter(function(item)
-    return item:find(arglead) == 1
+    return vim.startswith(item, arglead)
   end, items)
 end
 
