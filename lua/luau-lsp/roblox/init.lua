@@ -71,6 +71,10 @@ function M.prepare(opts)
 end
 
 function M.start()
+  if config.get().platform.type ~= "roblox" then
+    return
+  end
+
   if config.get().sourcemap.enabled and config.get().sourcemap.autogenerate then
     require("luau-lsp.roblox.sourcemap").start()
   end

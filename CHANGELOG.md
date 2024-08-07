@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Sourcemap generation and studio server will only start if the configured platform is `roblox`
+
 ## [1.5.0] - 2024-08-01
 
 ### Added
