@@ -148,6 +148,25 @@ require("luau-lsp").setup {
 
 https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/f9d45153-47f0-4565-a2ed-3769153732a0
 
+## .luaurc aliases
+
+The server is not able to read `.luaurc` aliases yet, but `require("luau-lsp").aliases()` can read `.luaurc` if it exists and returns a table containing the aliases with `@`.
+
+```lua
+require("luau-lsp").setup {
+  server = {
+    settings = {
+      ["luau-lsp"] = {
+        require = {
+          mode = "relativeToFile",
+          directoryAliases = require("luau-lsp").aliases(),
+        },
+      },
+    },
+  },
+}
+```
+
 ## Server configuration
 
 ```lua

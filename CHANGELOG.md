@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- `require("luau-lsp").aliases()` to read and return aliases from `.luaurc`
+
 ### Fixed
 
 - Sourcemap generation and studio server will only start if the configured platform is `roblox`
