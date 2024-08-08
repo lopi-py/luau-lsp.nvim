@@ -1,0 +1,20 @@
+{
+    "name": "Roblox Project",
+    "emitLegacyScripts": false,
+    "tree": {
+        "$className": "DataModel",
+        "ServerScriptService": {
+            "Server": {
+                "$path": "src/server"
+            }
+        },
+        "ReplicatedStorage": {
+            "Client": {
+                "$path": "src/client"
+            },
+            "Shared": {
+                "$path": "src/shared"
+            }
+        }
+    }
+}

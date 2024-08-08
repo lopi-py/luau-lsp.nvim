@@ -1,14 +1,31 @@
+local json = require "luau-lsp.json"
+local log = require "luau-lsp.log"
+
+---@param paths string[]
+---@return file*?
+local function find_luaurc(paths)
+  local luaurc = io.open(".luaurc", "r")
+  if luaurc then
+    return luaurc
+  end
+
+  for _, path in ipairs(paths) do
+    luaurc = io.open(path .. "/.luaurc", "r")
+    if luaurc then
+      return luaurc
+    end
+  end
+end
+
 local M = {}
 
+---@param paths? string[]
 ---@return table<string, string>?
-function M.aliases()
-  local luaurc = io.open(".luaurc", "r")
+function M.aliases(paths)
+  local luaurc = find_luaurc(paths or { "src", "lib" })
   if not luaurc then
     return
   end
-
-  local json = require "luau-lsp.json"
-  local log = require "luau-lsp.log"
 
   local success, contents = pcall(json.decode, luaurc:read "a")
   if not success then

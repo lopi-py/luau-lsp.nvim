@@ -152,6 +152,12 @@ https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/f9d45153-47f0-4565-a2ed
 
 The server is not able to read `.luaurc` aliases yet, but `require("luau-lsp").aliases()` can read `.luaurc` if it exists and returns a table containing the aliases with `@`.
 
+`.luaurc` lookup order:
+
+1. `.luaurc`
+2. `src/.luaurc`
+3. `lib/.luaurc`
+
 ```lua
 require("luau-lsp").setup {
   server = {

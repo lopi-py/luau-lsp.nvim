@@ -55,9 +55,8 @@ describe("luau-lsp server", function()
     local second = create_luau_buffer()
     local third = create_luau_buffer()
 
-    -- try to start the server for the same buffer many times
     server.start(first)
-    server.start(first)
+    server.start(second)
     server.start(third)
 
     local client = wait_for_client()
