@@ -11,7 +11,7 @@ https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/4fa6d3b1-44fe-414f-96ff
 
 ## Installation
 
-Use your favourite plugin manager to install luau-lsp.nvim
+Use your favorite plugin manager to install luau-lsp.nvim
 
 <details>
 
@@ -76,7 +76,7 @@ require("mason-lspconfig").setup_handlers {
 
 ## Roblox
 
-Roblox types are downloaded from the luau-lsp repo and passed to the language server.
+Roblox types are downloaded from the luau-lsp repository and passed to the language server.
 
 ```lua
 require("luau-lsp").setup {
@@ -280,7 +280,7 @@ To open the `luau-lsp.nvim` log file, run `:LuauLsp log`
 
 ## FAQ
 
-### Why doesn't the luau filetype detection work?
+### Why doesn't the Luau filetype detection work?
 
 Don't lazy load the plugin if you are on Neovim v0.9
 
@@ -306,17 +306,32 @@ require("luau-lsp").setup {
 }
 ```
 
-### How to use luau-lsp in a roblox codebase using the .lua extension?
-
-Add this to your config. Requires Neovim 0.10+
+### How to set the platform automatically?
 
 ```lua
-local cwd = assert(vim.uv.cwd())
-local rojo_file_found = vim.fs.root(cwd, function(name)
-  return name:match "%.project.json$"
-end)
+local function rojo_project()
+  return vim.fs.root(0, function(name)
+    return name:match "%s.project.json$"
+  end)
+end
 
-if rojo_file_found then
+require("luau-lsp").setup {
+  platform = {
+    type = rojo_project() and "roblox" or "standard",
+  },
+}
+```
+
+### How to use luau-lsp in a Roblox codebase using the .lua extension?
+
+```lua
+local function rojo_project()
+  return vim.fs.root(0, function(name)
+    return name:match "%s.project.json$"
+  end)
+end
+
+if rojo_project() then
   vim.filetype.add {
     extension = {
       lua = function(path)
