@@ -33,7 +33,7 @@ function M.aliases(paths)
     return
   end
 
-  local aliases = {}
+  local aliases = vim.empty_dict()
 
   for alias, value in pairs(contents.aliases or {}) do
     aliases["@" .. alias] = value
