@@ -8,6 +8,7 @@
 
 ### Fixed
 
+- Merge internal modified capabilities with the default client capabilities if not specified in the server config
 - Sourcemap generation and studio server will only start if the configured platform is `roblox`
 
 ## [1.5.0] - 2024-08-01

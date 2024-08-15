@@ -108,7 +108,8 @@ end
 ---
 ---@param opts luau-lsp.ClientConfig
 local function force_push_diagnostics(opts)
-  opts.capabilities = vim.tbl_deep_extend("force", opts.capabilities or {}, {
+  local capabilities = opts.capabilities or vim.lsp.protocol.make_client_capabilities()
+  opts.capabilities = vim.tbl_deep_extend("force", capabilities, {
     textDocument = {
       diagnostic = vim.NIL,
     },
@@ -119,7 +120,6 @@ local function force_push_diagnostics(opts)
     if on_init then
       on_init(client, result)
     end
-
     client.server_capabilities.diagnosticProvider = nil
   end
 end
