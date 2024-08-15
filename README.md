@@ -290,7 +290,7 @@ Make sure to enable the file watcher capability and pass it in the server option
 
 ```lua
 -- there are couple ways to get the default capabilities, it depends on your distribution or what completion plugins are you using
-local capabilities = vim.lsp.procotol.make_client_capabilities()
+local capabilities = vim.lsp.protocol.make_client_capabilities()
 
 -- example using nvim-cmp
 capabilities = vim.tbl_deep_extend("force", capabilities, require("nvim_cmp_lsp").default_capabilities())
