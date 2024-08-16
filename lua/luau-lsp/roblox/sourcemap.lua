@@ -8,6 +8,13 @@ local job = nil
 
 local M = {}
 
+---@return string[]
+function M.get_rojo_project_files()
+  local project_files = vim.split(vim.fn.glob "*.project.json", "\n")
+  table.sort(project_files)
+  return vim.tbl_filter(util.is_file, project_files)
+end
+
 local get_rojo_project_file = async.wrap(function(callback)
   local project_file = config.get().sourcemap.rojo_project_file
   if util.is_file(project_file) then
@@ -49,20 +56,25 @@ local function start_sourcemap_generation(project_file)
     table.insert(args, "--include-non-scripts")
   end
 
-  log.info("Starting sourcemap generation for `%s`", project_file)
-
-  job = Job:new {
+  local ok
+  ok, job = pcall(Job.new, Job, {
     command = config.get().sourcemap.rojo_path,
     args = args,
     on_exit = function(self, code)
-      if code and code ~= 0 then
+      if code ~= 0 then
         local err = table.concat(self:stderr_result(), "\n")
         log.error("Failed to update sourcemap for `%s`: %s", project_file, err)
       end
-
       job = nil
     end,
-  }
+  })
+
+  if not ok then
+    log.error "rojo executable not found"
+    return
+  end
+
+  log.info("Starting sourcemap generation for `%s`", project_file)
   job:start()
 end
 
@@ -70,27 +82,6 @@ local function stop_sourcemap_generation()
   if job then
     job:shutdown()
   end
-end
-
----@return vim.Version
-function M.version()
-  local result = Job:new({
-    command = config.get().sourcemap.rojo_path,
-    args = { "--version" },
-  }):sync()
-
-  local version = vim.version.parse(result[1])
-  assert(version, "could not parse rojo version")
-
-  return version
-end
-
----@return string[]
-function M.get_rojo_project_files()
-  local project_files = vim.split(vim.fn.glob "*.project.json", "\n")
-  table.sort(project_files)
-
-  return vim.tbl_filter(util.is_file, project_files)
 end
 
 M.start = async.void(function(project_file)

@@ -1,4 +1,3 @@
-local Job = require "plenary.job"
 local async = require "plenary.async"
 local compat = require "luau-lsp.compat"
 local config = require "luau-lsp.config"
@@ -52,8 +51,6 @@ end
 ---@return string[]
 local function get_cmd()
   local cmd = vim.deepcopy(config.get().server.cmd)
-
-  util.expand_cmd(cmd)
 
   for _, definition_file in ipairs(config.get().types.definition_files) do
     definition_file = vim.fs.normalize(definition_file)
@@ -125,7 +122,7 @@ local function force_push_diagnostics(opts)
 end
 
 ---@async
----@return number
+---@return number?
 local function start_language_server()
   local opts = vim.tbl_deep_extend("force", config.get().server, {
     name = "luau-lsp",
@@ -139,11 +136,12 @@ local function start_language_server()
   require("luau-lsp.roblox").prepare(opts)
 
   local client_id = vim.lsp.start_client(opts)
-  assert(client_id, "could not start luau-lsp")
+  if not client_id then
+    log.error "luau-lsp executable not found"
+    return
+  end
 
-  vim.schedule(function()
-    require("luau-lsp.roblox").start()
-  end)
+  require("luau-lsp.roblox").start()
 
   return client_id
 end
@@ -167,16 +165,6 @@ end
 
 local M = {}
 
----@return vim.Version
-function M.version()
-  local result = Job:new({ command = "luau-lsp", args = { "--version" } }):sync()
-
-  local version = vim.version.parse(result[1])
-  assert(version, "could not parse luau-lsp version")
-
-  return version
-end
-
 ---@param bufnr? number
 function M.start(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
@@ -196,7 +184,14 @@ function M.start(bufnr)
   end
 
   if #pending_buffers == 0 then
-    async.run(start_language_server, vim.schedule_wrap(attach_pending_buffers))
+    async.run(
+      start_language_server,
+      vim.schedule_wrap(function(client_id)
+        if client_id then
+          attach_pending_buffers(client_id)
+        end
+      end)
+    )
   end
 
   table.insert(pending_buffers, bufnr)

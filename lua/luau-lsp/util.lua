@@ -38,12 +38,4 @@ function M.get_client(bufnr)
   return compat.get_clients({ name = "luau-lsp", bufnr = bufnr })[1]
 end
 
----@param cmd string[]
-function M.expand_cmd(cmd)
-  local exepath = vim.fn.exepath(cmd[1])
-  if exepath ~= "" then
-    cmd[1] = exepath
-  end
-end
-
 return M

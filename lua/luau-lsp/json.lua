@@ -2,6 +2,7 @@ local M = {}
 
 ---@param str string
 ---@param opts? table<string, any>
+---@return any
 function M.decode(str, opts)
   str = str
     :gsub("//[^\n]*", "")

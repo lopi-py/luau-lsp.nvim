@@ -1,44 +1,58 @@
-local Path = require "plenary.path"
 local util = require "luau-lsp.util"
-
-local PLUGIN_NAME = "luau-lsp.nvim"
-local LOG_FILE = Path:new(util.storage_file "luau-lsp.log")
-
-local levels_lookup = {}
-for k, v in pairs(vim.log.levels) do
-  levels_lookup[v] = k
-end
-
-local function supports_title()
-  local success = pcall(require, "notify")
-  return success
-end
-
----@param level number
----@return fun(message: string, ...: any)
-local function create_logger(level)
-  return vim.schedule_wrap(function(message, ...)
-    local timestr = vim.fn.strftime "%H:%M:%S"
-    message = string.format(message, ...)
-
-    LOG_FILE:write(string.format("%s[%s]: %s\n", timestr, levels_lookup[level], message), "a")
-
-    if level >= vim.log.levels.WARN then
-      if not supports_title() then
-        message = string.format("[%s]: %s", PLUGIN_NAME, message)
-      end
-
-      vim.notify(message, level, { title = PLUGIN_NAME })
-    end
-  end)
-end
 
 local M = {}
 
-M.log_file = tostring(LOG_FILE)
-M.debug = create_logger(vim.log.levels.DEBUG)
-M.info = create_logger(vim.log.levels.INFO)
-M.warn = create_logger(vim.log.levels.WARN)
-M.error = create_logger(vim.log.levels.ERROR)
+M.level = vim.log.levels.WARN
+M.filename = util.storage_file "luau-lsp.log"
+
+---@type file*?
+local logfile
+
+---@return boolean
+local function supports_title()
+  return package.loaded["notify"] ~= nil
+end
+
+---@param message string
+---@param level string
+local function write(message, level)
+  if not logfile then
+    logfile = io.open(M.filename, "a+")
+  end
+  assert(logfile)
+  logfile:write(string.format("%s[%s] %s", os.date "%H:%M:%S", level, message))
+  logfile:write "\n"
+  logfile:flush()
+end
+
+---@param message string
+---@param level number
+local notify = vim.schedule_wrap(function(message, level)
+  if supports_title() then
+    vim.notify(message, level, { title = "luau-lsp.nvim" })
+  else
+    vim.notify(string.format("[%s] %s", "luau-lsp.nvim", message), level)
+  end
+end)
+
+---@param level string
+---@param levelnr number
+---@return fun(message: string, ...: any)
+local function create_logger(level, levelnr)
+  return function(message, ...)
+    message = string.format(message, ...)
+
+    write(message, level)
+
+    if levelnr >= M.level then
+      notify(message, levelnr)
+    end
+  end
+end
+
+M.debug = create_logger("DEBUG", vim.log.levels.DEBUG)
+M.info = create_logger("INFO", vim.log.levels.INFO)
+M.warn = create_logger("WARN", vim.log.levels.WARN)
+M.error = create_logger("ERROR", vim.log.levels.ERROR)
 
 return M

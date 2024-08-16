@@ -43,7 +43,7 @@ local defaults = {
   ---@class luau-lsp.ClientConfig: vim.lsp.ClientConfig
   server = {
     ---@type string[]
-    cmd = { "luau-lsp", "lsp" },
+    cmd = { vim.fn.exepath "luau-lsp", "lsp" },
     ---@type fun(path: string): string?
     root_dir = function(path)
       local server = require "luau-lsp.server"

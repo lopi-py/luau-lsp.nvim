@@ -9,7 +9,7 @@ local log = require "luau-lsp.log"
 local commands = {
   log = {
     execute = function()
-      vim.cmd.tabnew(log.log_file)
+      vim.cmd.tabnew(log.filename)
     end,
   },
 
