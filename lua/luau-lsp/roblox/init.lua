@@ -70,7 +70,7 @@ function M.prepare(cmd)
   table.insert(cmd, "--docs=" .. api_docs_file())
 end
 
-function M.start()
+M.start = vim.schedule_wrap(function()
   if config.get().platform.type ~= "roblox" then
     return
   end
@@ -82,6 +82,6 @@ function M.start()
   if config.get().plugin.enabled then
     require("luau-lsp.roblox.studio").start()
   end
-end
+end)
 
 return M

@@ -98,8 +98,8 @@ describe("luau-lsp server", function()
     assert
       .stub(notify).was
       .called_with("[luau-lsp.nvim] Unable to find project file `default.project.json`", vim.log.levels.ERROR)
-    assert.match("globalTypes.PluginSecurity.d.luau", client.config.cmd[4])
-    assert.match("api%-docs.json", client.config.cmd[5])
+    assert.match("globalTypes.PluginSecurity.d.luau", client.config.cmd[3])
+    assert.match("api%-docs.json", client.config.cmd[4])
   end)
 
   it("should respect user settings", function()
