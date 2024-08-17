@@ -51,8 +51,8 @@ end, 1)
 local M = {}
 
 ---@async
----@param opts luau-lsp.ClientConfig
-function M.prepare(opts)
+---@param cmd string[]
+function M.prepare(cmd)
   if config.get().platform.type ~= "roblox" then
     return
   end
@@ -66,11 +66,11 @@ function M.prepare(opts)
     end
   end
 
-  table.insert(opts.cmd, "--definitions=" .. global_types_file())
-  table.insert(opts.cmd, "--docs=" .. api_docs_file())
+  table.insert(cmd, "--definitions=" .. global_types_file())
+  table.insert(cmd, "--docs=" .. api_docs_file())
 end
 
-M.start = vim.schedule_wrap(function()
+function M.start()
   if config.get().platform.type ~= "roblox" then
     return
   end
@@ -82,6 +82,6 @@ M.start = vim.schedule_wrap(function()
   if config.get().plugin.enabled then
     require("luau-lsp.roblox.studio").start()
   end
-end)
+end
 
 return M

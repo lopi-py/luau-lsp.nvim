@@ -1,7 +1,7 @@
 column_width = 99
 indent_type = "Spaces"
 indent_width = 2
-no_call_parentheses = true
+call_parentheses = "None"
 
 [sort_requires]
 enabled = true

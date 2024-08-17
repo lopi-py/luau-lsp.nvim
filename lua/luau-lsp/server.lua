@@ -48,9 +48,12 @@ local function get_fflags()
   return vim.tbl_deep_extend("force", fflags, config.get().fflags.override)
 end
 
+---@async
 ---@return string[]
 local function get_cmd()
   local cmd = vim.deepcopy(config.get().server.cmd)
+
+  require("luau-lsp.roblox").prepare(cmd)
 
   for _, definition_file in ipairs(config.get().types.definition_files) do
     definition_file = vim.fs.normalize(definition_file)
@@ -126,14 +129,13 @@ end
 local function start_language_server()
   local opts = vim.tbl_deep_extend("force", config.get().server, {
     name = "luau-lsp",
-    cmd = get_cmd(),
     root_dir = get_root_dir(),
+    cmd = get_cmd(),
     settings = get_settings(),
     init_options = { fflags = get_fflags() },
   })
 
   force_push_diagnostics(opts)
-  require("luau-lsp.roblox").prepare(opts)
 
   local client_id = vim.lsp.start_client(opts)
   if not client_id then
@@ -168,7 +170,6 @@ local M = {}
 ---@param bufnr? number
 function M.start(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
-
   if not is_luau_file(bufnr) then
     return
   end
