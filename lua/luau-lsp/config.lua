@@ -55,7 +55,7 @@ local defaults = {
         "stylua.toml",
         "selene.toml",
         "selene.yml",
-      })
+      }) or vim.fn.getcwd()
     end,
   },
 }
