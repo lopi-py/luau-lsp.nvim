@@ -8,6 +8,7 @@
 
 ### Fixed
 
+- Error loading the server when root directory not found
 - Definition files that depend on Roblox types will now load properly
 - Merge internal modified capabilities with the default client capabilities if not specified in the server config
 - Sourcemap generation and studio server will only start if the configured platform is `roblox`

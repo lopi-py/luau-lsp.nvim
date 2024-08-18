@@ -84,12 +84,6 @@ local function get_cmd()
   return cmd
 end
 
----@return string?
-local function get_root_dir()
-  local bufnr = vim.api.nvim_get_current_buf()
-  return config.get().server.root_dir(vim.api.nvim_buf_get_name(bufnr))
-end
-
 --- Patch shared settings between the client extension and the server
 local function get_settings()
   return {
@@ -107,7 +101,7 @@ end
 --- Neovim does not support diagnostic's relatedDocuments, but push-based diagnostics should work
 --- fine
 ---
----@param opts luau-lsp.ClientConfig
+---@param opts vim.lsp.ClientConfig
 local function force_push_diagnostics(opts)
   local capabilities = opts.capabilities or vim.lsp.protocol.make_client_capabilities()
   opts.capabilities = vim.tbl_deep_extend("force", capabilities, {
@@ -128,13 +122,17 @@ end
 ---@async
 ---@return number?
 local function start_language_server()
-  local opts = vim.tbl_deep_extend("force", config.get().server, {
-    name = "luau-lsp",
-    root_dir = get_root_dir(),
-    cmd = get_cmd(),
-    settings = get_settings(),
-    init_options = { fflags = get_fflags() },
-  })
+  local bufnr = vim.api.nvim_get_current_buf()
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+
+  local opts = vim.deepcopy(config.get().server) --[[@as vim.lsp.ClientConfig]]
+  opts.name = "luau-lsp"
+  opts.cmd = get_cmd()
+  opts.root_dir = opts.root_dir(bufname)
+  opts.settings = vim.tbl_deep_extend("force", opts.settings or {}, get_settings())
+  opts.init_options = {
+    fflags = get_fflags(),
+  }
 
   force_push_diagnostics(opts)
 
