@@ -6,7 +6,7 @@ local M = {}
 ---@param opts { name: string, cmd: string[], version?: string, required: boolean? }
 local function check_executable(opts)
   local ok, job = pcall(Job.new, Job, {
-    command = opts.cmd[1],
+    command = vim.fn.exepath(opts.cmd[1]),
     args = vim.list_slice(opts.cmd, 2),
   })
 

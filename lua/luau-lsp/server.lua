@@ -52,6 +52,7 @@ end
 ---@return string[]
 local function get_cmd()
   local cmd = vim.deepcopy(config.get().server.cmd)
+  cmd[1] = vim.fn.exepath(cmd[1])
 
   require("luau-lsp.roblox").prepare(cmd)
 
