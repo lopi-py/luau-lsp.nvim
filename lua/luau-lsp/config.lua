@@ -48,7 +48,7 @@ local defaults = {
     root_dir = function(path)
       local server = require "luau-lsp.server"
       return server.root(path, function(name)
-        return name:match ".*%.project.json$"
+        return name:match ".+%.project%.json$"
       end) or server.root(path, {
         ".git",
         ".luaurc",

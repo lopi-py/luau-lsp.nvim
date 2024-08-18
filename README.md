@@ -253,7 +253,7 @@ local defaults = {
     root_dir = function(path)
       local server = require "luau-lsp.server"
       return server.root(path, function(name)
-        return name:match ".*%.project.json$"
+        return name:match ".+%.project%.json$"
       end) or server.root(path, {
         ".git",
         ".luaurc",
@@ -311,7 +311,7 @@ require("luau-lsp").setup {
 ```lua
 local function rojo_project()
   return vim.fs.root(0, function(name)
-    return name:match "%s.project.json$"
+    return name:match ".+%.project%.json$"
   end)
 end
 
@@ -327,7 +327,7 @@ require("luau-lsp").setup {
 ```lua
 local function rojo_project()
   return vim.fs.root(0, function(name)
-    return name:match "%s.project.json$"
+    return name:match ".+%.project%.json$"
   end)
 end
 
@@ -335,7 +335,7 @@ if rojo_project() then
   vim.filetype.add {
     extension = {
       lua = function(path)
-        return path:match ".nvim.lua$" and "lua" or "luau"
+        return path:match "%.nvim%.lua$" and "lua" or "luau"
       end,
     },
   }
