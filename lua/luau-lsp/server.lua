@@ -5,21 +5,31 @@ local curl = require "plenary.curl"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
-local CURRENT_FFLAGS =
+local CURRENT_FFLAGS_URL =
   "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCDesktopClient"
 
+---@type integer[]
 local pending_buffers = {}
 
 local fetch_fflags = async.wrap(function(callback)
+  local function on_error(message)
+    log.error("Failed to fetch current Luau FFlags: %s", message)
+    callback {}
+  end
+
   curl.get {
-    url = CURRENT_FFLAGS,
+    url = CURRENT_FFLAGS_URL,
     accept = "application/json",
     callback = function(result)
-      callback(vim.json.decode(result.body).applicationSettings)
+      local ok, content = pcall(vim.json.decode, result.body)
+      if ok then
+        callback(content.applicationSettings)
+      else
+        on_error(content)
+      end
     end,
-    on_error = function()
-      log.error "Could not fetch the latest Luau FFlags"
-      callback {}
+    on_error = function(result)
+      on_error(result.stderr)
     end,
     compressed = false,
   }
@@ -62,7 +72,7 @@ local function get_cmd()
       table.insert(cmd, "--definitions=" .. definition_file)
     else
       log.warn(
-        "Definitions file at `%s` does not exist, types will not be provided from this file",
+        "Definitions file at '%s' does not exist, types will not be provided from this file",
         definition_file
       )
     end
@@ -73,7 +83,7 @@ local function get_cmd()
     if util.is_file(documentation_file) then
       table.insert(cmd, "--docs=" .. documentation_file)
     else
-      log.warn("Documentations file at `%s` does not exist", documentation_file)
+      log.warn("Documentations file at '%s' does not exist", documentation_file)
     end
   end
 
@@ -119,8 +129,16 @@ local function force_push_diagnostics(opts)
   end
 end
 
----@async
----@return number?
+---@param client_id number
+local function attach_pending_buffers(client_id)
+  for _, bufnr in ipairs(pending_buffers) do
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.lsp.buf_attach_client(bufnr, client_id)
+    end
+  end
+  pending_buffers = {}
+end
+
 local function start_language_server()
   local bufnr = vim.api.nvim_get_current_buf()
   local bufname = vim.api.nvim_buf_get_name(bufnr)
@@ -142,20 +160,10 @@ local function start_language_server()
     return
   end
 
-  require("luau-lsp.roblox").start()
-
-  return client_id
-end
-
----@param client_id number
-local function attach_pending_buffers(client_id)
-  for _, bufnr in ipairs(pending_buffers) do
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.lsp.buf_attach_client(bufnr, client_id)
-    end
-  end
-
-  pending_buffers = {}
+  vim.schedule(function()
+    require("luau-lsp.roblox").start()
+    attach_pending_buffers(client_id)
+  end)
 end
 
 ---@param bufnr number
@@ -184,14 +192,7 @@ function M.start(bufnr)
   end
 
   if #pending_buffers == 0 then
-    async.run(
-      start_language_server,
-      vim.schedule_wrap(function(client_id)
-        if client_id then
-          attach_pending_buffers(client_id)
-        end
-      end)
-    )
+    async.run(start_language_server)
   end
 
   table.insert(pending_buffers, bufnr)

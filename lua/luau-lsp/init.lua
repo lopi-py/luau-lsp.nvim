@@ -29,7 +29,7 @@ function M.aliases(paths)
 
   local success, contents = pcall(json.decode, luaurc:read "a")
   if not success then
-    log.error("Could not read `.luaurc`: %s", contents)
+    log.error("Failed to read '.luaurc': %s", contents)
     return
   end
 

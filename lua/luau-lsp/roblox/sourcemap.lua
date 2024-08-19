@@ -1,5 +1,4 @@
 local Job = require "plenary.job"
-local async = require "plenary.async"
 local config = require "luau-lsp.config"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
@@ -15,7 +14,8 @@ function M.get_rojo_project_files()
   return vim.tbl_filter(util.is_file, project_files)
 end
 
-local get_rojo_project_file = async.wrap(function(callback)
+---@param callback fun(project_file: string?)
+local function get_rojo_project_file(callback)
   local project_file = config.get().sourcemap.rojo_project_file
   if util.is_file(project_file) then
     callback(project_file)
@@ -24,11 +24,11 @@ local get_rojo_project_file = async.wrap(function(callback)
 
   local found_project_files = M.get_rojo_project_files()
   if #found_project_files == 0 then
-    log.error("Unable to find project file `%s`", project_file)
+    log.error("Unable to find project file '%s'", project_file)
     callback()
   elseif #found_project_files == 1 then
     log.info(
-      "Unable to find project file `%s`. We found `%s`",
+      "Unable to find project file '%s'. We found '%s'",
       project_file,
       found_project_files[1]
     )
@@ -36,7 +36,7 @@ local get_rojo_project_file = async.wrap(function(callback)
   else
     vim.ui.select(found_project_files, { prompt = "Select project file" }, callback)
   end
-end, 1)
+end
 
 ---@param project_file? string
 local function start_sourcemap_generation(project_file)
@@ -63,7 +63,7 @@ local function start_sourcemap_generation(project_file)
     on_exit = function(self, code)
       if code ~= 0 then
         local err = table.concat(self:stderr_result(), "\n")
-        log.error("Failed to update sourcemap for `%s`: %s", project_file, err)
+        log.error("Failed to update sourcemap for '%s': %s", project_file, err)
       end
       job = nil
     end,
@@ -74,7 +74,7 @@ local function start_sourcemap_generation(project_file)
     return
   end
 
-  log.info("Starting sourcemap generation for `%s`", project_file)
+  log.info("Starting sourcemap generation for '%s'", project_file)
   job:start()
 end
 
@@ -84,14 +84,20 @@ local function stop_sourcemap_generation()
   end
 end
 
-M.start = async.void(function(project_file)
+---@param project_file? string
+function M.start(project_file)
   if project_file and not util.is_file(project_file) then
-    log.error("Invalid project file `%s`", project_file)
+    log.error("Invalid project file '%s'", project_file)
     return
   end
 
   stop_sourcemap_generation()
-  start_sourcemap_generation(project_file or get_rojo_project_file())
-end)
+
+  if project_file then
+    start_sourcemap_generation(project_file)
+  else
+    get_rojo_project_file(start_sourcemap_generation)
+  end
+end
 
 return M

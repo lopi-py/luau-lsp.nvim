@@ -4,7 +4,7 @@ local curl = require "plenary.curl"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
-local API_DOCS =
+local API_DOCS_URL =
   "https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/api-docs/en-us.json"
 
 local function global_types_url()
@@ -29,9 +29,9 @@ local download_api = async.wrap(function(callback)
     callback(true)
   end, 2)
 
-  local on_error = util.on_count(function()
+  local on_error = util.once(function()
     callback(false)
-  end, 2)
+  end)
 
   curl.get(global_types_url(), {
     output = global_types_file(),
@@ -40,7 +40,7 @@ local download_api = async.wrap(function(callback)
     compressed = false,
   })
 
-  curl.get(API_DOCS, {
+  curl.get(API_DOCS_URL, {
     output = api_docs_file(),
     callback = on_success,
     on_error = on_error,
@@ -59,9 +59,9 @@ function M.prepare(cmd)
 
   if not download_api() then
     if util.is_file(global_types_file()) and util.is_file(api_docs_file()) then
-      log.error "Could not download roblox types, using local files"
+      log.warn "Failed to download Roblox API, using local files"
     else
-      log.error "Could not download roblox types, no local files found"
+      log.error "Failed to download Roblox API, local files not found"
       return
     end
   end
@@ -70,7 +70,7 @@ function M.prepare(cmd)
   table.insert(cmd, "--docs=" .. api_docs_file())
 end
 
-M.start = vim.schedule_wrap(function()
+function M.start()
   if config.get().platform.type ~= "roblox" then
     return
   end
@@ -82,6 +82,6 @@ M.start = vim.schedule_wrap(function()
   if config.get().plugin.enabled then
     require("luau-lsp.roblox.studio").start()
   end
-end)
+end
 
 return M

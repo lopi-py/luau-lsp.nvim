@@ -83,7 +83,7 @@ function M.execute(cmdline)
   if commands[command] then
     commands[command].execute(args)
   else
-    log.error("Invalid command `%s`", command)
+    log.error("Invalid command '%s'", command)
   end
 end
 

@@ -32,6 +32,18 @@ function M.on_count(callback, n)
   end
 end
 
+---@param fn function
+---@return function
+function M.once(fn)
+  local called = false
+  return function(...)
+    if not called then
+      called = true
+      fn(...)
+    end
+  end
+end
+
 ---@param bufnr number?
 ---@return vim.lsp.Client?
 function M.get_client(bufnr)

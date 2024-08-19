@@ -52,9 +52,8 @@ local defaults = {
       end) or server.root(path, {
         ".git",
         ".luaurc",
-        "stylua.toml",
         "selene.toml",
-        "selene.yml",
+        "stylua.toml",
       })
     end,
   },
@@ -66,25 +65,25 @@ local options = defaults
 local function validate(opts)
   if vim.tbl_get(opts, "platform", "type") then
     if not compat.list_contains(PLATFORMS, opts.platform.type) then
-      log.error("Invalid option `platform.type` value: " .. opts.platform.type)
+      log.error("Invalid option 'platform.type' value: " .. opts.platform.type)
     end
   end
 
   if vim.tbl_get(opts, "types", "roblox_security_level") then
     if not compat.list_contains(SECURITY_LEVELS, opts.types.roblox_security_level) then
       log.error(
-        "Invalid option `types.roblox_security_level` value: " .. opts.types.roblox_security_level
+        "Invalid option 'types.roblox_security_level' value: " .. opts.types.roblox_security_level
       )
     end
   end
 
   if vim.tbl_get(opts, "types", "roblox") ~= nil then
-    log.warn "`types.roblox` is deprecated, use `platform.type` instead"
+    log.warn "'types.roblox' is deprecated, use 'platform.type' instead"
   end
 
   local function check_server_setting(name)
     if vim.tbl_get(opts, "server", "settings", "luau-lsp", name) ~= nil then
-      log.error("`%s` should not be passed as server setting", name)
+      log.error("'%s' should not be passed as server setting", name)
     end
   end
 
