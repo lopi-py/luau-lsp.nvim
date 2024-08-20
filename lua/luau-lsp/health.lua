@@ -3,7 +3,7 @@ local config = require "luau-lsp.config"
 
 local M = {}
 
----@param opts { name: string, cmd: string[], version?: string, required: boolean? }
+---@param opts { name: string, cmd: string[], version?: string, optional: boolean? }
 local function check_executable(opts)
   local ok, job = pcall(Job.new, Job, {
     command = vim.fn.exepath(opts.cmd[1]),
@@ -11,26 +11,20 @@ local function check_executable(opts)
   })
 
   if not ok then
-    local report = opts.required == false and vim.health.warn or vim.health.error
+    local report = opts.optional and vim.health.warn or vim.health.error
     report(string.format("%s: not available", opts.name))
     return
   end
 
-  if opts.version then
-    local version = table.concat(job:sync(), "\n")
-    if vim.version.ge(version, opts.version) then
-      vim.health.ok(string.format("%s: `%s`", opts.name, tostring(version)))
-    else
-      vim.health.error(
-        string.format(
-          "%s: required version is `%s`, found `%s`",
-          opts.name,
-          opts.version:gsub("a", "b"),
-          version
-        )
-      )
-    end
+  local version = table.concat(job:sync(), "\n")
+  if opts.version and vim.version.lt(version, opts.version) then
+    vim.health.error(
+      string.format("%s: required version is `%s`, found `%s`", opts.name, opts.version, version)
+    )
+    return
   end
+
+  vim.health.ok(string.format("%s: `%s`", opts.name, version))
 end
 
 function M.check()
@@ -59,9 +53,11 @@ function M.check()
     name = "rojo",
     cmd = { config.get().sourcemap.rojo_path, "--version" },
     version = "7.3.0",
-    required = config.get().platform.type == "roblox"
-      and config.get().sourcemap.enabled
-      and config.get().sourcemap.autogenerate,
+    optional = not (
+        config.get().platform.type == "roblox"
+        and config.get().sourcemap.enabled
+        and config.get().sourcemap.autogenerate
+      ),
   }
 end
 
