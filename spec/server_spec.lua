@@ -1,4 +1,3 @@
-local compat = require "luau-lsp.compat"
 local config = require "luau-lsp.config"
 local server = require "luau-lsp.server"
 
@@ -18,11 +17,11 @@ end
 
 local function wait_for_client()
   vim.wait(5000, function()
-    local clients = compat.get_clients { name = "luau-lsp" }
+    local clients = vim.lsp.get_clients { name = "luau-lsp" }
     return clients[1] ~= nil
   end)
 
-  local clients = compat.get_clients { name = "luau-lsp" }
+  local clients = vim.lsp.get_clients { name = "luau-lsp" }
   assert.same(1, #clients)
 
   return clients[1]
@@ -130,6 +129,6 @@ describe("luau-lsp server", function()
           testField = "testing",
         },
       },
-    }, compat.get_client_settings(client))
+    }, client.settings)
   end)
 end)

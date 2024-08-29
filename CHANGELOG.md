@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Removed
+
+- Support for Neovim 0.9
+
 ## [1.6.0] - 2024-08-29
 
 ### Added

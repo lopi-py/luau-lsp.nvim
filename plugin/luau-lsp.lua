@@ -1,14 +1,3 @@
-if vim.version().minor < 10 then
-  vim.filetype.add {
-    extension = {
-      luau = "luau",
-    },
-    filename = {
-      [".luaurc"] = "jsonc",
-    },
-  }
-end
-
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "luau",
   callback = function()

@@ -1,5 +1,4 @@
 local async = require "plenary.async"
-local compat = require "luau-lsp.compat"
 local config = require "luau-lsp.config"
 local curl = require "plenary.curl"
 local log = require "luau-lsp.log"
@@ -41,7 +40,7 @@ local function get_fflags()
   local fflags = {}
 
   if config.get().fflags.sync then
-    compat
+    vim
       .iter(fetch_fflags())
       :filter(function(name)
         return name:match "^FFlagLuau"
@@ -187,7 +186,7 @@ function M.start(bufnr)
     return
   end
 
-  if compat.list_contains(pending_buffers, bufnr) then
+  if vim.list_contains(pending_buffers, bufnr) then
     return
   end
 
@@ -215,11 +214,11 @@ function M.restart()
 
   local buffers = vim.lsp.get_buffers_by_client_id(client.id)
 
-  local timer = compat.uv.new_timer()
+  local timer = vim.uv.new_timer()
   timer:start(500, 100, function()
     if client.is_stopped() then
       timer:stop()
-      compat.iter(buffers):each(vim.schedule_wrap(M.start))
+      vim.iter(buffers):each(vim.schedule_wrap(M.start))
     end
   end)
 end

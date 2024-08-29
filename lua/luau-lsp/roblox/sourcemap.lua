@@ -1,9 +1,8 @@
-local Job = require "plenary.job"
 local config = require "luau-lsp.config"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
-local job = nil
+local pid
 
 local M = {}
 
@@ -44,7 +43,8 @@ local function start_sourcemap_generation(project_file)
     return
   end
 
-  local args = {
+  local cmd = {
+    config.get().sourcemap.rojo_path,
     "sourcemap",
     "--watch",
     project_file,
@@ -53,21 +53,17 @@ local function start_sourcemap_generation(project_file)
   }
 
   if config.get().sourcemap.include_non_scripts then
-    table.insert(args, "--include-non-scripts")
+    table.insert(cmd, "--include-non-scripts")
   end
 
-  local ok
-  ok, job = pcall(Job.new, Job, {
-    command = config.get().sourcemap.rojo_path,
-    args = args,
-    on_exit = function(self, code)
-      if code ~= 0 then
-        local err = table.concat(self:stderr_result(), "\n")
-        log.error("Failed to update sourcemap for '%s': %s", project_file, err)
-      end
-      job = nil
-    end,
-  })
+  local ok, job = pcall(vim.system, cmd, {
+    text = true,
+  }, function(result)
+    if result.stderr and result.stderr ~= "" then
+      log.error("Failed to update sourcemap for '%s': %s", project_file, result.stderr)
+    end
+    pid = nil
+  end)
 
   if not ok then
     log.error "rojo executable not found"
@@ -75,12 +71,12 @@ local function start_sourcemap_generation(project_file)
   end
 
   log.info("Starting sourcemap generation for '%s'", project_file)
-  job:start()
+  pid = job.pid
 end
 
 local function stop_sourcemap_generation()
-  if job then
-    job:shutdown()
+  if pid then
+    vim.uv.kill(pid)
   end
 end
 

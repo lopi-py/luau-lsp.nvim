@@ -1,4 +1,3 @@
-local compat = require "luau-lsp.compat"
 local log = require "luau-lsp.log"
 
 local PLATFORMS = { "standard", "roblox" }
@@ -46,10 +45,9 @@ local defaults = {
     cmd = { "luau-lsp", "lsp" },
     ---@type fun(path: string): string?
     root_dir = function(path)
-      local server = require "luau-lsp.server"
-      return server.root(path, function(name)
+      return vim.fs.root(path, function(name)
         return name:match ".+%.project%.json$"
-      end) or server.root(path, {
+      end) or vim.fs.root(path, {
         ".git",
         ".luaurc",
         "selene.toml",
@@ -64,13 +62,13 @@ local options = defaults
 ---@param opts luau-lsp.Config
 local function validate(opts)
   if vim.tbl_get(opts, "platform", "type") then
-    if not compat.list_contains(PLATFORMS, opts.platform.type) then
+    if not vim.list_contains(PLATFORMS, opts.platform.type) then
       log.error("Invalid option 'platform.type' value: " .. opts.platform.type)
     end
   end
 
   if vim.tbl_get(opts, "types", "roblox_security_level") then
-    if not compat.list_contains(SECURITY_LEVELS, opts.types.roblox_security_level) then
+    if not vim.list_contains(SECURITY_LEVELS, opts.types.roblox_security_level) then
       log.error(
         "Invalid option 'types.roblox_security_level' value: " .. opts.types.roblox_security_level
       )

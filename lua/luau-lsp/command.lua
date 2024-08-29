@@ -1,4 +1,3 @@
-local compat = require "luau-lsp.compat"
 local log = require "luau-lsp.log"
 
 ---@class luau-lsp.Command
@@ -63,7 +62,7 @@ function M.complete(arglead, cmdline)
       vim.list_extend(items, complete)
     end
 
-    if compat.list_contains(items, args[1]) then
+    if vim.list_contains(items, args[1]) then
       items = {}
     end
   else

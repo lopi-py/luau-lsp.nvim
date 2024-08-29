@@ -1,30 +1,26 @@
-local Job = require "plenary.job"
 local config = require "luau-lsp.config"
 
 local M = {}
 
 ---@param opts { name: string, cmd: string[], version?: string, optional: boolean? }
 local function check_executable(opts)
-  local ok, job = pcall(Job.new, Job, {
-    command = vim.fn.exepath(opts.cmd[1]),
-    args = vim.list_slice(opts.cmd, 2),
-  })
-
+  local ok, job = pcall(vim.system, opts.cmd)
   if not ok then
     local report = opts.optional and vim.health.warn or vim.health.error
     report(string.format("%s: not available", opts.name))
     return
   end
 
-  local version = table.concat(job:sync(), "\n")
-  if opts.version and vim.version.lt(version, opts.version) then
+  local result = job:wait()
+  local stdout = result.stdout or ""
+  if opts.version and vim.version.lt(stdout, opts.version) then
     vim.health.error(
-      string.format("%s: required version is `%s`, found `%s`", opts.name, opts.version, version)
+      string.format("%s: required version is `%s`, found `%s`", opts.name, opts.version, stdout)
     )
     return
   end
 
-  vim.health.ok(string.format("%s: `%s`", opts.name, version))
+  vim.health.ok(string.format("%s: `%s`", opts.name, stdout))
 end
 
 function M.check()
@@ -32,7 +28,7 @@ function M.check()
 
   check_executable {
     name = "luau-lsp",
-    cmd = { config.get().server.cmd[1], "--version" },
+    cmd = { vim.fn.exepath(config.get().server.cmd[1]), "--version" },
     version = "1.32.0",
   }
 

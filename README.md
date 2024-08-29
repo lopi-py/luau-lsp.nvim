@@ -6,7 +6,7 @@ https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/4fa6d3b1-44fe-414f-96ff
 
 ## Requirements
 
-* Neovim 0.9+ (0.10+ is recommended)
+* Neovim 0.10+
 * [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
 
 ## Installation
@@ -251,10 +251,9 @@ local defaults = {
     cmd = { "luau-lsp", "lsp" },
     ---@type fun(path: string): string?
     root_dir = function(path)
-      local server = require "luau-lsp.server"
-      return server.root(path, function(name)
+      return vim.fs.root(path, function(name)
         return name:match ".+%.project%.json$"
-      end) or server.root(path, {
+      end) or vim.fs.root(path, {
         ".git",
         ".luaurc",
         "stylua.toml",
@@ -280,23 +279,19 @@ To open the `luau-lsp.nvim` log file, run `:LuauLsp log`
 
 ## FAQ
 
-### Why doesn't the Luau filetype detection work?
-
-Don't lazy load the plugin if you are on Neovim v0.9
-
 ### Why doesn't the server detect changes in the sourcemap?
 
 Make sure to enable the file watcher capability and pass it in the server options
 
 ```lua
--- there are couple ways to get the default capabilities, it depends on your distribution or what completion plugins are you using
+-- there are couple ways to get the default capabilities, it depends on your distribution or the completion plugin you are using
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 
 -- example using nvim-cmp
 capabilities = vim.tbl_deep_extend("force", capabilities, require("nvim_cmp_lsp").default_capabilities())
 
 -- manually enable the file watcher capability so luau-lsp will know when the sourcemap changes
--- only needed if you are running Neovim 0.9 or Linux
+-- only needed if you are on Linux
 capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
 
 require("luau-lsp").setup {

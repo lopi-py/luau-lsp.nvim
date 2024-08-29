@@ -3,13 +3,11 @@
 -- https://github.com/JohnnyMorganz/luau-lsp/blob/main/editors/code/src/extension.ts
 -- https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/rpc.lua
 
-local compat = require "luau-lsp.compat"
 local config = require "luau-lsp.config"
 local http = require "luau-lsp.http"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
-local uv = compat.uv
 local is_listening = false
 
 local server
@@ -35,7 +33,7 @@ local function start_server(port)
   is_listening = true
   current_port = port
 
-  server = uv.new_tcp()
+  server = vim.uv.new_tcp()
   server:bind("127.0.0.1", port)
 
   log.info("Plugin server listening on port " .. port)
@@ -43,7 +41,7 @@ local function start_server(port)
   server:listen(128, function(listen_err)
     assert(not listen_err, listen_err)
 
-    socket = uv.new_tcp()
+    socket = vim.uv.new_tcp()
     server:accept(socket)
 
     local parse_chunk = coroutine.wrap(http.request_parser_loop)
