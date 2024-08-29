@@ -55,7 +55,7 @@ function M.once(fn)
   end
 end
 
----@param bufnr number?
+---@param bufnr integer?
 ---@return vim.lsp.Client?
 function M.get_client(bufnr)
   return vim.lsp.get_clients({ name = "luau-lsp", bufnr = bufnr })[1]

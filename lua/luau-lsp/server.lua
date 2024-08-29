@@ -165,7 +165,7 @@ local function start_language_server()
   end)
 end
 
----@param bufnr number
+---@param bufnr integer
 ---@return boolean
 local function is_luau_file(bufnr)
   return vim.bo[bufnr].buftype == "" and vim.bo[bufnr].filetype == "luau"

@@ -7,23 +7,16 @@ local M = {}
 
 local current_method = "luau-lsp/bytecode"
 local current_optlevel = 0
-
 local bytecode_bufnr = -1
 local bytecode_winnr = -1
-
-local optimization_levels = {
-  ["None"] = 0,
-  ["01"] = 1,
-  ["02"] = 2,
-}
 
 ---@param callback fun(optlevel: number)
 local function get_optimization_level(callback)
   vim.ui.select({ "02", "01", "None" }, {
     prompt = "Select optimization level",
   }, function(choice)
-    if choice and optimization_levels[choice] then
-      callback(optimization_levels[choice])
+    if choice then
+      callback(tonumber(choice) or 0)
     end
   end)
 end
@@ -36,7 +29,6 @@ local function close_view()
   if vim.api.nvim_win_is_valid(bytecode_winnr) then
     vim.api.nvim_win_close(bytecode_winnr, true)
   end
-
   if vim.api.nvim_buf_is_valid(bytecode_bufnr) then
     vim.api.nvim_buf_delete(bytecode_bufnr, { force = true })
   end
@@ -55,13 +47,13 @@ local function create_view()
   vim.bo[bytecode_bufnr].bufhidden = "wipe"
   vim.bo[bytecode_bufnr].swapfile = false
   vim.bo[bytecode_bufnr].modifiable = false
+  vim.wo[bytecode_winnr].winfixbuf = true
 
   -- treesitter is too slow to parse luau bytecode (freezes neovim), we could wait for
   -- https://github.com/neovim/neovim/pull/22420
   vim.bo[bytecode_bufnr].syntax = "luau"
 
   vim.keymap.set("n", "q", close_view, {
-    silent = true,
     buffer = bytecode_bufnr,
     desc = "Close the window",
   })
@@ -73,7 +65,7 @@ local function create_view()
     end,
   })
 
-  vim.api.nvim_create_autocmd("BufWipeout", {
+  vim.api.nvim_create_autocmd("BufUnload", {
     group = augroup,
     buffer = bytecode_bufnr,
     callback = function()
@@ -120,7 +112,7 @@ local function show_bytecode_info(method, filename)
   end)
 end
 
----@param bufnr number
+---@param bufnr integer
 function M.update_buffer(bufnr)
   local client = util.get_client(bufnr)
   if not client then
