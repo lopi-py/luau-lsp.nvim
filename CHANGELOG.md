@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.6.0] - 2024-08-29
+
 ### Added
 
 - `require("luau-lsp").aliases()` to read and return aliases from `.luaurc`
