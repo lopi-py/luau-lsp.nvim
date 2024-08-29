@@ -3,7 +3,7 @@ local util = require "luau-lsp.util"
 local M = {}
 
 M.level = vim.log.levels.WARN
-M.filename = util.storage_file "luau-lsp.log"
+M.filename = util.joinpath(vim.fn.stdpath "log", "luau-lsp.log")
 
 ---@type file*?
 local logfile
@@ -20,8 +20,7 @@ local function write(message, level)
     logfile = io.open(M.filename, "a+")
   end
   assert(logfile)
-  logfile:write(string.format("%s[%s] %s", os.date "%H:%M:%S", level, message))
-  logfile:write "\n"
+  logfile:write(string.format("%s[%s] %s\n", os.date "%H:%M:%S", level, message))
   logfile:flush()
 end
 

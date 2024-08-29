@@ -1,6 +1,6 @@
-local Path = require "plenary.path"
-
 local M = {}
+
+M.is_windows = vim.uv.os_uname() == "Windows_NT"
 
 ---@param path string
 ---@return boolean
@@ -9,13 +9,25 @@ function M.is_file(path)
   return stat and stat.type == "file" or false
 end
 
+function M.is_dir(path)
+  local stat = vim.uv.fs_stat(path)
+  return stat and stat.type == "directory" or false
+end
+
+---@vararg string
+---@return string
+function M.joinpath(...)
+  return table.concat({ ... }, M.is_windows and "\\" or "/")
+end
+
 ---@param key string
 ---@return string
 function M.storage_file(key)
-  local storage = Path:new(vim.fn.stdpath "data") / "luau-lsp"
-  storage:mkdir { parents = true }
-
-  return tostring(storage / key)
+  local path = M.joinpath(vim.fn.stdpath "data", "luau-lsp")
+  if not M.is_dir(path) then
+    vim.uv.fs_mkdir(path, 448)
+  end
+  return M.joinpath(path, key)
 end
 
 ---@param callback function
