@@ -6,6 +6,10 @@
 
 - Support for Neovim 0.9
 
+### Fixed
+
+- Kill rojo sourcemap process on exit
+
 ## [1.6.0] - 2024-08-29
 
 ### Added

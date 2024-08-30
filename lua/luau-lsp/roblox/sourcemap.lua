@@ -37,6 +37,12 @@ local function get_rojo_project_file(callback)
   end
 end
 
+local function stop_sourcemap_generation()
+  if pid then
+    vim.uv.kill(pid)
+  end
+end
+
 ---@param project_file? string
 local function start_sourcemap_generation(project_file)
   if not project_file then
@@ -56,13 +62,13 @@ local function start_sourcemap_generation(project_file)
     table.insert(cmd, "--include-non-scripts")
   end
 
+  local augroup = vim.api.nvim_create_augroup("luau-lsp/sourcemap", {})
   local ok, job = pcall(vim.system, cmd, {
     text = true,
   }, function(result)
     if result.stderr and result.stderr ~= "" then
       log.error("Failed to update sourcemap for '%s': %s", project_file, result.stderr)
     end
-    pid = nil
   end)
 
   if not ok then
@@ -72,12 +78,11 @@ local function start_sourcemap_generation(project_file)
 
   log.info("Starting sourcemap generation for '%s'", project_file)
   pid = job.pid
-end
 
-local function stop_sourcemap_generation()
-  if pid then
-    vim.uv.kill(pid)
-  end
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = augroup,
+    callback = stop_sourcemap_generation,
+  })
 end
 
 ---@param project_file? string
