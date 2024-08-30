@@ -15,12 +15,17 @@ local function check_executable(opts)
   local stdout = result.stdout or ""
   if opts.version and vim.version.lt(stdout, opts.version) then
     vim.health.error(
-      string.format("%s: required version is `%s`, found `%s`", opts.name, opts.version, stdout)
+      string.format(
+        "%s: required version is `%s`, found `%s`",
+        opts.name,
+        opts.version,
+        vim.trim(stdout)
+      )
     )
     return
   end
 
-  vim.health.ok(string.format("%s: `%s`", opts.name, stdout))
+  vim.health.ok(string.format("%s: `%s`", opts.name, vim.trim(stdout)))
 end
 
 function M.check()
@@ -32,15 +37,15 @@ function M.check()
     version = "1.32.0",
   }
 
-  local autocmds = vim.api.nvim_get_autocmds {
+  local ok, autocmds = pcall(vim.api.nvim_get_autocmds, {
     group = "lspconfig",
     event = "FileType",
     pattern = "luau",
-  }
-  if #autocmds == 0 then
-    vim.health.ok "No conflicts with `nvim-lspconfig`"
-  else
+  })
+  if ok and #autocmds > 0 then
     vim.health.error "`lspconfig.luau_lsp.setup` was called, it may cause conflicts"
+  else
+    vim.health.ok "No conflicts with `nvim-lspconfig`"
   end
 
   vim.health.start "Rojo (required for automatic sourcemap generation)"
