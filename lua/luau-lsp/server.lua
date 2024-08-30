@@ -223,20 +223,4 @@ function M.restart()
   end)
 end
 
----@param path string
----@param marker string[] | fun(name: string): boolean
----@return string?
-function M.root(path, marker)
-  local paths = vim.fs.find(marker, {
-    upward = true,
-    path = path,
-  })
-
-  if #paths == 0 then
-    return nil
-  end
-
-  return vim.fs.dirname(paths[1])
-end
-
 return M
