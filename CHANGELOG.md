@@ -4,7 +4,8 @@
 
 ### Removed
 
-- Support for Neovim 0.9
+- Removed deprecated commands starting with `Luau*`
+- Dropped support for Neovim 0.9
 
 ### Fixed
 
