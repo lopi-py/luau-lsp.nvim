@@ -25,7 +25,7 @@ end
 function M.storage_file(key)
   local path = M.joinpath(vim.fn.stdpath "data", "luau-lsp")
   if not M.is_dir(path) then
-    vim.uv.fs_mkdir(path, 448)
+    vim.fn.mkdir(path, "p")
   end
   return M.joinpath(path, key)
 end

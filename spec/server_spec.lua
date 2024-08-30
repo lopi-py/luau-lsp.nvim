@@ -28,9 +28,6 @@ local function wait_for_client()
 end
 
 describe("luau-lsp server", function()
-  ---@diagnostic disable-next-line: duplicate-set-field
-  vim.notify = function() end
-
   after_each(function()
     local client = wait_for_client()
     client.stop(true)
