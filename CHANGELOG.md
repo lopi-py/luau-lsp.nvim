@@ -4,7 +4,8 @@
 
 ### Removed
 
-- Removed deprecated commands starting with `Luau*`
+- Deprecated option `types.roblox`
+- Deprecated commands starting with `Luau*`
 - Dropped support for Neovim 0.9
 
 ### Fixed

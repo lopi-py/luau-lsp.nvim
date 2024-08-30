@@ -75,10 +75,6 @@ local function validate(opts)
     end
   end
 
-  if vim.tbl_get(opts, "types", "roblox") ~= nil then
-    log.warn "'types.roblox' is deprecated, use 'platform.type' instead"
-  end
-
   local function check_server_setting(name)
     if vim.tbl_get(opts, "server", "settings", "luau-lsp", name) ~= nil then
       log.error("'%s' should not be passed as server setting", name)
