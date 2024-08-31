@@ -1,6 +1,6 @@
 local M = {}
 
-M.is_windows = vim.uv.os_uname() == "Windows_NT"
+M.is_windows = vim.uv.os_uname().sysname == "Windows_NT"
 
 ---@param path string
 ---@return boolean
