@@ -16,9 +16,7 @@ local fetch_fflags = async.wrap(function(callback)
     callback {}
   end
 
-  curl.get {
-    url = CURRENT_FFLAGS_URL,
-    accept = "application/json",
+  curl.get(CURRENT_FFLAGS_URL, {
     callback = function(result)
       local ok, content = pcall(vim.json.decode, result.body)
       if ok then
@@ -28,10 +26,9 @@ local fetch_fflags = async.wrap(function(callback)
       end
     end,
     on_error = function(result)
-      on_error(result.stderr)
+      on_error(table.concat(result.stderr, "\n"))
     end,
-    compressed = false,
-  }
+  })
 end, 1)
 
 ---@async

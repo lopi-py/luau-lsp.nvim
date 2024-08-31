@@ -27,14 +27,14 @@ function M.aliases(paths)
     return
   end
 
-  local ok, contents = pcall(json.decode, luaurc:read "a")
+  local ok, content = pcall(json.decode, luaurc:read "a")
   if not ok then
-    log.error("Failed to read '.luaurc': %s", contents)
+    log.error("Failed to read '.luaurc': %s", content)
     return
   end
 
   local aliases = vim.empty_dict()
-  for alias, value in pairs(contents.aliases or {}) do
+  for alias, value in pairs(content.aliases or {}) do
     aliases["@" .. alias] = value
   end
   return aliases

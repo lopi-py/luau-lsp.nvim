@@ -37,14 +37,12 @@ local download_api = async.wrap(function(callback)
     output = global_types_file(),
     callback = on_success,
     on_error = on_error,
-    compressed = false,
   })
 
   curl.get(API_DOCS_URL, {
     output = api_docs_file(),
     callback = on_success,
     on_error = on_error,
-    compressed = false,
   })
 end, 1)
 

@@ -2,7 +2,7 @@ local json = require "luau-lsp.json"
 
 describe("json5 decoder", function()
   it("should decode with comments", function()
-    local ok, contents = pcall(
+    local ok, content = pcall(
       json.decode,
       [[
       // .luaurc
@@ -18,11 +18,11 @@ describe("json5 decoder", function()
     assert.same({
       foo = "foo",
       bar = "bar",
-    }, contents)
+    }, content)
   end)
 
   it("should decode with trailing commas", function()
-    local ok, contents = pcall(
+    local ok, content = pcall(
       json.decode,
       [[
       {
@@ -36,11 +36,11 @@ describe("json5 decoder", function()
     assert.same({
       foo = "foo",
       bar = "bar",
-    }, contents)
+    }, content)
   end)
 
   it("should decode nesting fields", function()
-    local ok, contents = pcall(
+    local ok, content = pcall(
       json.decode,
       [[
         {
@@ -57,6 +57,6 @@ describe("json5 decoder", function()
       foo = {
         bar = "baz",
       },
-    }, contents)
+    }, content)
   end)
 end)
