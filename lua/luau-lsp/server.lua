@@ -26,7 +26,7 @@ local fetch_fflags = async.wrap(function(callback)
       end
     end,
     on_error = function(result)
-      on_error(table.concat(result.stderr, "\n"))
+      on_error(result.stderr)
     end,
   })
 end, 1)
