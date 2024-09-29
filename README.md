@@ -136,7 +136,7 @@ require("luau-lsp").setup {
   fflags = {
     sync = true, -- sync currently enabled fflags with roblox's published fflags
     override = {
-      LuauTarjanChildLimit = 0,
+      LuauSolverV2 = "True", -- enable the new solver
     },
   },
 }

@@ -6,6 +6,7 @@ local util = require "luau-lsp.util"
 
 local CURRENT_FFLAGS_URL =
   "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCDesktopClient"
+local FFLAG_KINDS = { "FFlag", "FInt", "DFFlag", "DFInt" }
 
 ---@type integer[]
 local pending_buffers = {}
@@ -37,18 +38,13 @@ local function get_fflags()
   local fflags = {}
 
   if config.get().fflags.sync then
-    vim
-      .iter(fetch_fflags())
-      :filter(function(name)
-        return name:match "^FFlagLuau"
-      end)
-      :map(function(name, value)
-        ---@diagnostic disable-next-line: redundant-return-value
-        return name:sub(6), value
-      end)
-      :each(function(name, value)
-        fflags[name] = value
-      end)
+    for name, value in pairs(fetch_fflags()) do
+      for _, kind in ipairs(FFLAG_KINDS) do
+        if vim.startswith(name, kind .. "Luau") then
+          fflags[name:sub(#kind + 1)] = value
+        end
+      end
+    end
   end
 
   return vim.tbl_deep_extend("force", fflags, config.get().fflags.override)
