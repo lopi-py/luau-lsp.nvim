@@ -61,4 +61,15 @@ function M.get_client(bufnr)
   return vim.lsp.get_clients({ name = "luau-lsp", bufnr = bufnr })[1]
 end
 
+--- TODO: remove when https://github.com/JohnnyMorganz/luau-lsp/issues/752 is fixed
+---
+---@param dir string?
+---@return string?
+function M.lower_case_drive(dir)
+  if M.is_windows and dir then
+    return dir:sub(1, 1):lower() .. dir:sub(2)
+  end
+  return dir
+end
+
 return M
