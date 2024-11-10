@@ -37,7 +37,7 @@ end
 local function create_view()
   vim.cmd "belowright vsplit +enew"
 
-  local augroup = vim.api.nvim_create_augroup("luau-lsp/bytecode", {})
+  local group = vim.api.nvim_create_augroup("luau-lsp/bytecode", {})
 
   bytecode_bufnr = vim.api.nvim_get_current_buf()
   bytecode_winnr = vim.api.nvim_get_current_win()
@@ -59,17 +59,17 @@ local function create_view()
   })
 
   vim.api.nvim_create_autocmd(UPDATE_EVENTS, {
-    group = augroup,
+    group = group,
     callback = function(event)
       M.update_buffer(event.buf)
     end,
   })
 
   vim.api.nvim_create_autocmd("BufUnload", {
-    group = augroup,
+    group = group,
     buffer = bytecode_bufnr,
     callback = function()
-      vim.api.nvim_del_augroup_by_id(augroup)
+      vim.api.nvim_del_augroup_by_id(group)
     end,
   })
 

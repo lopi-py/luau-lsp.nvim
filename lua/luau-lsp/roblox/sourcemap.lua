@@ -55,14 +55,14 @@ local function start_sourcemap_generation(project_file)
     "--watch",
     project_file,
     "--output",
-    "sourcemap.json",
+    config.get().sourcemap.sourcemap_file,
   }
 
   if config.get().sourcemap.include_non_scripts then
     table.insert(cmd, "--include-non-scripts")
   end
 
-  local augroup = vim.api.nvim_create_augroup("luau-lsp/sourcemap", {})
+  local group = vim.api.nvim_create_augroup("luau-lsp/sourcemap", {})
   local ok, job = pcall(vim.system, cmd, {
     text = true,
   }, function(result)
@@ -80,7 +80,7 @@ local function start_sourcemap_generation(project_file)
   pid = job.pid
 
   vim.api.nvim_create_autocmd("VimLeavePre", {
-    group = augroup,
+    group = group,
     callback = stop_sourcemap_generation,
   })
 end

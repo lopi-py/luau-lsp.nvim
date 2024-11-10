@@ -95,6 +95,7 @@ local function get_settings()
       },
       sourcemap = {
         enabled = config.get().sourcemap.enabled,
+        sourcemapFile = config.get().sourcemap.sourcemap_file,
       },
     },
   }

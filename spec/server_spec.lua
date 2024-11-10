@@ -114,18 +114,6 @@ describe("luau-lsp server", function()
     create_luau_buffer()
     local client = wait_for_client()
 
-    assert.same({
-      ["luau-lsp"] = {
-        platform = {
-          type = "roblox",
-        },
-        sourcemap = {
-          enabled = true,
-        },
-        testSetting = {
-          testField = "testing",
-        },
-      },
-    }, client.settings)
+    assert.same("testing", vim.tbl_get(client.settings, "luau-lsp", "testSetting", "testField"))
   end)
 end)

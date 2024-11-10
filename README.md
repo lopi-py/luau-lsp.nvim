@@ -99,6 +99,7 @@ require("luau-lsp").setup {
     enabled = true,
     autogenerate = true, -- automatic generation when the server is attached
     rojo_project_file = "default.project.json",
+    sourcemap_file = "sourcemap.json",
   },
 }
 ```
@@ -164,7 +165,6 @@ require("luau-lsp").setup {
     settings = {
       ["luau-lsp"] = {
         require = {
-          mode = "relativeToFile",
           directoryAliases = require("luau-lsp").aliases(),
         },
       },
@@ -226,6 +226,7 @@ local defaults = {
     rojo_path = "rojo",
     rojo_project_file = "default.project.json",
     include_non_scripts = true,
+    sourcemap_file = "sourcemap.json",
   },
   types = {
     ---@type string[]
