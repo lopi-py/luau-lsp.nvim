@@ -1,43 +1,8 @@
-local json = require "luau-lsp.json"
-local log = require "luau-lsp.log"
-
----@param paths string[]
----@return file*?
-local function find_luaurc(paths)
-  local luaurc = io.open(".luaurc", "r")
-  if luaurc then
-    return luaurc
-  end
-
-  for _, path in ipairs(paths) do
-    luaurc = io.open(path .. "/.luaurc", "r")
-    if luaurc then
-      return luaurc
-    end
-  end
-end
-
 local M = {}
 
----@param paths? string[]
 ---@return table<string, string>?
-function M.aliases(paths)
-  local luaurc = find_luaurc(paths or { "src", "lib" })
-  if not luaurc then
-    return
-  end
-
-  local ok, content = pcall(json.decode, luaurc:read "a")
-  if not ok then
-    log.error("Failed to read '.luaurc': %s", content)
-    return
-  end
-
-  local aliases = vim.empty_dict()
-  for alias, value in pairs(content.aliases or {}) do
-    aliases["@" .. alias] = value
-  end
-  return aliases
+function M.aliases()
+  return require("luau-lsp.luaurc").aliases { "lib", "src" }
 end
 
 ---@param opts luau-lsp.Config

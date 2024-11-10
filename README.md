@@ -155,8 +155,8 @@ The server is not able to read `.luaurc` aliases yet, but `require("luau-lsp").a
 `.luaurc` lookup order:
 
 1. `.luaurc`
-2. `src/.luaurc`
-3. `lib/.luaurc`
+2. `lib/.luaurc`
+3. `src/.luaurc`
 
 ```lua
 require("luau-lsp").setup {

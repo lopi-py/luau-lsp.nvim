@@ -40,7 +40,6 @@ end)
 local function create_logger(level, levelnr)
   return function(message, ...)
     message = string.format(message, ...)
-
     write(message, level)
 
     if levelnr >= M.level then
