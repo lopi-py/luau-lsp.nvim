@@ -4,8 +4,8 @@
 
 ### Added
 
-- Option `sourcemap.sourcemap_file` to specify a different name to use for the sourcemap
 - Option `fflags.enable_new_solver` to enable the flags required for Luau's new type solver
+- Option `sourcemap.sourcemap_file` to specify a different name to use for the sourcemap
 
 ### Changed
 
@@ -13,6 +13,7 @@
 
 ### Removed
 
+- Deprecated function `require("luau-lsp").aliases()` as now luau-lsp has built-in support
 - Deprecated option `types.roblox`
 - Deprecated commands starting with `Luau*`
 - Dropped support for Neovim 0.9

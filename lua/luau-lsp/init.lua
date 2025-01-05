@@ -1,8 +1,7 @@
 local M = {}
 
----@return table<string, string>?
 function M.aliases()
-  return require("luau-lsp.luaurc").aliases { "lib", "src" }
+  require("luau-lsp.log").warn 'require("luau-lsp").aliases() is deprecated, not needed anymore'
 end
 
 ---@param opts luau-lsp.Config
