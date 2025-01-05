@@ -135,9 +135,10 @@ require("luau-lsp").setup {
 ```lua
 require("luau-lsp").setup {
   fflags = {
+    enable_new_solver = true, -- enables the flags required for luau's new type solver.
     sync = true, -- sync currently enabled fflags with roblox's published fflags
-    override = {
-      LuauSolverV2 = "True", -- enable the new solver
+    override = { -- override fflags passed to luau 
+
     },
   },
 }
@@ -238,6 +239,7 @@ local defaults = {
   },
   fflags = {
     enable_by_default = false,
+    enable_new_solver = false,
     sync = true,
     ---@type table<string, string>
     override = {},

@@ -5,10 +5,11 @@
 ### Added
 
 - Option `sourcemap.sourcemap_file` to specify a different name to use for the sourcemap
+- Option `fflags.enable_new_solver` to enable the flags required for Luau's new type solver
 
 ### Changed
 
-- Upgraded the required version of `luau-lsp` to `1.35.0`
+- Upgraded the required version of `luau-lsp` to `1.38.0`
 
 ### Removed
 

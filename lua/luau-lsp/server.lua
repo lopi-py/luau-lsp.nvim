@@ -47,6 +47,12 @@ local function get_fflags()
     end
   end
 
+  if config.get().fflags.enable_new_solver then
+    fflags["LuauSolverV2"] = "true"
+    fflags["LuauNewSolverPopulateTableLocations"] = "true"
+    fflags["LuauNewSolverPrePopulateClasses"] = "true"
+  end
+
   return vim.tbl_deep_extend("force", fflags, config.get().fflags.override)
 end
 

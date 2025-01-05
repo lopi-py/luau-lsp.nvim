@@ -34,7 +34,7 @@ function M.check()
   check_executable {
     name = "luau-lsp",
     cmd = { vim.fn.exepath(config.get().server.cmd[1]), "--version" },
-    version = "1.35.0",
+    version = "1.38.0",
   }
 
   local ok, autocmds = pcall(vim.api.nvim_get_autocmds, {

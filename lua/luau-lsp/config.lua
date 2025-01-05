@@ -32,6 +32,7 @@ local defaults = {
   },
   fflags = {
     enable_by_default = false,
+    enable_new_solver = false,
     sync = true,
     ---@type table<string, string>
     override = {},
