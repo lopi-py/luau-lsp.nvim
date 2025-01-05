@@ -145,7 +145,7 @@ local function start_language_server()
   local opts = vim.deepcopy(config.get().server) --[[@as vim.lsp.ClientConfig]]
   opts.name = "luau-lsp"
   opts.cmd = get_cmd()
-  opts.root_dir = util.lower_case_drive(opts.root_dir(bufname))
+  opts.root_dir = opts.root_dir(bufname)
   opts.settings = vim.tbl_deep_extend("force", opts.settings or {}, get_settings())
   opts.init_options = {
     fflags = get_fflags(),
