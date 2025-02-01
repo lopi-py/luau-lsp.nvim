@@ -56,6 +56,8 @@ local function handle_request(socket, chunk)
     end)
   elseif metadata.path == "/clear" then
     client.notify "$/plugin/clear"
+    send_status(socket, 200)
+  else
     send_status(socket, 404)
   end
 end
