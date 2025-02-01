@@ -23,7 +23,7 @@ end
 ---@param key string
 ---@return string
 function M.storage_file(key)
-  local path = M.joinpath(vim.fn.stdpath "data", "luau-lsp")
+  local path = M.joinpath(vim.fn.stdpath "data" --[[@as string]], "luau-lsp")
   if not M.is_dir(path) then
     vim.fn.mkdir(path, "p")
   end

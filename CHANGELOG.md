@@ -4,6 +4,7 @@
 
 ### Added
 
+- Asynchronous GZip decompression to improve performance when receiving large data models
 - Option `fflags.enable_new_solver` to enable the flags required for Luau's new type solver
 - Option `sourcemap.sourcemap_file` to specify a different name to use for the sourcemap
 

@@ -8,105 +8,90 @@ local http = require "luau-lsp.http"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
-local is_listening = false
-
+---@type uv.uv_tcp_t?
 local server
-local socket
 
-local current_port = config.get().plugin.port
+local parse_chunk = coroutine.wrap(http.request_parser_loop)
+parse_chunk()
 
----@param target_socket uv_tcp_t
+---@param socket uv.uv_tcp_t
 ---@param status number
 ---@param body? string
-local function send_status(target_socket, status, body)
+local function send_status(socket, status, body)
   local response = http.create_response({}, body or "", status)
-  target_socket:write(response)
+  socket:write(response)
+  socket:close()
+end
+
+---@param socket uv.uv_tcp_t
+---@param chunk string?
+local function handle_request(socket, chunk)
+  if not chunk then
+    socket:close()
+    return
+  end
+
+  local metadata, headers, body = parse_chunk(chunk)
+  if not metadata or not headers or not body then
+    socket:close()
+    return
+  end
+
+  local client = util.get_client()
+  if not client then
+    send_status(socket, 500)
+    return
+  end
+
+  if metadata.path == "/full" then
+    http.decompress(headers, body, function(res)
+      if client.is_stopped() then
+        send_status(socket, 500)
+      elseif res.tree then
+        client.notify("$/plugin/full", res.tree)
+        send_status(socket, 200)
+      else
+        send_status(socket, 400)
+      end
+    end)
+  elseif metadata.path == "/clear" then
+    client.notify "$/plugin/clear"
+    send_status(socket, 404)
+  end
 end
 
 local M = {}
 
----@param port number
-local function start_server(port)
-  assert(type(port) == "number", "Port must be a number")
-  assert(is_listening == false, "This server object is already bound to http://localhost:" .. port)
-
-  is_listening = true
-  current_port = port
-
-  server = vim.uv.new_tcp()
-  server:bind("127.0.0.1", port)
-
-  log.info("Plugin server listening on port " .. port)
-
-  server:listen(128, function(listen_err)
-    assert(not listen_err, listen_err)
-
-    socket = vim.uv.new_tcp()
-    server:accept(socket)
-
-    local parse_chunk = coroutine.wrap(http.request_parser_loop)
-    parse_chunk()
-
-    socket:read_start(function(read_err, chunk)
-      assert(not read_err, read_err)
-
-      if chunk then
-        while true do
-          local metadata, headers, body = parse_chunk(chunk)
-          local client = util.get_client()
-
-          if not metadata then
-            return
-          end
-
-          if not client then
-            send_status(socket, 500)
-            return
-          end
-
-          if metadata.path == "/full" then
-            local data_model = headers.content_encoding == "gzip" and http.decompress(body).tree
-              or vim.json.decode(body).tree
-
-            if not data_model then
-              send_status(socket, 400)
-              break
-            end
-
-            client.notify("$/plugin/full", data_model)
-            send_status(socket, 200)
-          elseif metadata.path == "/clear" then
-            client.notify "$/plugin/clear"
-            send_status(socket, 200)
-          else
-            send_status(socket, 404)
-            break
-          end
-          chunk = ""
-        end
-      else
-        socket:close()
-      end
-    end)
-  end)
+local function stop_server()
+  if server then
+    server:shutdown()
+    server = nil
+    log.info "Plugin server has disconnected"
+  end
 end
 
-local function stop_server()
-  if is_listening then
-    server:shutdown()
-
-    if socket then
-      socket:shutdown()
+---@param port number
+local function start_server(port)
+  server = assert(vim.uv.new_tcp())
+  server:bind("127.0.0.1", port)
+  server:listen(128, function(listen_err)
+    if listen_err then
+      log.error(listen_err)
+    else
+      local socket = assert(vim.uv.new_tcp())
+      server:accept(socket)
+      socket:read_start(function(read_err, chunk)
+        if read_err then
+          socket:close()
+          log.error(read_err)
+        else
+          handle_request(socket, chunk)
+        end
+      end)
     end
+  end)
 
-    local client = util.get_client()
-    if client then
-      client.notify "$/plugin/clear"
-    end
-
-    is_listening = false
-    log.info("Plugin server disconnected from port " .. current_port)
-  end
+  log.info("Plugin server is now listening on port " .. port)
 end
 
 function M.start()

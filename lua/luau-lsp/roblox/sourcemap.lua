@@ -2,6 +2,7 @@ local config = require "luau-lsp.config"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
+---@type number?
 local pid
 
 local M = {}
@@ -39,7 +40,7 @@ end
 
 local function stop_sourcemap_generation()
   if pid then
-    vim.uv.kill(pid)
+    vim.uv.kill(pid, "sigterm")
   end
 end
 
@@ -62,10 +63,7 @@ local function start_sourcemap_generation(project_file)
     table.insert(cmd, "--include-non-scripts")
   end
 
-  local group = vim.api.nvim_create_augroup("luau-lsp/sourcemap", {})
-  local ok, job = pcall(vim.system, cmd, {
-    text = true,
-  }, function(result)
+  local ok, job = pcall(vim.system, cmd, { text = true }, function(result)
     if result.stderr and result.stderr ~= "" then
       log.error("Failed to update sourcemap for '%s': %s", project_file, result.stderr)
     end
@@ -80,7 +78,7 @@ local function start_sourcemap_generation(project_file)
   pid = job.pid
 
   vim.api.nvim_create_autocmd("VimLeavePre", {
-    group = group,
+    group = vim.api.nvim_create_augroup("luau-lsp.sourcemap", {}),
     callback = stop_sourcemap_generation,
   })
 end

@@ -1,8 +1,4 @@
-local zzlib = require "zzlib"
-
-local M = {}
-
-local status_phrases = {
+local STATUS_PRHASES = {
   [200] = "OK",
   [202] = "Accepted",
   [400] = "Bad Request",
@@ -10,9 +6,12 @@ local status_phrases = {
   [500] = "Internal Server Error",
 }
 
-local function parse_headers(header)
-  assert(type(header) == "string", "header must a be string")
+local M = {}
 
+---@param header string
+---@return table?
+---@return table?
+local function parse_headers(header)
   if header == "" then
     return
   end
@@ -27,10 +26,8 @@ local function parse_headers(header)
       headers[key] = value
     else
       local method, place = string.match(line, "(%w+) (.+) HTTP/%d.%d")
-
       if method and place then
         local path, raw_queries = string.match(place, "([^%?]+)(.*)")
-
         local queries = {}
 
         if raw_queries then
@@ -54,17 +51,14 @@ function M.request_parser_loop()
 
   while true do
     local start, finish = string.find(buffer, "\r\n\r\n", 1, true)
-
     if start then
       local headers, metadata = parse_headers(buffer)
       local content_length = headers and tonumber(headers.content_length) or 0
-
       local body_chunks = { string.sub(buffer, finish + 1) }
       local body_length = #body_chunks[1]
 
       while body_length < content_length do
         local chunk = coroutine.yield() or error "Expected more data for the body."
-
         table.insert(body_chunks, chunk)
         body_length = body_length + #chunk
       end
@@ -73,31 +67,29 @@ function M.request_parser_loop()
       body_chunks[#body_chunks] = string.sub(last_chunk, 1, content_length - body_length - 1)
 
       local remaining = ""
-
       if body_length > content_length then
         remaining = string.sub(last_chunk, content_length - body_length)
       end
-      local body = table.concat(body_chunks)
 
+      local body = table.concat(body_chunks)
       local chunk = coroutine.yield(metadata, headers, body)
         or error "Expected more data for the body."
 
       buffer = remaining .. chunk
     else
       local chunk = coroutine.yield() or error "Expected more chunks for the header"
-
       buffer = buffer .. chunk
     end
   end
 end
 
+---@param headers table
+---@param body string
+---@param status number
+---@return string
 function M.create_response(headers, body, status)
-  assert(type(headers) == "table", "Headers must be a table")
-  assert(type(body) == "string", "Body must be a string")
-  assert(type(status) == "number", "Status must be a number")
-
   local data = {
-    "HTTP/1.1 " .. tostring(status) .. " " .. status_phrases[status],
+    "HTTP/1.1 " .. tostring(status) .. " " .. STATUS_PRHASES[status],
     "Content-Length: " .. tostring(string.len(body)),
     "",
     body,
@@ -114,10 +106,23 @@ function M.create_response(headers, body, status)
   return table.concat(data, "\r\n")
 end
 
-function M.decompress(body)
-  local result = zzlib.gunzip(body)
+---@param headers table
+---@param body string
+---@param callback fun(ret: any)
+function M.decompress(headers, body, callback)
+  assert(headers.content_encoding == "gzip")
 
-  return vim.json.decode(result)
+  local async
+  async = assert(vim.uv.new_async(function(ret)
+    callback(vim.mpack.decode(ret))
+    async:close()
+  end))
+
+  vim.uv.new_thread(nil, function(body_data, async_handler)
+    local zzlib = require "zzlib"
+    local result = vim.json.decode(zzlib.gunzip(body_data))
+    async_handler:send(vim.mpack.encode(result))
+  end, body, async)
 end
 
 return M

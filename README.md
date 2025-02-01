@@ -135,10 +135,10 @@ require("luau-lsp").setup {
 ```lua
 require("luau-lsp").setup {
   fflags = {
-    enable_new_solver = true, -- enables the flags required for luau's new type solver.
+    enable_new_solver = true, -- enables the flags required for luau's new type solver
     sync = true, -- sync currently enabled fflags with roblox's published fflags
     override = { -- override fflags passed to luau 
-
+      LuauTableTypeMaximumStringifierLength = "0",
     },
   },
 }

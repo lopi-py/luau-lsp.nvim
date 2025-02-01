@@ -37,7 +37,7 @@ end
 local function create_view()
   vim.cmd "belowright vsplit +enew"
 
-  local group = vim.api.nvim_create_augroup("luau-lsp/bytecode", {})
+  local group = vim.api.nvim_create_augroup("luau-lsp.bytecode", {})
 
   bytecode_bufnr = vim.api.nvim_get_current_buf()
   bytecode_winnr = vim.api.nvim_get_current_win()
