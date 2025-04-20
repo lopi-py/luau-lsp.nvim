@@ -8,6 +8,8 @@ local http = require "luau-lsp.http"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
+local M = {}
+
 ---@type uv.uv_tcp_t?
 local server
 
@@ -24,7 +26,7 @@ local function send_status(socket, status, body)
 end
 
 ---@param socket uv.uv_tcp_t
----@param chunk string?
+---@param chunk? string
 local function handle_request(socket, chunk)
   if not chunk then
     socket:close()
@@ -45,24 +47,22 @@ local function handle_request(socket, chunk)
 
   if metadata.path == "/full" then
     http.decompress(headers, body, function(res)
-      if client.is_stopped() then
+      if client:is_stopped() then
         send_status(socket, 500)
       elseif res.tree then
-        client.notify("$/plugin/full", res.tree)
+        client:notify("$/plugin/full", res.tree)
         send_status(socket, 200)
       else
         send_status(socket, 400)
       end
     end)
   elseif metadata.path == "/clear" then
-    client.notify "$/plugin/clear"
+    client:notify "$/plugin/clear"
     send_status(socket, 200)
   else
     send_status(socket, 404)
   end
 end
-
-local M = {}
 
 local function stop_server()
   if server then

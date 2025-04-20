@@ -33,7 +33,7 @@ function M.check()
 
   check_executable {
     name = "luau-lsp",
-    cmd = { vim.fn.exepath(config.get().server.cmd[1]), "--version" },
+    cmd = { config.get().server.path, "--version" },
     version = "1.38.0",
   }
 

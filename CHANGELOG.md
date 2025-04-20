@@ -7,17 +7,19 @@
 - Asynchronous GZip decompression to improve performance when receiving large data models
 - Option `fflags.enable_new_solver` to enable the flags required for Luau's new type solver
 - Option `sourcemap.sourcemap_file` to specify a different name to use for the sourcemap
+- Option `server.path` to allow the use of locally installed luau-lsp binaries
 
 ### Changed
 
 - Upgraded the required version of `luau-lsp` to `1.38.0`
+- Bytecode and compiler remarks window now use treesitter
 
 ### Removed
 
 - Deprecated function `require("luau-lsp").aliases()` as now luau-lsp has built-in support
 - Deprecated option `types.roblox`
 - Deprecated commands starting with `Luau*`
-- Dropped support for Neovim 0.9
+- Dropped support for Neovim 0.9 and 0.10
 
 ### Fixed
 

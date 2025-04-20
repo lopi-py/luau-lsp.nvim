@@ -4,6 +4,8 @@ local log = require "luau-lsp.log"
 ---@field execute fun(args: string[])
 ---@field complete? string[] | fun(): string[]
 
+local M = {}
+
 ---@type table<string, luau-lsp.Command>
 local commands = {
   log = {
@@ -11,19 +13,12 @@ local commands = {
       vim.cmd.tabnew(log.filename)
     end,
   },
-
-  restart = {
-    execute = require("luau-lsp.server").restart,
-  },
-
   bytecode = {
     execute = require("luau-lsp.bytecode").bytecode,
   },
-
   compiler_remarks = {
     execute = require("luau-lsp.bytecode").compiler_remarks,
   },
-
   regenerate_sourcemap = {
     execute = function(args)
       require("luau-lsp.roblox.sourcemap").start(args[1])
@@ -44,8 +39,6 @@ local function parse(cmdline)
   local command = table.remove(args, 1)
   return command, args
 end
-
-local M = {}
 
 ---@param arglead string
 ---@param cmdline string
