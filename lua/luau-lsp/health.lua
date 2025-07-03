@@ -28,24 +28,34 @@ local function check_executable(opts)
   vim.health.ok(string.format("%s: `%s`", opts.name, vim.trim(stdout)))
 end
 
-function M.check()
-  vim.health.start "luau-lsp"
+local function is_lspconfig_enabled()
+  local ok, autocmds = pcall(vim.api.nvim_get_autocmds, {
+    group = "lspconfig",
+    event = "FileType",
+    pattern = "luau",
+  })
+  return ok and #autocmds > 0
+end
 
+function M.check()
   check_executable {
     name = "luau-lsp",
     cmd = { config.get().server.path, "--version" },
     version = "1.38.0",
   }
 
-  local ok, autocmds = pcall(vim.api.nvim_get_autocmds, {
-    group = "lspconfig",
-    event = "FileType",
-    pattern = "luau",
-  })
-  if ok and #autocmds > 0 then
-    vim.health.error "`lspconfig.luau_lsp.setup` was called, it may cause conflicts"
+  vim.health.start "Setup"
+
+  if is_lspconfig_enabled() then
+    vim.health.error "`lspconfig.luau_lsp.setup` was called, this might cause conflicts"
   else
-    vim.health.ok "No conflicts with `nvim-lspconfig`"
+    vim.health.ok "No conflicting setup from `nvim-lspconfig`"
+  end
+
+  if vim.lsp.is_enabled "luau_lsp" then
+    vim.health.error '`vim.lsp.enable("luau_lsp")` was called, this might cause conflicts'
+  else
+    vim.health.ok "No conflicting setup from native lsp"
   end
 
   vim.health.start "Rojo (required for automatic sourcemap generation)"

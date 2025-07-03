@@ -226,7 +226,7 @@ local defaults = {
     port = 3667,
   },
   server = {
-    path = vim.fn.exepath "luau-lsp",
+    path = "luau-lsp",
   },
 }
 ```
