@@ -4,12 +4,11 @@ local curl = require "plenary.curl"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
-local API_DOCS_URL =
-  "https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/api-docs/en-us.json"
+local API_DOCS_URL = "https://luau-lsp.pages.dev/api-docs/en-us.json"
 
 local function global_types_url()
   return string.format(
-    "https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.%s.d.luau",
+    "https://luau-lsp.pages.dev/type-definitions/globalTypes.%s.d.luau",
     config.get().types.roblox_security_level
   )
 end

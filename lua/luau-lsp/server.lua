@@ -5,7 +5,7 @@ local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
 
 local CURRENT_FFLAGS_URL =
-  "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCDesktopClient"
+  "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCStudioApp"
 local FFLAG_KINDS = { "FFlag", "FInt", "DFFlag", "DFInt" }
 
 local M = {}
