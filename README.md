@@ -54,7 +54,7 @@ use {
 ## Quick start
 
 > [!CAUTION]
-> `lspconfig.luau_lsp.setup` and `vim.lsp.enable("luau_lsp")` should **NOT** be called, it might cause conflicts with this plugin
+> `lspconfig.luau_lsp.setup` and `vim.lsp.enable("luau_lsp")` should **NOT** be called, as it might cause conflicts with this plugin
 
 ```lua
 require("luau-lsp").setup {
@@ -91,7 +91,7 @@ require("luau-lsp").setup {
 
 ### Rojo sourcemap
 
-Sourcemap generation is done by running `rojo sourcemap --watch default.project.json --output sourcemap.json`.
+Sourcemap generation is done by running `rojo sourcemap --watch --output sourcemap.json default.project.json`.
 
 ```lua
 require("luau-lsp").setup {
@@ -104,7 +104,20 @@ require("luau-lsp").setup {
 }
 ```
 
-`:LuauLsp regenerate_sourcemap {file}` is provided to start sourcemap generation with the project file passed as argument (optional).
+#### Custom generator
+
+You can specify a custom generator command using `sourcemap.generator_cmd`. Note that `sourcemap.rojo_project_file` and `sourcemap.sourcemap_file` will be ignored. This option is recommended for [per-project configuration](#project-configuration).
+
+```lua
+require("luau-lsp").setup {
+  sourcemap = {
+    -- based on https://argon.wiki/docs/commands/cli#sourcemap
+    generator_cmd = { "argon", "sourcemap", "--watch", "--non-scripts" },
+  },
+}
+```
+
+`:LuauLsp regenerate_sourcemap` is provided to restart sourcemap generation.
 
 ### Companion plugin
 
@@ -146,7 +159,7 @@ require("luau-lsp").setup {
 
 ## Bytecode generation
 
-`:LuauLsp bytecode` and `:LuauLsp compiler_remarks` open a new window and show the current Luau file bytecode and compiler remarks. It will automatically update if you change the file or edit it. Close with `q`.
+`:LuauLsp bytecode` and `:LuauLsp compiler_remarks` open a new window and show the current Luau file bytecode and compiler remarks. It will automatically update when you change or edit the file. Close with `q`.
 
 https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/f9d45153-47f0-4565-a2ed-3769153732a0
 
@@ -205,6 +218,8 @@ local defaults = {
     rojo_project_file = "default.project.json",
     include_non_scripts = true,
     sourcemap_file = "sourcemap.json",
+    ---@type string[]?
+    generator_cmd = nil,
   },
   types = {
     ---@type string[]

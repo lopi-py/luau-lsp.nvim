@@ -30,6 +30,8 @@ local defaults = {
     rojo_project_file = "default.project.json",
     include_non_scripts = true,
     sourcemap_file = "sourcemap.json",
+    ---@type string[]?
+    generator_cmd = nil,
   },
   types = {
     ---@type string[]

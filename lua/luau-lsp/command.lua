@@ -20,10 +20,7 @@ local commands = {
     execute = require("luau-lsp.bytecode").compiler_remarks,
   },
   regenerate_sourcemap = {
-    execute = function(args)
-      require("luau-lsp.roblox.sourcemap").start(args[1])
-    end,
-    complete = require("luau-lsp.roblox.sourcemap").get_rojo_project_files,
+    execute = require("luau-lsp.roblox.sourcemap").start,
   },
 }
 
