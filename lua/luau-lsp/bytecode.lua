@@ -49,9 +49,7 @@ local function create_view()
   vim.bo[bytecode_bufnr].modifiable = false
   vim.wo[bytecode_winnr].winfixbuf = true
 
-  -- treesitter is too slow to parse luau bytecode (freezes neovim), we could wait for
-  -- https://github.com/neovim/neovim/pull/22420
-  vim.bo[bytecode_bufnr].syntax = "luau"
+  vim.treesitter.start(bytecode_bufnr, "luau")
 
   vim.keymap.set("n", "q", close_view, {
     buffer = bytecode_bufnr,
@@ -60,9 +58,9 @@ local function create_view()
 
   vim.api.nvim_create_autocmd(UPDATE_EVENTS, {
     group = group,
-    callback = function(event)
+    callback = vim.schedule_wrap(function(event)
       M.update_buffer(event.buf)
-    end,
+    end),
   })
 
   vim.api.nvim_create_autocmd("BufUnload", {
@@ -124,7 +122,7 @@ function M.update_buffer(bufnr)
     optimizationLevel = current_optlevel,
   }
 
-  client.request(current_method, params, function(err, result)
+  client:request(current_method, params, function(err, result)
     if err then
       log.error(err.message)
       return

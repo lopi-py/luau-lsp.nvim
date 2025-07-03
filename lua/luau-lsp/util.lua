@@ -9,6 +9,8 @@ function M.is_file(path)
   return stat and stat.type == "file" or false
 end
 
+---@param path string
+---@return boolean
 function M.is_dir(path)
   local stat = vim.uv.fs_stat(path)
   return stat and stat.type == "directory" or false
@@ -23,7 +25,7 @@ end
 ---@param key string
 ---@return string
 function M.storage_file(key)
-  local path = M.joinpath(vim.fn.stdpath "data" --[[@as string]], "luau-lsp")
+  local path = M.joinpath(vim.fn.stdpath "data", "luau-lsp")
   if not M.is_dir(path) then
     vim.fn.mkdir(path, "p")
   end
@@ -43,19 +45,7 @@ function M.on_count(callback, n)
   end
 end
 
----@param fn function
----@return function
-function M.once(fn)
-  local called = false
-  return function(...)
-    if not called then
-      called = true
-      fn(...)
-    end
-  end
-end
-
----@param bufnr integer?
+---@param bufnr? integer
 ---@return vim.lsp.Client?
 function M.get_client(bufnr)
   return vim.lsp.get_clients({ name = "luau-lsp", bufnr = bufnr })[1]

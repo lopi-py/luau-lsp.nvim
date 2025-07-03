@@ -1,8 +1,9 @@
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "luau",
   callback = function()
-    require("luau-lsp.server").start()
+    require("luau-lsp.server").setup()
   end,
+  once = true,
 })
 
 vim.api.nvim_create_user_command("LuauLsp", function(opts)

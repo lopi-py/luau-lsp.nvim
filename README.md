@@ -1,12 +1,12 @@
 # luau-lsp.nvim
 
-A [luau-lsp](https://github.com/JohnnyMorganz/luau-lsp/) extension to improve your experience in neovim.
+A [luau-lsp](https://github.com/JohnnyMorganz/luau-lsp/) extension to improve your experience in Neovim.
 
 https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/4fa6d3b1-44fe-414f-96ff-b2d58e840080
 
 ## Requirements
 
-* Neovim 0.10+
+* Neovim 0.11+
 * [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
 
 ## Installation
@@ -54,7 +54,7 @@ use {
 ## Quick start
 
 > [!CAUTION]
-> `lspconfig.luau_lsp.setup` should **NOT** be called, it may cause conflicts with the plugin
+> `lspconfig.luau_lsp.setup` should **NOT** be called, it may cause conflicts with this plugin
 
 ```lua
 require("luau-lsp").setup {
@@ -97,7 +97,7 @@ Sourcemap generation is done by running `rojo sourcemap --watch default.project.
 require("luau-lsp").setup {
   sourcemap = {
     enabled = true,
-    autogenerate = true, -- automatic generation when the server is attached
+    autogenerate = true, -- automatic generation when the server is initialized
     rojo_project_file = "default.project.json",
     sourcemap_file = "sourcemap.json",
   },
@@ -108,7 +108,7 @@ require("luau-lsp").setup {
 
 ### Companion plugin
 
-You can install the companion plugin [here](https://create.roblox.com/store/asset/10913122509/Luau-Language-Server-Companion?externalSource=www).
+You can install the companion plugin [here](https://create.roblox.com/store/asset/10913122509/Luau-Language-Server-Companion).
 
 ```lua
 require("luau-lsp").setup {
@@ -135,7 +135,7 @@ require("luau-lsp").setup {
 ```lua
 require("luau-lsp").setup {
   fflags = {
-    enable_new_solver = true, -- enables the flags required for luau's new type solver
+    enable_new_solver = true, -- enables the fflags required for luau's new type solver
     sync = true, -- sync currently enabled fflags with roblox's published fflags
     override = { -- override fflags passed to luau 
       LuauTableTypeMaximumStringifierLength = "0",
@@ -152,22 +152,23 @@ https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/f9d45153-47f0-4565-a2ed
 
 ## Server configuration
 
+See `:help vim.lsp.config`
+
 ```lua
-require("luau-lsp").setup {
-  server = {
-    settings = {
-      -- https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json
-      ["luau-lsp"] = {
-        completion = {
-          imports = {
-            enabled = true, -- enable auto imports
-          },
+vim.lsp.config("luau-lsp", {
+  settings = {
+    ["luau-lsp"] = {
+      completion = {
+        imports = {
+          enabled = true, -- enable auto imports
         },
       },
     },
   },
-}
+})
 ```
+
+For full **server** options check the [luau-lsp schema](https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json)
 
 ## Project configuration
 
@@ -191,7 +192,7 @@ For more info about `.nvim.lua`, check `:help 'exrc'`
 ---@alias luau-lsp.PlatformType "standard" | "roblox"
 ---@alias luau-lsp.RobloxSecurityLevel "None" | "LocalUserSecurity" | "PluginSecurity" | "RobloxScriptSecurity"
 
----@class luau-lsp.Config
+---@class luau-lsp.Config : {}
 local defaults = {
   platform = {
     ---@type luau-lsp.PlatformType
@@ -224,22 +225,8 @@ local defaults = {
     enabled = false,
     port = 3667,
   },
-  ---@class luau-lsp.ClientConfig: vim.lsp.ClientConfig
   server = {
-    ---@type string[]
-    cmd = { "luau-lsp", "lsp" },
-    ---@type fun(path: string): string?
-    root_dir = function(path)
-      return vim.fs.root(path, function(name)
-        return name:match ".+%.project%.json$"
-      end) or vim.fs.root(path, {
-        ".git",
-        ".luaurc",
-        "stylua.toml",
-        "selene.toml",
-        "selene.yml",
-      })
-    end,
+    path = vim.fn.exepath "luau-lsp",
   },
 }
 ```
@@ -260,24 +247,18 @@ To open the `luau-lsp.nvim` log file, run `:LuauLsp log`
 
 ### Why doesn't the server detect changes in the sourcemap?
 
-Make sure to enable the file watcher capability and pass it in the server options
+Make sure to enable the file watcher capability
 
 ```lua
--- there are couple ways to get the default capabilities, it depends on your distribution or the completion plugin you are using
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-
--- example using nvim-cmp
-capabilities = vim.tbl_deep_extend("force", capabilities, require("nvim_cmp_lsp").default_capabilities())
-
--- manually enable the file watcher capability so luau-lsp will know when the sourcemap changes
--- only needed if you are on Linux
-capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
-
-require("luau-lsp").setup {
-  server = {
-    capabilities = capabilities,
+vim.lsp.config("*", {
+  capabilities = {
+    workspace = {
+      didChangeWatchedFiles = {
+        dynamicRegistration = true,
+      },
+    },
   },
-}
+})
 ```
 
 ### How to set the platform automatically?

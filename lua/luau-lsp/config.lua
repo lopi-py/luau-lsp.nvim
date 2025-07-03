@@ -1,14 +1,23 @@
 local log = require "luau-lsp.log"
 
-local PLATFORMS = { "standard", "roblox" }
-local SECURITY_LEVELS = { "None", "LocalUserSecurity", "PluginSecurity", "RobloxScriptSecurity" }
+local PLATFORM_TYPES = {
+  "standard",
+  "roblox",
+}
+
+local ROBLOX_SECURITY_LEVELS = {
+  "None",
+  "LocalUserSecurity",
+  "PluginSecurity",
+  "RobloxScriptSecurity",
+}
 
 local M = {}
 
 ---@alias luau-lsp.PlatformType "standard" | "roblox"
 ---@alias luau-lsp.RobloxSecurityLevel "None" | "LocalUserSecurity" | "PluginSecurity" | "RobloxScriptSecurity"
 
----@class luau-lsp.Config
+---@class luau-lsp.Config : {}
 local defaults = {
   platform = {
     ---@type luau-lsp.PlatformType
@@ -41,21 +50,8 @@ local defaults = {
     enabled = false,
     port = 3667,
   },
-  ---@class luau-lsp.ClientConfig: vim.lsp.ClientConfig
   server = {
-    ---@type string[]
-    cmd = { "luau-lsp", "lsp" },
-    ---@type fun(path: string): string?
-    root_dir = function(path)
-      return vim.fs.root(path, function(name)
-        return name:match ".+%.project%.json$"
-      end) or vim.fs.root(path, {
-        ".git",
-        ".luaurc",
-        "selene.toml",
-        "stylua.toml",
-      })
-    end,
+    path = vim.fn.exepath "luau-lsp",
   },
 }
 
@@ -63,31 +59,29 @@ local options = defaults
 
 ---@param opts luau-lsp.Config
 local function validate(opts)
-  if vim.tbl_get(opts, "platform", "type") then
-    if not vim.list_contains(PLATFORMS, opts.platform.type) then
+  if opts.server and opts.server.capabilities then
+    log.warn "Option 'server.capabilities' is deprecated. See ':help vim.lsp.config'"
+    vim.lsp.config("luau-lsp", { capabilities = opts.server.capabilities })
+  end
+
+  if opts.server and opts.server.settings then
+    log.warn "Option 'server.settings' is deprecated. See ':help vim.lsp.config'"
+    vim.lsp.config("luau-lsp", { settings = opts.server.settings })
+  end
+
+  if opts.platform and opts.platform.type then
+    if not vim.list_contains(PLATFORM_TYPES, opts.platform.type) then
       log.error("Invalid option 'platform.type' value: " .. opts.platform.type)
     end
   end
 
-  if vim.tbl_get(opts, "types", "roblox_security_level") then
-    if not vim.list_contains(SECURITY_LEVELS, opts.types.roblox_security_level) then
+  if opts.types and opts.types.roblox_security_level then
+    if not vim.list_contains(ROBLOX_SECURITY_LEVELS, opts.types.roblox_security_level) then
       log.error(
         "Invalid option 'types.roblox_security_level' value: " .. opts.types.roblox_security_level
       )
     end
   end
-
-  local function check_server_setting(name)
-    if vim.tbl_get(opts, "server", "settings", "luau-lsp", name) ~= nil then
-      log.error("'%s' should not be passed as server setting", name)
-    end
-  end
-
-  check_server_setting "platform"
-  check_server_setting "sourcemap"
-  check_server_setting "types"
-  check_server_setting "fflags"
-  check_server_setting "plugin"
 end
 
 ---@return luau-lsp.Config

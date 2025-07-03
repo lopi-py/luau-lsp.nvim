@@ -18,9 +18,9 @@ jobs:
 
       - name: Install luau-lsp
         run: |
-          wget https://github.com/JohnnyMorganz/luau-lsp/releases/latest/download/luau-lsp-linux-arm64.zip
-          unzip luau-lsp-linux-arm64.zip
-          sudo mv luau-lsp /usr/local/bin/luau-lsp
+          wget https://github.com/JohnnyMorganz/luau-lsp/releases/latest/download/luau-lsp-linux.zip
+          unzip luau-lsp-linux.zip -d bin
+          echo "$(pwd)/bin" >> $GITHUB_PATH
 
       - name: Run tests
         uses: nvim-neorocks/nvim-busted-action@v1

@@ -29,9 +29,9 @@ local download_api = async.wrap(function(callback)
     callback(true)
   end, 2)
 
-  local on_error = util.once(function()
+  local on_error = util.on_count(function()
     callback(false)
-  end)
+  end, 1)
 
   curl.get(global_types_url(), {
     output = global_types_file(),

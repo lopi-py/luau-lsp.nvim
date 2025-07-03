@@ -7,7 +7,6 @@ local pid
 
 local M = {}
 
----@return string[]
 function M.get_rojo_project_files()
   local project_files = vim.split(vim.fn.glob "*.project.json", "\n")
   table.sort(project_files)
