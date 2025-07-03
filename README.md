@@ -54,7 +54,7 @@ use {
 ## Quick start
 
 > [!CAUTION]
-> `lspconfig.luau_lsp.setup` should **NOT** be called, it may cause conflicts with this plugin
+> `lspconfig.luau_lsp.setup` and `vim.lsp.enable("luau_lsp")` should **NOT** be called, it might cause conflicts with this plugin
 
 ```lua
 require("luau-lsp").setup {
@@ -64,13 +64,13 @@ require("luau-lsp").setup {
 
 ### Using mason-lspconfig.nvim
 
+[mason-lspconfig.nvim](https://github.com/mason-org/mason-lspconfig.nvim) will try to automatically enable `luau_lsp`. To prevent this, make sure to exclude it:
+
 ```lua
-require("mason-lspconfig").setup_handlers {
-  luau_lsp = function()
-    require("luau-lsp").setup {
-      ...
-    }
-  end,
+require("mason-lspconfig").setup {
+  automatic_enable = {
+    exclude = { "luau_lsp" },
+  },
 }
 ```
 
