@@ -13,9 +13,6 @@ local M = {}
 ---@type uv.uv_tcp_t?
 local server
 
-local parse_chunk = coroutine.wrap(http.request_parser_loop)
-parse_chunk()
-
 ---@param socket uv.uv_tcp_t
 ---@param status number
 ---@param body? string
@@ -26,19 +23,10 @@ local function send_status(socket, status, body)
 end
 
 ---@param socket uv.uv_tcp_t
----@param chunk? string
-local function handle_request(socket, chunk)
-  if not chunk then
-    socket:close()
-    return
-  end
-
-  local metadata, headers, body = parse_chunk(chunk)
-  if not metadata or not headers or not body then
-    socket:close()
-    return
-  end
-
+---@param metadata table
+---@param headers table
+---@param body table
+local function handle_request(socket, metadata, headers, body)
   local client = util.get_client()
   if not client then
     send_status(socket, 500)
@@ -80,15 +68,29 @@ local function start_server(port)
     if listen_err then
       log.error(listen_err)
     else
+      local parse_chunk = coroutine.wrap(http.request_parser_loop)
+      parse_chunk()
+
       local socket = assert(vim.uv.new_tcp())
       server:accept(socket)
       socket:read_start(function(read_err, chunk)
         if read_err then
           socket:close()
           log.error(read_err)
-        else
-          handle_request(socket, chunk)
+          return
         end
+
+        if not chunk then
+          socket:close()
+          return
+        end
+
+        local metadata, headers, body = parse_chunk(chunk)
+        if not metadata or not headers or not body then
+          return
+        end
+
+        handle_request(socket, metadata, headers, body)
       end)
     end
   end)
