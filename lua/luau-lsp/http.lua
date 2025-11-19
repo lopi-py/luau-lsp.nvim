@@ -112,19 +112,21 @@ end
 function M.decompress(headers, body, callback)
   assert(headers.content_encoding == "gzip")
 
-  local async
-  async = assert(vim.uv.new_async(function(ret)
-    callback(vim.mpack.decode(ret))
-    async:close()
-  end))
+  vim.uv
+    .new_work(function(data)
+      local util = require "luau-lsp.util"
+      local zzlib = require "zzlib"
 
-  ---@diagnostic disable-next-line: param-type-mismatch
-  vim.uv.new_thread(function(body_data, async_handler)
-    local zzlib = require "zzlib"
-    local result = vim.json.decode(zzlib.gunzip(body_data))
-    async_handler:send(vim.mpack.encode(result))
-    ---@diagnostic disable-next-line: param-type-mismatch
-  end, body, async)
+      -- mpack cannot encode deeply nested tables
+      local result = vim.json.decode(zzlib.gunzip(data))
+      result = util.limit_table_depth(result, 30)
+
+      ---@diagnostic disable-next-line: redundant-return-value
+      return vim.mpack.encode(result)
+    end, function(ret)
+      callback(vim.mpack.decode(ret))
+    end)
+    :queue(body)
 end
 
 return M

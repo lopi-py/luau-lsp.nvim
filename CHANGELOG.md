@@ -4,7 +4,7 @@
 
 ### Added
 
-- Add `:LuauLsp redownload_api` command to force refresh cached files
+- Command `:LuauLsp redownload_api` to force refresh of cached files
 - Cache remote definition and documentation downloads for one day to avoid unnecessary re-downloads
 - Option `server.base_luaurc` to specify a base `.luaurc` file for the server
 - Option `sourcemap.generator_cmd` to specify a custom sourcemap generator command
@@ -35,6 +35,7 @@
 
 ### Fixed
 
+- MessagePack depth limit for deeply nested payloads
 - Handle large http payloads properly
 - Kill rojo sourcemap process on exit
 

@@ -12,7 +12,6 @@ return {
   root_dir = function(bufnr, on_dir)
     on_dir(rojo_project(bufnr))
   end,
-  capabilities = { textDocument = { diagnostic = vim.NIL } },
   settings = {
     ["luau-lsp"] = {
       platform = {
@@ -24,6 +23,10 @@ return {
       },
     },
   },
+
+  -- HACK: pull diagnostics do not update affected files, so force push based diagnostics
+  -- https://github.com/JohnnyMorganz/luau-lsp/issues/541
+  capabilities = { textDocument = { diagnostic = vim.NIL } },
   on_init = function(client)
     client.server_capabilities.diagnosticProvider = nil
   end,

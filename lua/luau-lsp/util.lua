@@ -39,6 +39,27 @@ function M.get_client(bufnr)
   return vim.lsp.get_clients({ name = "luau-lsp", bufnr = bufnr })[1]
 end
 
+---@param tbl table
+---@param max_depth number
+---@param current_depth? number
+---@return table
+function M.limit_table_depth(tbl, max_depth, current_depth)
+  current_depth = current_depth or 0
+  if current_depth >= max_depth then
+    return {}
+  end
+
+  local result = {}
+  for key, value in pairs(tbl) do
+    if type(value) == "table" then
+      result[key] = M.limit_table_depth(value, max_depth, current_depth + 1)
+    else
+      result[key] = value
+    end
+  end
+  return result
+end
+
 ---@param url string
 ---@param opts? { output: string? }
 ---@param on_response? fun(err?: string, res?: { body: string }))
