@@ -120,10 +120,13 @@ function M.decompress(headers, body, callback)
 
   ---@diagnostic disable-next-line: param-type-mismatch
   vim.uv.new_thread(function(body_data, async_handler)
+    local util = require "luau-lsp.util"
     local zzlib = require "zzlib"
+
     local result = vim.json.decode(zzlib.gunzip(body_data))
+    result = util.limit_table_depth(result, 30)
+
     async_handler:send(vim.mpack.encode(result))
-    ---@diagnostic disable-next-line: param-type-mismatch
   end, body, async)
 end
 
