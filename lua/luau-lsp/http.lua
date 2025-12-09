@@ -112,19 +112,12 @@ end
 function M.decompress(headers, body, callback)
   assert(headers.content_encoding == "gzip")
 
-  local async
-  async = assert(vim.uv.new_async(function(ret)
-    callback(vim.mpack.decode(ret))
-    async:close()
-  end))
-
-  ---@diagnostic disable-next-line: param-type-mismatch
-  vim.uv.new_thread(function(body_data, async_handler)
-    local zzlib = require "zzlib"
-    local result = vim.json.decode(zzlib.gunzip(body_data))
-    async_handler:send(vim.mpack.encode(result))
-    ---@diagnostic disable-next-line: param-type-mismatch
-  end, body, async)
+  vim.uv
+    .new_work(function(...)
+      local zzlib = require "zzlib"
+      return vim.json.decode(zzlib.gunzip(...))
+    end, callback)
+    :queue(body)
 end
 
 return M
