@@ -19,7 +19,7 @@ jobs:
       - name: Install luau-lsp
         run: |
           wget https://github.com/JohnnyMorganz/luau-lsp/releases/latest/download/luau-lsp-linux-x86_64.zip
-          unzip luau-lsp-linux.zip -d bin
+          unzip luau-lsp-linux-x86_64.zip -d bin
           echo "$(pwd)/bin" >> $GITHUB_PATH
 
       - name: Run tests
