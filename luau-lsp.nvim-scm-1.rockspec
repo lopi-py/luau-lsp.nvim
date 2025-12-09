@@ -3,10 +3,11 @@ package = "luau-lsp.nvim"
 version = "scm-1"
 
 source = {
-  url = "git+https://github.com/lopi-py/luau-lsp.nvim.git",
+  url = "git://github.com/lopi-py/luau-lsp.nvim",
 }
 
 dependencies = {
+  "lua == 5.1",
   "plenary.nvim",
 }
 

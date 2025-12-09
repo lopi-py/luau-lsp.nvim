@@ -76,7 +76,7 @@ require("mason-lspconfig").setup {
 
 ## Roblox
 
-Roblox types are downloaded from the luau-lsp repository and passed to the language server.
+Roblox types are downloaded from the luau-lsp page and passed to the language server.
 
 ```lua
 require("luau-lsp").setup {

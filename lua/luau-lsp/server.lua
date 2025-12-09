@@ -31,6 +31,18 @@ local fetch_fflags = async.wrap(function(callback)
   })
 end, 1)
 
+---@param fflags table<string, string>
+---@param name string
+---@param value boolean|number|string
+local function append_fflag(fflags, name, value)
+  for _, kind in ipairs(FFLAG_KINDS) do
+    if vim.startswith(name, kind .. "Luau") then
+      fflags[name:sub(#kind + 1)] = tostring(value)
+      return
+    end
+  end
+end
+
 ---@async
 ---@return table<string, string>
 local function get_fflags()
@@ -38,11 +50,7 @@ local function get_fflags()
 
   if config.get().fflags.sync then
     for name, value in pairs(fetch_fflags()) do
-      for _, kind in ipairs(FFLAG_KINDS) do
-        if vim.startswith(name, kind .. "Luau") then
-          fflags[name:sub(#kind + 1)] = value
-        end
-      end
+      append_fflag(fflags, name, value)
     end
   end
 
@@ -50,7 +58,11 @@ local function get_fflags()
     fflags["LuauSolverV2"] = "true"
   end
 
-  return vim.tbl_deep_extend("force", fflags, config.get().fflags.override)
+  for name, value in pairs(config.get().fflags.override) do
+    append_fflag(fflags, name, value)
+  end
+
+  return fflags
 end
 
 ---@async

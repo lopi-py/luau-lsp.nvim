@@ -37,6 +37,10 @@ local function is_lspconfig_enabled()
   return ok and #autocmds > 0
 end
 
+local function is_native_lsp_enabled()
+  return vim.lsp.is_enabled "luau_lsp"
+end
+
 function M.check()
   check_executable {
     name = "luau-lsp",
@@ -52,7 +56,7 @@ function M.check()
     vim.health.ok "No conflicting setup from `nvim-lspconfig`"
   end
 
-  if vim.lsp.is_enabled "luau_lsp" then
+  if is_native_lsp_enabled() then
     vim.health.error '`vim.lsp.enable("luau_lsp")` was called, this might cause conflicts'
   else
     vim.health.ok "No conflicting setup from native lsp"
