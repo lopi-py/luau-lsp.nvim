@@ -34,7 +34,7 @@ local defaults = {
     generator_cmd = nil,
   },
   types = {
-    ---@type string[]
+    ---@type table<string, string>
     definition_files = {},
     ---@type string[]
     documentation_files = {},
@@ -57,7 +57,7 @@ local defaults = {
   },
 }
 
-local options = defaults
+local options = vim.deepcopy(defaults)
 
 ---@param opts luau-lsp.Config
 local function validate(opts)
@@ -69,6 +69,10 @@ local function validate(opts)
   if opts.server and opts.server.settings then
     log.warn "Option 'server.settings' is deprecated. See ':help vim.lsp.config'"
     vim.lsp.config("luau-lsp", { settings = opts.server.settings })
+  end
+
+  if opts.types and vim.islist(opts.types.definition_files) then
+    log.warn "Option 'types.definition_files' as list is deprecated. Use a table with named keys instead."
   end
 
   if opts.platform and opts.platform.type then

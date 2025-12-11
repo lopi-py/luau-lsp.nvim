@@ -137,7 +137,10 @@ require("luau-lsp").setup {
 ```lua
 require("luau-lsp").setup {
   types = {
-    definition_files = { "path/to/definitions/file" },
+    definition_files = {
+      ["@foo"] = "path/to/definitions/file",
+      bar = "https://some.url/file.d.luau", -- @ will be added internally
+    },
     documentation_files = { "path/to/documentation/file" },
   },
 }
@@ -222,7 +225,7 @@ local defaults = {
     generator_cmd = nil,
   },
   types = {
-    ---@type string[]
+    ---@type table<string, string>
     definition_files = {},
     ---@type string[]
     documentation_files = {},

@@ -45,7 +45,7 @@ function M.check()
   check_executable {
     name = "luau-lsp",
     cmd = { config.get().server.path, "--version" },
-    version = "1.38.0",
+    version = "1.56.0",
   }
 
   vim.health.start "Setup"

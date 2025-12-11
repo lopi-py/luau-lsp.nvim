@@ -12,9 +12,14 @@
 
 ### Changed
 
+- `types.definition_files` format changed from `string[]` to table `["@name"] = "path/url"`, allowing both file paths and URLs
 - Deprecated `server.*` options except the new `server.path`
 - Bytecode and compiler remarks window now use treesitter
 - Upgraded the required version of `luau-lsp` to `1.38.0`
+
+### Deprecated
+
+- Using `types.definition_files` as an list is deprecated in favor of a table with named keys
 
 ### Removed
 

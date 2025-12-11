@@ -1,3 +1,6 @@
+local async = require "plenary.async"
+local curl = require "plenary.curl"
+
 local M = {}
 
 M.is_windows = vim.uv.os_uname().sysname == "Windows_NT"
@@ -22,14 +25,15 @@ function M.joinpath(...)
   return table.concat({ ... }, M.is_windows and "\\" or "/")
 end
 
----@param key string
+---@vararg string
 ---@return string
-function M.storage_file(key)
-  local path = M.joinpath(vim.fn.stdpath "data", "luau-lsp")
+function M.storage_file(...)
+  local args = { ... }
+  local path = M.joinpath(vim.fn.stdpath "data", "luau-lsp", unpack(args, 1, #args - 1))
   if not M.is_dir(path) then
     vim.fn.mkdir(path, "p")
   end
-  return M.joinpath(path, key)
+  return M.joinpath(path, args[#args])
 end
 
 ---@param callback function
@@ -50,5 +54,20 @@ end
 function M.get_client(bufnr)
   return vim.lsp.get_clients({ name = "luau-lsp", bufnr = bufnr })[1]
 end
+
+---@async
+---@param url string
+---@param output string
+M.download_file = async.wrap(function(url, output, callback)
+  curl.get(url, {
+    output = output,
+    callback = vim.schedule_wrap(function()
+      callback(output)
+    end),
+    on_error = vim.schedule_wrap(function(result)
+      callback(nil, result.stderr)
+    end),
+  })
+end, 3)
 
 return M
