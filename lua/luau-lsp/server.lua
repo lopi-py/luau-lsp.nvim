@@ -10,6 +10,7 @@ local CURRENT_FFLAGS_URL =
 
 local M = {}
 
+---@param callback fun(fflags: table<string, string>)
 local fetch_fflags = async.wrap(function(callback)
   local function on_error(message)
     log.error("Failed to fetch current Luau FFlags: %s", message)
@@ -62,31 +63,37 @@ local function documentation_path(path)
   return util.storage_file("docs", vim.fs.basename(path))
 end
 
----@async
 ---@param source string
 ---@param output string
----@return string?
-local function resolve_remote_file(source, output)
-  local path, err = util.download_file(source, output)
-  if path then
-    return path
-  elseif util.is_file(output) then
-    log.warn("Failed to download file from '%s'. Using local version: %s", source, err)
-    return output
-  end
-  log.error("Failed to download file from '%s': %s", source, err)
+---@param callback fun(path?: string)
+local function resolve_remote_file(source, output, callback)
+  util.download_file(source, output, function(err, path)
+    if path then
+      callback(path)
+    elseif util.is_file(output) then
+      log.warn("Failed to download file from '%s'. Using local version: %s", source, err)
+      callback(output)
+    else
+      log.error("Failed to download file from '%s': %s", source, err)
+      callback()
+    end
+  end)
 end
 
----@async
 ---@param source string
 ---@param output string
----@return string?
-local function resolve_file(source, output)
+---@param callback fun(path: string?)
+local function resolve_file(source, output, callback)
   if source:find "^https?://" then
-    return resolve_remote_file(source, output)
+    resolve_remote_file(source, output, callback)
   else
-    return vim.fs.normalize(source)
+    callback(vim.fs.normalize(source))
   end
+end
+
+---@param filename string
+local function extract_package_name(filename)
+  return filename:gsub("%.d%.luau?$", ""):gsub("%.luau?$", "")
 end
 
 local function normalize_definitions()
@@ -95,7 +102,7 @@ local function normalize_definitions()
 
   if vim.islist(definitions) then
     for _, path in ipairs(definitions) do
-      local name = vim.fs.basename(path):gsub("%.d%.luau?$", ""):gsub("%.luau?$", "")
+      local name = extract_package_name(vim.fs.basename(path))
       result[name] = { source = path, output = definitions_path(name) }
     end
     return result
@@ -128,19 +135,37 @@ local function build_cmd(ctx)
   local definitions = vim.tbl_extend("force", roblox_defs or {}, config_defs)
   local documentation = vim.list_extend(roblox_docs or {}, config_docs)
 
+  local futures = {}
+
   for name, data in pairs(definitions) do
-    local resolved_path = resolve_file(data.source, data.output)
-    if resolved_path then
-      ctx:add_definitions(name, resolved_path)
-    end
+    table.insert(
+      futures,
+      async.wrap(function(callback)
+        resolve_file(data.source, data.output, function(path)
+          if path then
+            ctx:add_definitions(name, path)
+          end
+          callback()
+        end)
+      end, 1)
+    )
   end
 
   for _, data in ipairs(documentation) do
-    local resolved_path = resolve_file(data.source, data.output)
-    if resolved_path then
-      ctx:add_documentation(resolved_path)
-    end
+    table.insert(
+      futures,
+      async.wrap(function(callback)
+        resolve_file(data.source, data.output, function(path)
+          if path then
+            ctx:add_documentation(path)
+          end
+          callback()
+        end)
+      end, 1)
+    )
   end
+
+  async.util.join(futures)
 
   for name, path in pairs(ctx.definitions) do
     table.insert(cmd, "--definitions:" .. name .. "=" .. path)
@@ -157,38 +182,17 @@ local function build_cmd(ctx)
   return cmd
 end
 
-local function start()
+M.setup = async.void(function()
+  local ctx = Context.new()
+  add_fflags_to_context(ctx)
+
+  vim.lsp.config("luau-lsp", {
+    cmd = build_cmd(ctx),
+    init_options = { fflags = ctx.fflags },
+  })
+
   vim.lsp.enable "luau-lsp"
-
   require("luau-lsp.roblox").start()
-
-  -- HACK: nvim 0.11 does not start the server right after enabling
-  if vim.fn.has "nvim-0.12" == 0 then
-    vim
-      .iter(vim.api.nvim_list_bufs())
-      :filter(function(bufnr)
-        return vim.bo[bufnr].filetype == "luau"
-      end)
-      :each(function(bufnr)
-        vim.api.nvim_exec_autocmds("FileType", {
-          group = "nvim.lsp.enable",
-          buffer = bufnr,
-          modeline = false,
-        })
-      end)
-  end
-end
-
-function M.setup()
-  async.run(function()
-    local ctx = Context.new()
-    add_fflags_to_context(ctx)
-
-    vim.lsp.config("luau-lsp", {
-      cmd = build_cmd(ctx),
-      init_options = { fflags = ctx.fflags },
-    })
-  end, vim.schedule_wrap(start))
-end
+end)
 
 return M

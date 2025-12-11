@@ -16,7 +16,7 @@ local server
 ---@param socket uv.uv_tcp_t
 ---@param status number
 ---@param body? string
-local function send_status(socket, status, body)
+local function send_response(socket, status, body)
   local response = http.create_response({}, body or "", status)
   socket:write(response)
   socket:close()
@@ -29,26 +29,26 @@ end
 local function handle_request(socket, metadata, headers, body)
   local client = util.get_client()
   if not client then
-    send_status(socket, 500)
+    send_response(socket, 500)
     return
   end
 
   if metadata.path == "/full" then
     http.decompress(headers, body, function(res)
       if client:is_stopped() then
-        send_status(socket, 500)
+        send_response(socket, 500)
       elseif res.tree then
         client:notify("$/plugin/full", res.tree)
-        send_status(socket, 200)
+        send_response(socket, 200)
       else
-        send_status(socket, 400)
+        send_response(socket, 400)
       end
     end)
   elseif metadata.path == "/clear" then
     client:notify "$/plugin/clear"
-    send_status(socket, 200)
+    send_response(socket, 200)
   else
-    send_status(socket, 404)
+    send_response(socket, 404)
   end
 end
 

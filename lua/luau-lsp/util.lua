@@ -1,4 +1,3 @@
-local async = require "plenary.async"
 local curl = require "plenary.curl"
 
 local M = {}
@@ -36,38 +35,25 @@ function M.storage_file(...)
   return M.joinpath(path, args[#args])
 end
 
----@param callback function
----@param n number
----@return function
-function M.on_count(callback, n)
-  local counter = 0
-  return function()
-    counter = counter + 1
-    if counter == n then
-      callback()
-    end
-  end
-end
-
 ---@param bufnr? integer
 ---@return vim.lsp.Client?
 function M.get_client(bufnr)
   return vim.lsp.get_clients({ name = "luau-lsp", bufnr = bufnr })[1]
 end
 
----@async
 ---@param url string
 ---@param output string
-M.download_file = async.wrap(function(url, output, callback)
+---@param callback fun(err?: string, path?: string)
+function M.download_file(url, output, callback)
   curl.get(url, {
     output = output,
     callback = vim.schedule_wrap(function()
-      callback(output)
+      callback(nil, output)
     end),
     on_error = vim.schedule_wrap(function(result)
-      callback(nil, result.stderr)
+      callback(result.stderr)
     end),
   })
-end, 3)
+end
 
 return M

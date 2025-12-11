@@ -38,6 +38,7 @@ local get_rojo_project_file = async.wrap(function(callback)
   end
 end, 1)
 
+---@async
 local function get_rojo_generator_cmd()
   local project_file = get_rojo_project_file()
   if not project_file then

@@ -6,7 +6,7 @@ https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/4fa6d3b1-44fe-414f-96ff
 
 ## Requirements
 
-* Neovim 0.11+
+* Neovim 0.11.2+
 * [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
 
 ## Installation
