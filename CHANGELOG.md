@@ -4,6 +4,7 @@
 
 ### Added
 
+- Option `server.base_luaurc` to specify a base `.luaurc` file for the server
 - Option `sourcemap.generator_cmd` to specify a custom sourcemap generator command
 - Option `server.path` to allow the use of locally installed luau-lsp binaries
 - Asynchronous GZip decompression to improve performance when receiving large data models

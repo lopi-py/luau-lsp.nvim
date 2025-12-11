@@ -71,7 +71,7 @@ local function resolve_remote_file(source, output, callback)
     if path then
       callback(path)
     elseif util.is_file(output) then
-      log.warn("Failed to download file from '%s'. Using local version: %s", source, err)
+      log.warn("Failed to download file from '%s', using local version: %s", source, err)
       callback(output)
     else
       log.error("Failed to download file from '%s': %s", source, err)
@@ -125,10 +125,7 @@ end
 
 ---@async
 ---@param ctx luau-lsp.Context
----@return string[]
-local function build_cmd(ctx)
-  local cmd = { config.get().server.path, "lsp" }
-
+local function add_definitions_to_context(ctx)
   local roblox_defs, roblox_docs = require("luau-lsp.roblox").definitions()
   local config_defs, config_docs = normalize_definitions(), normalize_documentation()
 
@@ -166,17 +163,41 @@ local function build_cmd(ctx)
   end
 
   async.util.join(futures)
+end
+
+---@param ctx luau-lsp.Context
+---@return string[]
+local function build_cmd(ctx)
+  local cmd = { config.get().server.path, "lsp" }
 
   for name, path in pairs(ctx.definitions) do
-    table.insert(cmd, "--definitions:" .. name .. "=" .. path)
+    if util.is_file(path) then
+      table.insert(cmd, "--definitions:" .. name .. "=" .. path)
+    else
+      log.warn("Definitions file '%s' at '%s' does not exist", name, path)
+    end
   end
 
   for _, path in ipairs(ctx.documentation) do
-    table.insert(cmd, "--docs=" .. path)
+    if util.is_file(path) then
+      table.insert(cmd, "--docs=" .. path)
+    else
+      log.warn("Documentation file at '%s' does not exist", path)
+    end
   end
 
   if not config.get().fflags.enable_by_default then
     table.insert(cmd, "--no-flags-enabled")
+  end
+
+  local base_luaurc = config.get().server.base_luaurc
+  if base_luaurc then
+    base_luaurc = vim.fs.normalize(base_luaurc)
+    if util.is_file(base_luaurc) then
+      table.insert(cmd, "--base-luaurc=" .. base_luaurc)
+    else
+      log.warn("Base .luaurc file does not exist: %s", base_luaurc)
+    end
   end
 
   return cmd
@@ -184,6 +205,8 @@ end
 
 M.setup = async.void(function()
   local ctx = Context.new()
+
+  add_definitions_to_context(ctx)
   add_fflags_to_context(ctx)
 
   vim.lsp.config("luau-lsp", {

@@ -54,6 +54,8 @@ local defaults = {
   },
   server = {
     path = "luau-lsp",
+    ---@type string?
+    base_luaurc = nil,
   },
 }
 
