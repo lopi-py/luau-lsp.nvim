@@ -22,6 +22,9 @@ local commands = {
   regenerate_sourcemap = {
     execute = require("luau-lsp.roblox.sourcemap").start,
   },
+  redownload_api = {
+    execute = require("luau-lsp.server").download_api,
+  },
 }
 
 ---@param cmdline string

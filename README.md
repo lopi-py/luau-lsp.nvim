@@ -146,6 +146,8 @@ require("luau-lsp").setup {
 }
 ```
 
+Remote definition and documentation files are cached for one day to avoid re-downloading them on every start. Run `:LuauLsp redownload_api` to ignore the cache and fetch fresh copies on demand.
+
 ## Luau FFLags
 
 ```lua

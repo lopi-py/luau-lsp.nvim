@@ -4,6 +4,8 @@
 
 ### Added
 
+- Add `:LuauLsp redownload_api` command to force refresh cached files
+- Cache remote definition and documentation downloads for one day to avoid unnecessary re-downloads
 - Option `server.base_luaurc` to specify a base `.luaurc` file for the server
 - Option `sourcemap.generator_cmd` to specify a custom sourcemap generator command
 - Option `server.path` to allow the use of locally installed luau-lsp binaries
@@ -16,7 +18,7 @@
 - `types.definition_files` format changed from `string[]` to table `["@name"] = "path/url"`, allowing both file paths and URLs
 - Deprecated `server.*` options except the new `server.path`
 - Bytecode and compiler remarks window now use treesitter
-- Upgraded the required version of `luau-lsp` to `1.38.0`
+- Upgraded the required version of `luau-lsp` to `1.57.0`
 
 ### Deprecated
 
