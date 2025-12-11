@@ -100,7 +100,7 @@ local function normalize_definitions()
   local result = {}
   local definitions = config.get().types.definition_files
 
-  if vim.islist(definitions) then
+  if #definitions > 0 then
     for _, path in ipairs(definitions) do
       local name = extract_package_name(vim.fs.basename(path))
       result[name] = { source = path, output = definitions_path(name) }
@@ -165,9 +165,10 @@ local function add_definitions_to_context(ctx)
   async.util.join(futures)
 end
 
+---@private
 ---@param ctx luau-lsp.Context
 ---@return string[]
-local function build_cmd(ctx)
+function M.build_cmd(ctx)
   local cmd = { config.get().server.path, "lsp" }
 
   for name, path in pairs(ctx.definitions) do
@@ -210,7 +211,7 @@ M.setup = async.void(function()
   add_fflags_to_context(ctx)
 
   vim.lsp.config("luau-lsp", {
-    cmd = build_cmd(ctx),
+    cmd = M.build_cmd(ctx),
     init_options = { fflags = ctx.fflags },
   })
 

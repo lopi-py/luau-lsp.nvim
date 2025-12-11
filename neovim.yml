@@ -12,6 +12,8 @@ globals:
     any: true
   assert:
     any: true
+  before_each:
+    any: true
   after_each:
     any: true
   stub:

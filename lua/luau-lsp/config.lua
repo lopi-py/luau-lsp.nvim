@@ -73,7 +73,7 @@ local function validate(opts)
     vim.lsp.config("luau-lsp", { settings = opts.server.settings })
   end
 
-  if opts.types and vim.islist(opts.types.definition_files) then
+  if opts.types and opts.types.definition_files and #opts.types.definition_files > 0 then
     log.warn "Option 'types.definition_files' as list is deprecated. Use a table with named keys instead."
   end
 
