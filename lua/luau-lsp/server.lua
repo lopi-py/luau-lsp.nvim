@@ -109,9 +109,10 @@ local function resolve_file(source, output, force, callback)
   end
 end
 
----@param filename string
-local function extract_package_name(filename)
-  return filename:gsub("%.d%.luau?$", ""):gsub("%.luau?$", "")
+---@param path string
+local function get_package_name(path)
+  local filename = vim.fs.basename(path)
+  return filename:match "^(.-)%.d?%.?luau?$" or filename
 end
 
 local function normalize_definitions()
@@ -120,7 +121,7 @@ local function normalize_definitions()
 
   if #definitions > 0 then
     for _, path in ipairs(definitions) do
-      local name = extract_package_name(vim.fs.basename(path))
+      local name = get_package_name(path)
       result[name] = { source = path, output = definitions_path(name) }
     end
     return result
@@ -216,7 +217,7 @@ function M.build_cmd(ctx)
     if util.is_file(base_luaurc) then
       table.insert(cmd, "--base-luaurc=" .. base_luaurc)
     else
-      log.warn("Base .luaurc file does not exist: %s", base_luaurc)
+      log.warn("Base .luaurc file at '%s' does not exist", base_luaurc)
     end
   end
 

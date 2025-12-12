@@ -177,9 +177,7 @@ vim.lsp.config("luau-lsp", {
   settings = {
     ["luau-lsp"] = {
       completion = {
-        imports = {
-          enabled = true, -- enable auto imports
-        },
+        fillCallArguments = false, -- disable arguments snippets when completing a function call
       },
     },
   },
@@ -187,6 +185,17 @@ vim.lsp.config("luau-lsp", {
 ```
 
 For full **server** options check the [luau-lsp schema](https://github.com/folke/neoconf.nvim/blob/main/schemas/luau_lsp.json)
+
+### Plugin server options
+
+```lua
+require("luau-lsp").setup {
+  server = {
+    path = "path/to/luau-lsp", -- path to the luau-lsp server binary
+    base_luaurc = "path/to/.luaurc", -- path to a `.luaurc` file which acts as the default baseline luau config
+  },
+}
+```
 
 ## Project configuration
 
