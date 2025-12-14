@@ -1,5 +1,3 @@
-local curl = require "plenary.curl"
-
 local M = {}
 
 M.is_windows = vim.uv.os_uname().sysname == "Windows_NT"
@@ -42,18 +40,27 @@ function M.get_client(bufnr)
 end
 
 ---@param url string
----@param output string
----@param callback fun(err?: string, path?: string)
-function M.download_file(url, output, callback)
-  curl.get(url, {
-    output = output,
-    callback = vim.schedule_wrap(function()
-      callback(nil, output)
-    end),
-    on_error = vim.schedule_wrap(function(result)
-      callback(result.stderr)
-    end),
-  })
+---@param opts? { output: string? }
+---@param on_response? fun(err?: string, res?: { body: string }))
+function M.request(url, opts, on_response)
+  opts = opts or {}
+
+  local cmd = { "curl", "-f", "-L", "-s", "-S", url }
+  if opts.output then
+    vim.list_extend(cmd, { "-o", opts.output, "--create-dirs" })
+  end
+
+  vim.system(cmd, {}, function(result)
+    local msg = "Request failed with exit code %d"
+    local err = result.code ~= 0
+        and ((result.stderr ~= "" and result.stderr) or string.format(msg, result.code))
+      or nil
+    local res = result.code == 0 and { body = result.stdout } or nil
+
+    if on_response then
+      vim.schedule_wrap(on_response)(err, res)
+    end
+  end)
 end
 
 return M

@@ -26,6 +26,7 @@
 
 ### Removed
 
+- Drop `plenary.nvim` dependency
 - Argument {file} for `:LuauLsp regenerate_sourcemap` command
 - Dropped support for Neovim 0.9 and 0.10
 - Deprecated function `require("luau-lsp").aliases()` as now luau-lsp has built-in support

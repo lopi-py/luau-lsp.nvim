@@ -1,22 +1,53 @@
 local Context = require "luau-lsp.context"
-local async = require "plenary.async"
+local async = require "luau-lsp.async"
 local config = require "luau-lsp.config"
-local curl = require "plenary.curl"
 local log = require "luau-lsp.log"
+local resolver = require "luau-lsp.resolver"
 local util = require "luau-lsp.util"
 
 local CURRENT_FFLAGS_URL =
   "https://clientsettingscdn.roblox.com/v1/settings/application?applicationName=PCStudioApp"
 
-local CACHE_TTL = 24 * 60 * 60
+local M = {}
 
----@param path string
-local function is_cache_valid(path)
-  local stat = vim.uv.fs_stat(path)
-  if not stat or stat.type ~= "file" then
-    return false
+---@param callback fun(err: string?, fflags: table<string, string>?)
+local fetch_fflags = async.wrap(function(callback)
+  util.request(CURRENT_FFLAGS_URL, nil, function(err, res)
+    if err then
+      callback(err)
+      return
+    end
+
+    local ok, content = pcall(vim.json.decode, res.body)
+    if ok and content["applicationSettings"] then
+      callback(nil, content["applicationSettings"])
+    else
+      callback "Invalid JSON or missing applicationSettings"
+    end
+  end)
+end)
+
+---@async
+---@param ctx luau-lsp.Context
+local function add_fflags_to_context(ctx)
+  if config.get().fflags.sync then
+    local err, fflags = fetch_fflags()
+    if err then
+      log.error("Failed to fetch current Luau FFlags: %s", err)
+    end
+
+    for name, value in pairs(fflags or {}) do
+      ctx:add_fflag(name, value)
+    end
   end
-  return os.time() - stat.mtime.sec < CACHE_TTL
+
+  if config.get().fflags.enable_new_solver then
+    ctx:add_fflag("LuauSolverV2", true)
+  end
+
+  for name, value in pairs(config.get().fflags.override) do
+    ctx:add_fflag(name, value)
+  end
 end
 
 ---@param name string
@@ -32,111 +63,33 @@ local function documentation_path(path)
   return util.storage_file("docs", vim.fs.basename(path))
 end
 
-local M = {}
-
----@param callback fun(fflags: table<string, string>)
-local fetch_fflags = async.wrap(function(callback)
-  local function on_error(message)
-    log.error("Failed to fetch current Luau FFlags: %s", message)
-    callback {}
-  end
-
-  curl.get(CURRENT_FFLAGS_URL, {
-    callback = vim.schedule_wrap(function(result)
-      local ok, content = pcall(vim.json.decode, result.body)
-      if ok and content["applicationSettings"] then
-        callback(content["applicationSettings"])
-      else
-        on_error "Invalid JSON or missing applicationSettings"
-      end
-    end),
-    on_error = vim.schedule_wrap(function(result)
-      on_error(result.stderr)
-    end),
-  })
-end, 1)
-
----@async
----@param ctx luau-lsp.Context
-local function add_fflags_to_context(ctx)
-  if config.get().fflags.sync then
-    for name, value in pairs(fetch_fflags()) do
-      ctx:add_fflag(name, value)
-    end
-  end
-
-  if config.get().fflags.enable_new_solver then
-    ctx:add_fflag("LuauSolverV2", true)
-  end
-
-  for name, value in pairs(config.get().fflags.override) do
-    ctx:add_fflag(name, value)
-  end
-end
-
----@param source string
----@param output string
----@param force boolean
----@param callback fun(path?: string)
-local function resolve_remote_file(source, output, force, callback)
-  if not force and is_cache_valid(output) then
-    callback(output)
-    return
-  end
-
-  util.download_file(source, output, function(err, path)
-    if path then
-      callback(path)
-    elseif util.is_file(output) then
-      log.warn("Failed to download file from '%s', using local version: %s", source, err)
-      callback(output)
-    else
-      log.error("Failed to download file from '%s': %s", source, err)
-      callback()
-    end
-  end)
-end
-
----@param source string
----@param output string
----@param force boolean
----@param callback fun(path: string?)
-local function resolve_file(source, output, force, callback)
-  if source:find "^https?://" then
-    resolve_remote_file(source, output, force, callback)
-  else
-    callback(vim.fs.normalize(source))
-  end
-end
-
----@param path string
-local function get_package_name(path)
-  local filename = vim.fs.basename(path)
-  return filename:match "^(.-)%.d?%.?luau?$" or filename
-end
-
 local function normalize_definitions()
   local result = {}
   local definitions = config.get().types.definition_files
+
+  ---@param path string
+  local function get_package_name(path)
+    local filename = vim.fs.basename(path)
+    return filename:match "^(.-)%.d?%.?luau?$" or filename
+  end
 
   if #definitions > 0 then
     for _, path in ipairs(definitions) do
       local name = get_package_name(path)
       result[name] = { source = path, output = definitions_path(name) }
     end
-    return result
+  else
+    for name, path in pairs(definitions) do
+      result[name] = { source = path, output = definitions_path(name) }
+    end
   end
 
-  for name, path in pairs(definitions) do
-    result[name] = { source = path, output = definitions_path(name) }
-  end
   return result
 end
 
 local function normalize_documentation()
   local result = {}
-  local documentation = config.get().types.documentation_files
-  for _, path in ipairs(documentation) do
+  for _, path in ipairs(config.get().types.documentation_files) do
     table.insert(result, { source = path, output = documentation_path(path) })
   end
   return result
@@ -144,45 +97,37 @@ end
 
 ---@async
 ---@param ctx luau-lsp.Context
----@param force boolean
-local function add_definitions_to_context(ctx, force)
+---@param opts? { force: boolean? }
+local function add_definitions_to_context(ctx, opts)
+  opts = opts or {}
+
   local roblox_defs, roblox_docs = require("luau-lsp.roblox").definitions()
   local config_defs, config_docs = normalize_definitions(), normalize_documentation()
 
-  local definitions = vim.tbl_extend("force", roblox_defs or {}, config_defs)
-  local documentation = vim.list_extend(roblox_docs or {}, config_docs)
+  local definitions = vim.tbl_extend("force", roblox_defs, config_defs)
+  local documentation = vim.list_extend(roblox_docs, config_docs)
 
-  local futures = {}
+  local tasks = {}
 
   for name, data in pairs(definitions) do
-    table.insert(
-      futures,
-      async.wrap(function(callback)
-        resolve_file(data.source, data.output, force, function(path)
-          if path then
-            ctx:add_definitions(name, path)
-          end
-          callback()
-        end)
-      end, 1)
-    )
+    table.insert(tasks, function()
+      local path = resolver.resolve_file(data.source, data.output, opts)
+      if path then
+        ctx:add_definitions(name, path)
+      end
+    end)
   end
 
   for _, data in ipairs(documentation) do
-    table.insert(
-      futures,
-      async.wrap(function(callback)
-        resolve_file(data.source, data.output, force, function(path)
-          if path then
-            ctx:add_documentation(path)
-          end
-          callback()
-        end)
-      end, 1)
-    )
+    table.insert(tasks, function()
+      local path = resolver.resolve_file(data.source, data.output, opts)
+      if path then
+        ctx:add_documentation(path)
+      end
+    end)
   end
 
-  async.util.join(futures)
+  async.join(tasks)
 end
 
 ---@private
@@ -226,15 +171,21 @@ end
 
 M.download_api = async.void(function()
   local ctx = Context.new()
-  add_definitions_to_context(ctx, true)
+  add_definitions_to_context(ctx, { force = true })
   log.info "Definitions files have been updated, reload server to take effect"
 end)
 
 M.setup = async.void(function()
   local ctx = Context.new()
 
-  add_definitions_to_context(ctx, false)
-  add_fflags_to_context(ctx)
+  async.join {
+    function()
+      add_fflags_to_context(ctx)
+    end,
+    function()
+      add_definitions_to_context(ctx)
+    end,
+  }
 
   vim.lsp.config("luau-lsp", {
     cmd = M.build_cmd(ctx),
@@ -242,7 +193,8 @@ M.setup = async.void(function()
   })
 
   vim.lsp.enable "luau-lsp"
-  require("luau-lsp.roblox").start()
+
+  require("luau-lsp.roblox").setup()
 end)
 
 return M

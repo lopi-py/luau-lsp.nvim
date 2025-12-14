@@ -3,6 +3,8 @@ local util = require "luau-lsp.util"
 
 local API_DOCS_URL = "https://luau-lsp.pages.dev/api-docs/en-us.json"
 
+local M = {}
+
 local function global_types_url()
   return string.format(
     "https://luau-lsp.pages.dev/type-definitions/globalTypes.%s.d.luau",
@@ -21,11 +23,9 @@ local function api_docs_file()
   return util.storage_file("docs", "api-docs.json")
 end
 
-local M = {}
-
 function M.definitions()
   if config.get().platform.type ~= "roblox" then
-    return
+    return {}, {}
   end
 
   local definitions = {
@@ -43,7 +43,7 @@ function M.definitions()
   return definitions, documentation
 end
 
-function M.start()
+function M.setup()
   if config.get().platform.type ~= "roblox" then
     return
   end

@@ -1,4 +1,4 @@
-local async = require "plenary.async"
+local async = require "luau-lsp.async"
 local config = require "luau-lsp.config"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
@@ -28,7 +28,7 @@ local get_rojo_project_file = async.wrap(function(callback)
     callback()
   elseif #found_project_files == 1 then
     log.info(
-      "Unable to find project file '%s'. We found '%s'",
+      "Unable to find project file '%s', we found '%s'",
       project_file,
       found_project_files[1]
     )
@@ -36,7 +36,7 @@ local get_rojo_project_file = async.wrap(function(callback)
   else
     vim.ui.select(found_project_files, { prompt = "Select project file" }, callback)
   end
-end, 1)
+end)
 
 ---@async
 local function get_rojo_generator_cmd()
@@ -61,6 +61,12 @@ local function get_rojo_generator_cmd()
   return cmd
 end
 
+---@async
+---@return string[]?
+local function get_generator_cmd()
+  return config.get().sourcemap.generator_cmd or get_rojo_generator_cmd()
+end
+
 local function stop_sourcemap_generation()
   if pid then
     vim.uv.kill(pid, "sigterm")
@@ -69,8 +75,8 @@ end
 
 ---@param cmd string[]
 local function start_sourcemap_generation(cmd)
-  local ok, job = pcall(vim.system, cmd, { text = true }, function(result)
-    if result.stderr and result.stderr ~= "" then
+  local ok, job = pcall(vim.system, cmd, {}, function(result)
+    if result.stderr ~= "" then
       log.error("Failed to update sourcemap: %s", result.stderr)
     end
   end)
@@ -90,7 +96,7 @@ local function start_sourcemap_generation(cmd)
 end
 
 M.start = async.void(function()
-  local cmd = config.get().sourcemap.generator_cmd or get_rojo_generator_cmd()
+  local cmd = get_generator_cmd()
   if cmd then
     stop_sourcemap_generation()
     start_sourcemap_generation(cmd)

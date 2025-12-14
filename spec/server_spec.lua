@@ -18,8 +18,8 @@ describe("server.build_cmd", function()
     local ctx = Context.new()
     local cmd = server.build_cmd(ctx)
 
-    assert.equals("/usr/bin/luau-lsp", cmd[1])
-    assert.equals("lsp", cmd[2])
+    assert.equal("/usr/bin/luau-lsp", cmd[1])
+    assert.equal("lsp", cmd[2])
   end)
 
   it("should add definition files to command", function()

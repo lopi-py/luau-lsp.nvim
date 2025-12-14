@@ -25,7 +25,7 @@ end
 ---@param socket uv.uv_tcp_t
 ---@param metadata table
 ---@param headers table
----@param body table
+---@param body string
 local function handle_request(socket, metadata, headers, body)
   local client = util.get_client()
   if not client then

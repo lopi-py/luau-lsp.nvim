@@ -7,7 +7,6 @@ https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/4fa6d3b1-44fe-414f-96ff
 ## Requirements
 
 * Neovim 0.11.2+
-* [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
 
 ## Installation
 
@@ -22,9 +21,6 @@ Use your favorite plugin manager to install luau-lsp.nvim
   "lopi-py/luau-lsp.nvim",
   opts = {
     ...
-  },
-  dependencies = {
-    "nvim-lua/plenary.nvim",
   },
 }
 ```
@@ -43,9 +39,6 @@ use {
       ...
     }
   end,
-  requires = {
-    "nvim-lua/plenary.nvim",
-  },
 }
 ```
 
