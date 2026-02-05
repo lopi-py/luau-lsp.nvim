@@ -16,10 +16,20 @@ local server
 ---@param socket uv.uv_tcp_t
 ---@param status number
 ---@param body? string
-local function send_response(socket, status, body)
-  local response = http.create_response({}, body or "", status)
+---@param content_type? string
+local function send_response(socket, status, body, content_type)
+  local headers = {}
+  if content_type then
+    headers["content-type"] = content_type
+  end
+  local response = http.create_response(headers, body or "", status)
   socket:write(response)
   socket:close()
+end
+
+---@return string[]
+local function find_luau_files()
+  return vim.fn.glob("**/*.{lua,luau}", false, true)
 end
 
 ---@param socket uv.uv_tcp_t
@@ -47,6 +57,11 @@ local function handle_request(socket, metadata, headers, body)
   elseif metadata.path == "/clear" then
     client:notify "$/plugin/clear"
     send_response(socket, 200)
+  elseif metadata.path == "/get-file-paths" then
+    vim.schedule(function()
+      local res = vim.json.encode { files = find_luau_files() }
+      send_response(socket, 200, res, "application/json")
+    end)
   else
     send_response(socket, 404)
   end

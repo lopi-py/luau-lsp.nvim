@@ -4,6 +4,7 @@
 
 ### Added
 
+- `/get-file-paths` endpoint in the studio plugin server
 - Command `:LuauLsp redownload_api` to force refresh of cached files
 - Cache remote definition and documentation downloads for one day to avoid unnecessary re-downloads
 - Option `server.base_luaurc` to specify a base `.luaurc` file for the server
@@ -15,10 +16,10 @@
 
 ### Changed
 
+- Upgraded the required version of `luau-lsp` to `1.60.0`
 - `types.definition_files` format changed from `string[]` to table `["@name"] = "path/url"`, allowing both file paths and URLs
 - Deprecated `server.*` options except the new `server.path`
 - Bytecode and compiler remarks window now use treesitter
-- Upgraded the required version of `luau-lsp` to `1.57.0`
 
 ### Deprecated
 

@@ -88,22 +88,25 @@ end
 ---@param status number
 ---@return string
 function M.create_response(headers, body, status)
-  local data = {
+  local normalized = {}
+  for name, value in pairs(headers) do
+    normalized[string.lower(name)] = value
+  end
+
+  local header_lines = {
     "HTTP/1.1 " .. tostring(status) .. " " .. STATUS_PRHASES[status],
     "Content-Length: " .. tostring(string.len(body)),
-    "",
-    body,
   }
 
-  if not headers["content-type"] then
-    table.insert(data, 2, "Content-Type: text/plain")
+  if not normalized["content-type"] then
+    table.insert(header_lines, "Content-Type: text/plain")
   end
 
-  for name, value in pairs(headers) do
-    table.insert(data, 4, string.format("%s: %s", name, value))
+  for name, value in pairs(normalized) do
+    table.insert(header_lines, string.format("%s: %s", name, value))
   end
 
-  return table.concat(data, "\r\n")
+  return table.concat(header_lines, "\r\n") .. "\r\n\r\n" .. body
 end
 
 ---@param headers table

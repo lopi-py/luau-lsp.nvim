@@ -8,10 +8,9 @@ local M = {}
 ---@type number?
 local pid
 
-local function get_rojo_project_files()
-  local project_files = vim.split(vim.fn.glob "*.project.json", "\n")
-  table.sort(project_files)
-  return vim.tbl_filter(util.is_file, project_files)
+---@return string[]
+local function find_rojo_project_files()
+  return vim.fn.glob("*.project.json", false, true)
 end
 
 ---@param callback fun(project_file: string?)
@@ -22,7 +21,7 @@ local get_rojo_project_file = async.wrap(function(callback)
     return
   end
 
-  local found_project_files = get_rojo_project_files()
+  local found_project_files = find_rojo_project_files()
   if #found_project_files == 0 then
     log.error("Unable to find project file '%s'", project_file)
     callback()
