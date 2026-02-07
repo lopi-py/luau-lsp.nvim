@@ -8,7 +8,7 @@ end
 
 return {
   filetypes = { "luau" },
-  root_markers = { ".git", "selene.toml", "stylua.toml" },
+  root_markers = { "selene.toml", "stylua.toml", ".git" },
   root_dir = function(bufnr, on_dir)
     on_dir(rojo_project(bufnr))
   end,
