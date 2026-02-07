@@ -7,6 +7,7 @@ local config = require "luau-lsp.config"
 local http = require "luau-lsp.http"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
+local wsl = require "luau-lsp.roblox.wsl"
 
 local M = {}
 
@@ -27,11 +28,6 @@ local function send_response(socket, status, body, content_type)
   socket:close()
 end
 
----@return string[]
-local function find_luau_files()
-  return vim.fn.glob("**/*.{lua,luau}", false, true)
-end
-
 ---@param socket uv.uv_tcp_t
 ---@param metadata table
 ---@param headers table
@@ -48,6 +44,7 @@ local function handle_request(socket, metadata, headers, body)
       if client:is_stopped() then
         send_response(socket, 500)
       elseif res.tree then
+        wsl.normalize_file_paths(res.tree)
         client:notify("$/plugin/full", res.tree)
         send_response(socket, 200)
       else
@@ -59,7 +56,7 @@ local function handle_request(socket, metadata, headers, body)
     send_response(socket, 200)
   elseif metadata.path == "/get-file-paths" then
     vim.schedule(function()
-      local res = vim.json.encode { files = find_luau_files() }
+      local res = vim.json.encode { files = wsl.find_luau_files() }
       send_response(socket, 200, res, "application/json")
     end)
   else

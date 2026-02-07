@@ -4,7 +4,7 @@
 
 ### Added
 
-- `/get-file-paths` endpoint in the studio plugin server
+- Native Script Sync support for the studio plugin
 - Command `:LuauLsp redownload_api` to force refresh of cached files
 - Cache remote definition and documentation downloads for one day to avoid unnecessary re-downloads
 - Option `server.base_luaurc` to specify a base `.luaurc` file for the server

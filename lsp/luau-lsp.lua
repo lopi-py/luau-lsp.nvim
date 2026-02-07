@@ -19,6 +19,7 @@ return {
       },
       sourcemap = {
         enabled = config.get().sourcemap.enabled,
+        autogenerate = config.get().sourcemap.autogenerate,
         sourcemapFile = config.get().sourcemap.sourcemap_file,
       },
     },
