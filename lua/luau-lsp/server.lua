@@ -187,6 +187,8 @@ M.setup = async.void(function()
     end,
   }
 
+  async.await(vim.schedule)
+
   vim.lsp.config("luau-lsp", {
     cmd = M.build_cmd(ctx),
     init_options = { fflags = ctx.fflags },

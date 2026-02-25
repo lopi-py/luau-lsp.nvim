@@ -66,7 +66,7 @@ end
 
 local function stop_server()
   if server then
-    server:shutdown()
+    server:close()
     server = nil
     log.info "Plugin server has disconnected"
   end
