@@ -2,7 +2,7 @@ local config = require "luau-lsp.config"
 
 local M = {}
 
----@param opts { name: string, cmd: string[], version?: string, optional: boolean? }
+---@param opts { name: string, cmd: string[], version?: string, optional?: boolean }
 local function check_executable(opts)
   local ok, job = pcall(vim.system, opts.cmd)
   if not ok then
@@ -12,7 +12,7 @@ local function check_executable(opts)
   end
 
   local result = job:wait()
-  local stdout = result.stdout or ""
+  local stdout = result.stdout --[[@as string]]
   if opts.version and vim.version.lt(stdout, opts.version) then
     vim.health.error(
       string.format(

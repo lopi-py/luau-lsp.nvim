@@ -6,6 +6,7 @@ local function rojo_project(bufnr)
   end)
 end
 
+---@type vim.lsp.Config
 return {
   filetypes = { "luau" },
   root_markers = { "selene.toml", "stylua.toml", ".git" },

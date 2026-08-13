@@ -7,7 +7,7 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 vim.api.nvim_create_user_command("LuauLsp", function(opts)
-  require("luau-lsp.command").execute(opts.args)
+  require("luau-lsp.command").execute(opts.fargs)
 end, {
   nargs = "+",
   complete = function(...)

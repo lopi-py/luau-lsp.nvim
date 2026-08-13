@@ -8,7 +8,7 @@
 -- the COPYING file or http://www.wtfpl.net/ for more details.
 
 local unpack = table.unpack or unpack
-local infl = require "zzlib.inflate-bit32"
+local infl = require "luau-lsp.vendor.zzlib.inflate-bit32"
 
 local zzlib = {}
 

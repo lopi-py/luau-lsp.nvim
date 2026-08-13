@@ -2,18 +2,39 @@ local async = require "luau-lsp.async"
 
 local M = {}
 
+---@return string
+function M.temp_file()
+  local path = vim.fn.tempname()
+  vim.fn.writefile({}, path)
+
+  local env = getfenv(2)
+  env.finally(function()
+    vim.fn.delete(path)
+  end)
+
+  return path
+end
+
+---@param name string
+---@param block async fun()
 function M.it_async(name, block)
   local env = getfenv(2)
   return env.it(name, function()
-    local res
+    ---@type [string?, unknown ...]
+    local result
     async.run(block, function(...)
-      res = vim.F.pack_len(...)
+      result = vim.F.pack_len(...)
     end)
-    vim.wait(5000, function()
-      return res ~= nil
-    end)
-    if res[1] then
-      error(res[1])
+
+    assert(
+      vim.wait(5000, function()
+        return result ~= nil
+      end),
+      "async test timed out"
+    )
+
+    if result[1] then
+      error(result[1], 0)
     end
   end)
 end

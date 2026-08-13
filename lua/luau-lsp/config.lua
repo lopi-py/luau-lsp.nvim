@@ -1,5 +1,52 @@
 local log = require "luau-lsp.log"
 
+---@class luau-lsp.Config.Platform
+---@field type "standard" | "roblox"
+
+---@class luau-lsp.Config.Sourcemap
+---@field enabled boolean
+---@field autogenerate boolean
+---@field rojo_path string
+---@field rojo_project_file string
+---@field include_non_scripts boolean
+---@field sourcemap_file string
+---@field generator_cmd? string[]
+
+---@class luau-lsp.Config.Types
+---@field definition_files table<string, string>
+---@field documentation_files string[]
+---@field roblox_security_level "None" | "LocalUserSecurity" | "PluginSecurity" | "RobloxScriptSecurity"
+
+---@class luau-lsp.Config.Fflags
+---@field enable_by_default boolean
+---@field enable_new_solver boolean
+---@field sync boolean
+---@field override table<string, string | number | boolean>
+
+---@class luau-lsp.Config.Plugin
+---@field enabled boolean
+---@field port integer
+
+---@class luau-lsp.Config.Server
+---@field path string
+---@field base_luaurc? string
+
+---@class luau-lsp.Config
+---@field platform luau-lsp.Config.Platform
+---@field sourcemap luau-lsp.Config.Sourcemap
+---@field types luau-lsp.Config.Types
+---@field fflags luau-lsp.Config.Fflags
+---@field plugin luau-lsp.Config.Plugin
+---@field server luau-lsp.Config.Server
+
+---@class luau-lsp.Config.Partial
+---@field platform? Partial<luau-lsp.Config.Platform>
+---@field sourcemap? Partial<luau-lsp.Config.Sourcemap>
+---@field types? Partial<luau-lsp.Config.Types>
+---@field fflags? Partial<luau-lsp.Config.Fflags>
+---@field plugin? Partial<luau-lsp.Config.Plugin>
+---@field server? Partial<luau-lsp.Config.Server>
+
 local PLATFORM_TYPES = {
   "standard",
   "roblox",
@@ -14,13 +61,9 @@ local ROBLOX_SECURITY_LEVELS = {
 
 local M = {}
 
----@alias luau-lsp.PlatformType "standard" | "roblox"
----@alias luau-lsp.RobloxSecurityLevel "None" | "LocalUserSecurity" | "PluginSecurity" | "RobloxScriptSecurity"
-
----@class luau-lsp.Config : {}
+---@type luau-lsp.Config
 local defaults = {
   platform = {
-    ---@type luau-lsp.PlatformType
     type = "roblox",
   },
   sourcemap = {
@@ -30,22 +73,16 @@ local defaults = {
     rojo_project_file = "default.project.json",
     include_non_scripts = true,
     sourcemap_file = "sourcemap.json",
-    ---@type string[]?
-    generator_cmd = nil,
   },
   types = {
-    ---@type table<string, string>
     definition_files = {},
-    ---@type string[]
     documentation_files = {},
-    ---@type luau-lsp.RobloxSecurityLevel
     roblox_security_level = "PluginSecurity",
   },
   fflags = {
     enable_by_default = false,
     enable_new_solver = false,
     sync = true,
-    ---@type table<string, string>
     override = {},
   },
   plugin = {
@@ -54,14 +91,12 @@ local defaults = {
   },
   server = {
     path = "luau-lsp",
-    ---@type string?
-    base_luaurc = nil,
   },
 }
 
 local options = vim.deepcopy(defaults)
 
----@param opts luau-lsp.Config
+---@param opts luau-lsp.Config.Partial
 local function validate(opts)
   if opts.server and opts.server.capabilities then
     log.warn "Option 'server.capabilities' is deprecated. See ':help vim.lsp.config'"
@@ -97,10 +132,10 @@ function M.get()
   return options
 end
 
----@param opts luau-lsp.Config
+---@param opts luau-lsp.Config.Partial
 function M.config(opts)
   validate(opts)
-  options = vim.tbl_deep_extend("force", options, opts)
+  options = vim.tbl_deep_extend("force", options, opts) --[[@as luau-lsp.Config]]
 end
 
 return M

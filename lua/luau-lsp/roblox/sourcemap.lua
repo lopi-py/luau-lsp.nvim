@@ -5,7 +5,7 @@ local util = require "luau-lsp.util"
 
 local M = {}
 
----@type number?
+---@type integer?
 local pid
 
 ---@return string[]
@@ -75,13 +75,14 @@ end
 ---@param cmd string[]
 local function start_sourcemap_generation(cmd)
   local ok, job = pcall(vim.system, cmd, {}, function(result)
-    if result.stderr ~= "" then
-      log.error("Failed to update sourcemap: %s", result.stderr)
+    local stderr = result.stderr --[[@as string]]
+    if stderr ~= "" then
+      log.error("Failed to update sourcemap: %s", vim.trim(stderr))
     end
   end)
 
   if not ok then
-    log.error("Failed to start command: '%s'", cmd[1])
+    log.error("Failed to start command '%s': %s", cmd[1], job)
     return
   end
 

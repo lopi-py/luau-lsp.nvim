@@ -14,15 +14,8 @@ jobs:
         neovim-version: ["nightly", "stable"]
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install luau-lsp
-        run: |
-          wget https://github.com/JohnnyMorganz/luau-lsp/releases/latest/download/luau-lsp-linux-x86_64.zip
-          unzip luau-lsp-linux-x86_64.zip -d bin
-          echo "$(pwd)/bin" >> $GITHUB_PATH
-
+      - uses: actions/checkout@v7
       - name: Run tests
-        uses: lumen-oss/nvim-busted-action@v1.1.1
+        uses: lumen-oss/nvim-busted-action@v1.2.0
         with:
           nvim_version: ${{ matrix.neovim-version }}

@@ -4,41 +4,48 @@
 
 ### Added
 
-- Native Script Sync support for the studio plugin
-- Command `:LuauLsp redownload_api` to force refresh of cached files
-- Cache remote definition and documentation downloads for one day to avoid unnecessary re-downloads
-- Option `server.base_luaurc` to specify a base `.luaurc` file for the server
-- Option `sourcemap.generator_cmd` to specify a custom sourcemap generator command
-- Option `server.path` to allow the use of locally installed luau-lsp binaries
-- Asynchronous GZip decompression to improve performance when receiving large data models
-- Option `fflags.enable_new_solver` to enable the flags required for Luau's new type solver
-- Option `sourcemap.sourcemap_file` to specify a different name to use for the sourcemap
+- Native Script Sync support for the Studio companion plugin
+- Command `:LuauLsp refresh_types` to refresh definition and documentation files
+- Caching for remote definition and documentation files
+- Luau API documentation for standard projects
+- Option `server.base_luaurc` to specify a base `.luaurc` file
+- Option `server.path` to use a custom luau-lsp binary
+- Option `sourcemap.generator_cmd` to use a custom sourcemap generator
+- Option `sourcemap.sourcemap_file` to change the generated sourcemap filename
+- Option `fflags.enable_new_solver` to enable Luau's new type solver
 
 ### Changed
 
+- Server settings now use Neovim's built-in LSP configuration
 - Upgraded the required version of `luau-lsp` to `1.60.0`
-- `types.definition_files` format changed from `string[]` to table `["@name"] = "path/url"`, allowing both file paths and URLs
-- Deprecated `server.*` options except the new `server.path`
-- Bytecode and compiler remarks window now use treesitter
+- Definition files can now have custom names and use local paths or URLs
+- Expanded support for synchronizing and overriding Luau FFlags
+- Improved performance when processing large Studio data models
+- Added syntax highlighting to bytecode and compiler remarks windows
 
 ### Deprecated
 
-- Using `types.definition_files` as an list is deprecated in favor of a table with named keys
+- `server.capabilities` and `server.settings`, use `vim.lsp.config` instead
+- List values for `types.definition_files`, use a table with named keys instead
 
 ### Removed
 
-- Drop `plenary.nvim` dependency
-- Argument {file} for `:LuauLsp regenerate_sourcemap` command
-- Dropped support for Neovim 0.9 and 0.10
-- Deprecated function `require("luau-lsp").aliases()` as now luau-lsp has built-in support
-- Deprecated option `types.roblox`
+- Support for Neovim 0.9, 0.10, and 0.11
+- `plenary.nvim` dependency
+- `server.cmd` and `server.root_dir`, use `server.path` and `vim.lsp.config` instead
+- `:LuauLsp restart`, use `:lsp restart luau-lsp` instead
+- `{file}` argument from `:LuauLsp regenerate_sourcemap`
+- `require("luau-lsp").aliases()`, as luau-lsp has built-in alias support
+- Option `types.roblox`
 - Deprecated commands starting with `Luau*`
 
 ### Fixed
 
-- MessagePack depth limit for deeply nested payloads
-- Handle large http payloads properly
-- Kill rojo sourcemap process on exit
+- Studio synchronization failing with large or deeply nested data models
+- Studio clear requests not returning a successful response
+- Roblox type and documentation downloads
+- Project root detection when a Rojo project file is present
+- Rojo sourcemap processes remaining alive after Neovim exits
 
 ## [1.6.0] - 2024-08-29
 

@@ -3,11 +3,7 @@ package = "luau-lsp.nvim"
 version = "scm-1"
 
 source = {
-  url = "git://github.com/lopi-py/luau-lsp.nvim",
-}
-
-dependencies = {
-  "lua == 5.1",
+  url = "git+https://github.com/lopi-py/luau-lsp.nvim.git",
 }
 
 test_dependencies = {

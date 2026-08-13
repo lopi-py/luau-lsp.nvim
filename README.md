@@ -6,7 +6,9 @@ https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/4fa6d3b1-44fe-414f-96ff
 
 ## Requirements
 
-* Neovim 0.11.2+
+* Neovim 0.12+
+* [luau-lsp](https://github.com/JohnnyMorganz/luau-lsp/) 1.60.0+ available on `$PATH`, or configured with `server.path`
+* [Rojo](https://rojo.space/) 7.3.0+ for default sourcemap generation
 
 ## Installation
 
@@ -67,6 +69,18 @@ require("mason-lspconfig").setup {
 }
 ```
 
+## Standard Luau
+
+Built-in Luau API documentation is downloaded automatically for standard projects.
+
+```lua
+require("luau-lsp").setup {
+  platform = {
+    type = "standard",
+  },
+}
+```
+
 ## Roblox
 
 Roblox types are downloaded from the luau-lsp page and passed to the language server.
@@ -84,14 +98,16 @@ require("luau-lsp").setup {
 
 ### Rojo sourcemap
 
-Sourcemap generation is done by running `rojo sourcemap --watch --output sourcemap.json default.project.json`.
+Sourcemap generation is done by running `rojo sourcemap --watch --output sourcemap.json default.project.json --include-non-scripts` by default.
 
 ```lua
 require("luau-lsp").setup {
   sourcemap = {
     enabled = true,
     autogenerate = true, -- automatic generation when the server is initialized
+    rojo_path = "rojo",
     rojo_project_file = "default.project.json",
+    include_non_scripts = true,
     sourcemap_file = "sourcemap.json",
   },
 }
@@ -99,7 +115,7 @@ require("luau-lsp").setup {
 
 #### Custom generator
 
-You can specify a custom generator command using `sourcemap.generator_cmd`. Note that `sourcemap.rojo_project_file` and `sourcemap.sourcemap_file` will be ignored. This option is recommended for [per-project configuration](#project-configuration).
+You can specify a custom generator command using `sourcemap.generator_cmd`. The command is run exactly as provided, so the Rojo-specific options do not affect it. The generator must write the file configured by `sourcemap.sourcemap_file`, which the language server watches for changes. This option is recommended for [per-project configuration](#project-configuration).
 
 ```lua
 require("luau-lsp").setup {
@@ -115,6 +131,8 @@ require("luau-lsp").setup {
 ### Companion plugin
 
 You can install the companion plugin [here](https://create.roblox.com/store/asset/10913122509/Luau-Language-Server-Companion).
+
+Native Script Sync file discovery requires [`fd`](https://github.com/sharkdp/fd) or [`ripgrep`](https://github.com/BurntSushi/ripgrep) (`rg`) to be available on `$PATH`.
 
 ```lua
 require("luau-lsp").setup {
@@ -139,17 +157,18 @@ require("luau-lsp").setup {
 }
 ```
 
-Remote definition and documentation files are cached for one day to avoid re-downloading them on every start. Run `:LuauLsp redownload_api` to ignore the cache and fetch fresh copies on demand.
+Remote definition and documentation files are cached for one day to avoid re-downloading them on every start. Run `:LuauLsp refresh_types` to ignore the cache and fetch fresh copies on demand.
 
 ## Luau FFLags
 
 ```lua
 require("luau-lsp").setup {
   fflags = {
+    enable_by_default = false, -- start luau-lsp with --no-flags-enabled
     enable_new_solver = true, -- enables the fflags required for luau's new type solver
     sync = true, -- sync currently enabled fflags with roblox's published fflags
-    override = { -- override fflags passed to luau 
-      LuauTableTypeMaximumStringifierLength = "100",
+    override = { -- override fflags passed to luau
+      LuauTableTypeMaximumStringifierLength = 100,
     },
   },
 }
@@ -208,14 +227,11 @@ For more info about `.nvim.lua`, check `:help 'exrc'`
 
 <summary>Defaults</summary>
 
-```lua
----@alias luau-lsp.PlatformType "standard" | "roblox"
----@alias luau-lsp.RobloxSecurityLevel "None" | "LocalUserSecurity" | "PluginSecurity" | "RobloxScriptSecurity"
+See [`lua/luau-lsp/config.lua`](lua/luau-lsp/config.lua) for option types and validation.
 
----@class luau-lsp.Config : {}
+```lua
 local defaults = {
   platform = {
-    ---@type luau-lsp.PlatformType
     type = "roblox",
   },
   sourcemap = {
@@ -225,22 +241,17 @@ local defaults = {
     rojo_project_file = "default.project.json",
     include_non_scripts = true,
     sourcemap_file = "sourcemap.json",
-    ---@type string[]?
     generator_cmd = nil,
   },
   types = {
-    ---@type table<string, string>
     definition_files = {},
-    ---@type string[]
     documentation_files = {},
-    ---@type luau-lsp.RobloxSecurityLevel
     roblox_security_level = "PluginSecurity",
   },
   fflags = {
     enable_by_default = false,
     enable_new_solver = false,
     sync = true,
-    ---@type table<string, string>
     override = {},
   },
   plugin = {
@@ -249,7 +260,6 @@ local defaults = {
   },
   server = {
     path = "luau-lsp",
-    ---@type string?
     base_luaurc = nil,
   },
 }

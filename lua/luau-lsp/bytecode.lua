@@ -10,13 +10,16 @@ local current_optlevel = 0
 local bytecode_bufnr = -1
 local bytecode_winnr = -1
 
----@param callback fun(optlevel: number)
+---@param callback fun(optlevel: integer)
 local function get_optimization_level(callback)
-  vim.ui.select({ "02", "01", "None" }, {
+  vim.ui.select({ 2, 1, 0 }, {
     prompt = "Select optimization level",
+    format_item = function(item)
+      return item > 0 and string.format("%.2d", item) or "None"
+    end,
   }, function(choice)
     if choice then
-      callback(tonumber(choice) or 0)
+      callback(choice)
     end
   end)
 end
@@ -58,9 +61,9 @@ local function create_view()
 
   vim.api.nvim_create_autocmd(UPDATE_EVENTS, {
     group = group,
-    callback = vim.schedule_wrap(function(event)
+    callback = function(event)
       M.update_buffer(event.buf)
-    end),
+    end,
   })
 
   vim.api.nvim_create_autocmd("BufUnload", {
@@ -80,7 +83,7 @@ local function render_view_text(text)
     return
   end
 
-  local lines = vim.split(text, "\n")
+  local lines = vim.split(text, "\n", { trimempty = true })
 
   vim.bo[bytecode_bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(bytecode_bufnr, 0, -1, false, lines)
@@ -128,7 +131,7 @@ function M.update_buffer(bufnr)
       return
     end
 
-    render_view_text(result:gsub("[\n]+$", ""))
+    render_view_text(result)
   end, bufnr)
 end
 

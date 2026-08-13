@@ -1,11 +1,9 @@
-local util = require "luau-lsp.util"
-
 local M = {}
 
 M.level = vim.log.levels.WARN
-M.filename = util.joinpath(vim.fn.stdpath "log", "luau-lsp.log")
+M.filename = vim.fs.joinpath((vim.fn.stdpath "log") --[[@as string]], "luau-lsp.log")
 
----@type file*?
+---@type file?
 local logfile
 
 ---@return boolean
@@ -17,15 +15,14 @@ end
 ---@param level string
 local function write(message, level)
   if not logfile then
-    logfile = io.open(M.filename, "a+")
+    logfile = assert(io.open(M.filename, "a+"))
   end
-  assert(logfile)
   logfile:write(string.format("%s[%s] %s\n", os.date "%H:%M:%S", level, message))
   logfile:flush()
 end
 
 ---@param message string
----@param level number
+---@param level integer
 local notify = vim.schedule_wrap(function(message, level)
   if supports_title() then
     vim.notify(message, level, { title = "luau-lsp.nvim" })
