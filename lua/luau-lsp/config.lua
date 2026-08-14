@@ -138,4 +138,9 @@ function M.config(opts)
   options = vim.tbl_deep_extend("force", options, opts) --[[@as luau-lsp.Config]]
 end
 
+---@private
+function M._reset()
+  options = vim.deepcopy(defaults)
+end
+
 return M
