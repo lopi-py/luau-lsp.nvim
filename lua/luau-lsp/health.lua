@@ -2,30 +2,65 @@ local config = require "luau-lsp.config"
 
 local M = {}
 
----@param opts { name: string, cmd: string[], version?: string, optional?: boolean }
+---@param opts { name: string, cmd: string[], version?: string }
 local function check_executable(opts)
+  if not opts.cmd[1] or vim.fn.executable(opts.cmd[1]) ~= 1 then
+    vim.health.error(string.format("%s: not available", opts.name))
+    return
+  end
+
+  if not opts.version then
+    vim.health.ok(string.format("%s: `%s`", opts.name, opts.cmd[1]))
+    return
+  end
+
   local ok, job = pcall(vim.system, opts.cmd)
   if not ok then
-    local report = opts.optional and vim.health.warn or vim.health.error
-    report(string.format("%s: not available", opts.name))
+    vim.health.error(string.format("%s: failed to run `%s`", opts.name, opts.cmd[1]))
     return
   end
 
   local result = job:wait()
-  local stdout = result.stdout --[[@as string]]
-  if opts.version and vim.version.lt(stdout, opts.version) then
+  if result.code ~= 0 then
+    vim.health.error(string.format("%s: failed to run `%s`", opts.name, opts.cmd[1]))
+    return
+  end
+
+  local version = vim.trim(result.stdout --[[@as string]])
+  if vim.version.lt(version, opts.version) then
     vim.health.error(
-      string.format(
-        "%s: required version is `%s`, found `%s`",
-        opts.name,
-        opts.version,
-        vim.trim(stdout)
-      )
+      string.format("%s: required version is `%s`, found `%s`", opts.name, opts.version, version)
     )
     return
   end
 
-  vim.health.ok(string.format("%s: `%s`", opts.name, vim.trim(stdout)))
+  vim.health.ok(string.format("%s: `%s`", opts.name, version))
+end
+
+local function check_sourcemap_generator()
+  if config.get().platform.type ~= "roblox" then
+    return
+  end
+  if not config.get().sourcemap.enabled or not config.get().sourcemap.autogenerate then
+    return
+  end
+
+  vim.health.start "Sourcemap generator"
+
+  local generator_cmd = config.get().sourcemap.generator_cmd
+  if generator_cmd then
+    check_executable {
+      name = "custom generator",
+      cmd = generator_cmd,
+    }
+    return
+  end
+
+  check_executable {
+    name = "rojo",
+    cmd = { config.get().sourcemap.rojo_path, "--version" },
+    version = "7.3.0",
+  }
 end
 
 local function is_lspconfig_enabled()
@@ -62,18 +97,7 @@ function M.check()
     vim.health.ok "No conflicting setup from native lsp"
   end
 
-  vim.health.start "Rojo (required for automatic sourcemap generation)"
-
-  check_executable {
-    name = "rojo",
-    cmd = { config.get().sourcemap.rojo_path, "--version" },
-    version = "7.3.0",
-    optional = not (
-        config.get().platform.type == "roblox"
-        and config.get().sourcemap.enabled
-        and config.get().sourcemap.autogenerate
-      ),
-  }
+  check_sourcemap_generator()
 end
 
 return M

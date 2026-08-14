@@ -353,7 +353,7 @@ vim.lsp.config("jsonls", {
       -- schemas = require("schemastore").json.schemas { extra = schemas },
 
       validate = {
-        enabled = true
+        enabled = true,
       },
     },
   },
