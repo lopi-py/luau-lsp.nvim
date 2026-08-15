@@ -18,7 +18,7 @@ describe("server.fflags.resolve", function()
     config._reset()
   end)
 
-  it("resolves Luau overrides to server fflags", function()
+  it("normalizes user overrides to server fflags", function()
     config.config {
       fflags = {
         override = {
@@ -26,8 +26,9 @@ describe("server.fflags.resolve", function()
           FIntLuauFoo = 10,
           DFFlagLuauBar = "value",
           DFIntLuauAnotherFlag = 42,
+          FFlagDebugLuauTimeTracing = true,
           LuauDirect = false,
-          FFlagUnrelated = true,
+          Unprefixed = "enabled",
         },
       },
     }
@@ -37,7 +38,9 @@ describe("server.fflags.resolve", function()
       LuauFoo = "10",
       LuauBar = "value",
       LuauAnotherFlag = "42",
+      DebugLuauTimeTracing = "true",
       LuauDirect = "false",
+      Unprefixed = "enabled",
       ---@diagnostic disable-next-line: await-in-sync
     }, fflags.resolve())
   end)
@@ -59,6 +62,7 @@ describe("server.fflags.resolve", function()
             FFlagLuauSynced = true,
             FIntLuauCount = 3,
             FFlagLuauOverridden = false,
+            FFlagDebugLuauTimeTracing = true,
           },
         },
       })
