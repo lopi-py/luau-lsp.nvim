@@ -5,6 +5,7 @@
 ### Added
 
 - Native Script Sync support for the Studio companion plugin
+- Command `:LuauLsp codegen` to show CodeGen output for a selected assembly target
 - Command `:LuauLsp refresh_types` to refresh definition and documentation files
 - Caching for remote definition and documentation files
 - Luau API documentation for standard projects

@@ -90,7 +90,7 @@ local function start_sourcemap_generation(cmd)
   pid = job.pid
 
   vim.api.nvim_create_autocmd("VimLeavePre", {
-    group = vim.api.nvim_create_augroup("luau-lsp.sourcemap", {}),
+    group = vim.api.nvim_create_augroup("luau-lsp.sourcemap.generation", {}),
     callback = stop_sourcemap_generation,
   })
 end

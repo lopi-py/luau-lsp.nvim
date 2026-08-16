@@ -176,7 +176,7 @@ require("luau-lsp").setup {
 
 ## Bytecode generation
 
-`:LuauLsp bytecode` and `:LuauLsp compiler_remarks` open a new window and show the current Luau file bytecode and compiler remarks. It will automatically update when you change or edit the file. Close with `q`.
+`:LuauLsp bytecode`, `:LuauLsp compiler_remarks`, and `:LuauLsp codegen` open a new window and show compiler output for the current Luau file. CodeGen prompts for an assembly target after selecting the optimization level. The view automatically updates when you change or edit the file. Close it with `q`.
 
 https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/f9d45153-47f0-4565-a2ed-3769153732a0
 

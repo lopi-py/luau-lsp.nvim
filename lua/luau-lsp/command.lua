@@ -13,10 +13,13 @@ local commands = {
     end,
   },
   bytecode = {
-    execute = require("luau-lsp.bytecode").bytecode,
+    execute = require("luau-lsp.compiler").show_bytecode,
   },
   compiler_remarks = {
-    execute = require("luau-lsp.bytecode").compiler_remarks,
+    execute = require("luau-lsp.compiler").show_remarks,
+  },
+  codegen = {
+    execute = require("luau-lsp.compiler").show_codegen,
   },
   regenerate_sourcemap = {
     execute = require("luau-lsp.roblox.sourcemap").start,
