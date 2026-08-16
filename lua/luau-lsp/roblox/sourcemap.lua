@@ -5,8 +5,8 @@ local util = require "luau-lsp.util"
 
 local M = {}
 
----@type integer?
-local pid
+---@type vim.SystemObj?
+local process
 
 ---@return string[]
 local function find_rojo_project_files()
@@ -67,8 +67,8 @@ local function get_generator_cmd()
 end
 
 local function stop_sourcemap_generation()
-  if pid then
-    vim.uv.kill(pid, "sigterm")
+  if process then
+    process:kill(15)
   end
 end
 
@@ -78,6 +78,8 @@ local function start_sourcemap_generation(cmd)
     local stderr = result.stderr --[[@as string]]
     if stderr ~= "" then
       log.error("Failed to update sourcemap: %s", vim.trim(stderr))
+    elseif result.code ~= 0 then
+      log.error("Sourcemap generator exited with code %d", result.code)
     end
   end)
 
@@ -86,8 +88,8 @@ local function start_sourcemap_generation(cmd)
     return
   end
 
+  process = job
   log.info "Starting sourcemap generation"
-  pid = job.pid
 
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = vim.api.nvim_create_augroup("luau-lsp.sourcemap.generation", {}),

@@ -122,42 +122,66 @@ local function stop_server()
   end
 end
 
----@param port integer
-local function start_server(port)
-  server = assert(vim.uv.new_tcp())
-  server:bind("127.0.0.1", port)
-  server:listen(128, function(listen_err)
-    if listen_err then
-      log.error(listen_err)
+---@param listener uv.uv_tcp_t
+local function handle_connection(listener)
+  local socket = assert(vim.uv.new_tcp())
+
+  local accept_ok, accept_err = listener:accept(socket)
+  if not accept_ok then
+    socket:close()
+    log.error(accept_err --[[@as string]])
+    return
+  end
+
+  local parse_chunk = http.create_request_parser()
+
+  socket:read_start(function(read_err, chunk)
+    if read_err then
+      socket:close()
+      log.error(read_err)
       return
     end
 
-    local parse_chunk = http.create_request_parser()
+    if not chunk then
+      socket:close()
+      return
+    end
 
-    local socket = assert(vim.uv.new_tcp())
-    server:accept(socket)
-    socket:read_start(function(read_err, chunk)
-      if read_err then
-        socket:close()
-        log.error(read_err)
-        return
-      end
-
-      if not chunk then
-        socket:close()
-        return
-      end
-
-      local request = parse_chunk(chunk)
-      if not request then
-        return
-      end
-
+    local request = parse_chunk(chunk)
+    if request then
       handle_request(socket, request)
-    end)
+    end
+  end)
+end
+
+---@param port integer
+local function start_server(port)
+  local listener = assert(vim.uv.new_tcp())
+
+  local bind_ok, bind_err = listener:bind("127.0.0.1", port)
+  if not bind_ok then
+    listener:close()
+    log.error("Failed to start plugin server on port %d: %s", port, bind_err)
+    return
+  end
+
+  local listen_ok, listen_err = listener:listen(128, function(conn_err)
+    if conn_err then
+      log.error(conn_err)
+      return
+    end
+
+    handle_connection(listener)
   end)
 
-  log.info("Plugin server is now listening on port " .. port)
+  if not listen_ok then
+    listener:close()
+    log.error("Failed to start plugin server on port %d: %s", port, listen_err)
+    return
+  end
+
+  server = listener
+  log.info("Plugin server is now listening on port %d", port)
 end
 
 function M.start()

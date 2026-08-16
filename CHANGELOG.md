@@ -42,6 +42,7 @@
 
 ### Fixed
 
+- Studio plugin server port conflict handling
 - Studio synchronization failing with large or deeply nested data models
 - Studio clear requests not returning a successful response
 - Roblox type and documentation downloads

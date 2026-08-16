@@ -33,7 +33,7 @@ end)
 
 ---@param level string
 ---@param levelnr number
----@return fun(message: string, ...: any)
+---@return fun(message: string, ...: unknown)
 local function create_logger(level, levelnr)
   return function(message, ...)
     message = string.format(message, ...)
