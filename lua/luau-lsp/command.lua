@@ -21,6 +21,9 @@ local commands = {
   codegen = {
     execute = require("luau-lsp.compiler").show_codegen,
   },
+  internal_source = {
+    execute = require("luau-lsp.internal_source").show,
+  },
   regenerate_sourcemap = {
     execute = require("luau-lsp.roblox.sourcemap").start,
   },

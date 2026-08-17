@@ -7,6 +7,7 @@
 - Native Script Sync support for the Studio companion plugin
 - Automatic rename prompt after Extract to local variable/function refactorings
 - Command `:LuauLsp codegen` to show CodeGen output for a selected assembly target
+- Command `:LuauLsp internal_source` to inspect source produced by Luau source-transform plugins
 - Command `:LuauLsp refresh_types` to refresh definition and documentation files
 - Caching for remote definition and documentation files
 - Luau API documentation for standard projects

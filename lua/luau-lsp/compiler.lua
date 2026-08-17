@@ -1,3 +1,4 @@
+local View = require "luau-lsp.view"
 local async = require "luau-lsp.async"
 local log = require "luau-lsp.log"
 local util = require "luau-lsp.util"
@@ -6,8 +7,8 @@ local UPDATE_EVENTS = { "BufEnter", "BufNewFile", "InsertLeave", "TextChanged" }
 
 local M = {}
 
-local view_bufnr = -1
-local view_winnr = -1
+local view = View.new()
+local update_id = 0
 local current_method = "luau-lsp/bytecode"
 local current_optimization_level = 0
 ---@type string?
@@ -40,21 +41,11 @@ local function select_codegen_target()
   })
 end
 
-local function is_view_valid()
-  return vim.api.nvim_win_is_valid(view_winnr) and vim.api.nvim_buf_is_valid(view_bufnr)
-end
-
-local function close_view()
-  if vim.api.nvim_win_is_valid(view_winnr) then
-    vim.api.nvim_win_close(view_winnr, true)
-  end
-  if vim.api.nvim_buf_is_valid(view_bufnr) then
-    vim.api.nvim_buf_delete(view_bufnr, { force = true })
-  end
-end
-
 ---@param bufnr integer
 local function update_view(bufnr)
+  update_id = update_id + 1
+  local expected_update_id = update_id
+
   local client = util.get_client(bufnr)
   if not client then
     return
@@ -66,70 +57,23 @@ local function update_view(bufnr)
     codeGenTarget = current_codegen_target,
   }
 
-  ---@cast current_method vim.lsp.protocol.Method.ClientToServer.Request
   client:request(current_method, params, function(err, result)
+    if update_id ~= expected_update_id or not view:is_open() then
+      return
+    end
+
     if err then
       log.error(err.message)
       return
     end
 
-    if not is_view_valid() then
-      return
-    end
-
-    local lines = vim.split(result, "\n", { trimempty = true })
-    vim.bo[view_bufnr].modifiable = true
-    vim.api.nvim_buf_set_lines(view_bufnr, 0, -1, false, lines)
-    vim.bo[view_bufnr].modifiable = false
+    view:set_content(result)
   end, bufnr)
 end
 
----@param bufname string
-local function create_view(bufname)
-  vim.cmd "belowright vnew"
-
-  view_bufnr = vim.api.nvim_get_current_buf()
-  view_winnr = vim.api.nvim_get_current_win()
-
-  vim.api.nvim_buf_set_name(view_bufnr, bufname)
-
-  vim.wo[view_winnr].winfixbuf = true
-  vim.bo[view_bufnr].buflisted = false
-  vim.bo[view_bufnr].buftype = "nofile"
-  vim.bo[view_bufnr].bufhidden = "wipe"
-  vim.bo[view_bufnr].swapfile = false
-  vim.bo[view_bufnr].modifiable = false
-  vim.bo[view_bufnr].filetype = vim.filetype.match { buf = view_bufnr }
-
-  vim.keymap.set("n", "q", close_view, {
-    buffer = view_bufnr,
-    desc = "Close the window",
-  })
-
-  local group = vim.api.nvim_create_augroup("luau-lsp.compiler.output", {})
-
-  vim.api.nvim_create_autocmd(UPDATE_EVENTS, {
-    group = group,
-    callback = function(event)
-      update_view(event.buf)
-    end,
-  })
-
-  vim.api.nvim_create_autocmd("BufUnload", {
-    group = group,
-    buffer = view_bufnr,
-    callback = function()
-      vim.api.nvim_del_augroup_by_id(group)
-    end,
-  })
-
-  -- triggers BufEnter and updates the view
-  vim.cmd.wincmd "p"
-end
-
 ---@param method string
----@param bufname string
-local show_compiler_output = async.void(function(method, bufname)
+---@param filename string
+local show_compiler_output = async.void(function(method, filename)
   local bufnr = vim.api.nvim_get_current_buf()
   if not util.get_client(bufnr) then
     return
@@ -152,8 +96,18 @@ local show_compiler_output = async.void(function(method, bufname)
   current_optimization_level = optimization_level
   current_codegen_target = codegen_target
 
-  close_view()
-  create_view(bufname)
+  view:open {
+    name = filename,
+    augroup = "luau-lsp.compiler.output",
+  }
+
+  view:autocmd(UPDATE_EVENTS, {
+    callback = function(event)
+      update_view(event.buf)
+    end,
+  })
+
+  update_view(bufnr)
 end)
 
 function M.show_bytecode()

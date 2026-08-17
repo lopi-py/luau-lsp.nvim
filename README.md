@@ -180,6 +180,10 @@ require("luau-lsp").setup {
 
 https://github.com/lopi-py/luau-lsp.nvim/assets/70210066/f9d45153-47f0-4565-a2ed-3769153732a0
 
+## Transformed source
+
+`:LuauLsp internal_source` opens the source produced by Luau source-transform plugins in a nofile Luau buffer. The view updates when you edit the source or switch to another Luau file. Close it with `q`.
+
 ## Server configuration
 
 See `:help vim.lsp.config`
