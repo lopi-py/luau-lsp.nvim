@@ -91,18 +91,15 @@ local function create_view(bufname)
   view_bufnr = vim.api.nvim_get_current_buf()
   view_winnr = vim.api.nvim_get_current_win()
 
+  vim.api.nvim_buf_set_name(view_bufnr, bufname)
+
   vim.wo[view_winnr].winfixbuf = true
   vim.bo[view_bufnr].buflisted = false
   vim.bo[view_bufnr].buftype = "nofile"
   vim.bo[view_bufnr].bufhidden = "wipe"
   vim.bo[view_bufnr].swapfile = false
   vim.bo[view_bufnr].modifiable = false
-
-  vim.api.nvim_buf_set_name(view_bufnr, bufname)
-
-  if not pcall(vim.treesitter.start, view_bufnr, "luau") then
-    vim.bo[view_bufnr].syntax = "luau"
-  end
+  vim.bo[view_bufnr].filetype = vim.filetype.match { buf = view_bufnr }
 
   vim.keymap.set("n", "q", close_view, {
     buffer = view_bufnr,
@@ -160,7 +157,7 @@ local show_compiler_output = async.void(function(method, bufname)
 end)
 
 function M.show_bytecode()
-  show_compiler_output("luau-lsp/bytecode", "luau-lsp://compiler/bytecode.luau")
+  show_compiler_output("luau-lsp/bytecode", "luau-lsp://compiler/bytecode.asm")
 end
 
 function M.show_remarks()
@@ -168,7 +165,7 @@ function M.show_remarks()
 end
 
 function M.show_codegen()
-  show_compiler_output("luau-lsp/codeGen", "luau-lsp://compiler/codegen.luau")
+  show_compiler_output("luau-lsp/codeGen", "luau-lsp://compiler/codegen.asm")
 end
 
 return M
