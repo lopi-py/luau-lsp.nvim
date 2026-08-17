@@ -5,6 +5,7 @@
 ### Added
 
 - Native Script Sync support for the Studio companion plugin
+- Automatic rename prompt after Extract to local variable/function refactorings
 - Command `:LuauLsp codegen` to show CodeGen output for a selected assembly target
 - Command `:LuauLsp refresh_types` to refresh definition and documentation files
 - Caching for remote definition and documentation files
@@ -18,7 +19,7 @@
 ### Changed
 
 - Server settings now use Neovim's built-in LSP configuration
-- Upgraded the required version of `luau-lsp` to `1.60.0`
+- Upgraded the required version of `luau-lsp` to `1.65.0`
 - Definition files can now have custom names and use local paths or URLs
 - Expanded support for synchronizing and overriding Luau FFlags
 - Improved performance when processing large Studio data models

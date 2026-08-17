@@ -25,6 +25,26 @@ return {
       },
     },
   },
+  commands = {
+    ["luau-lsp.rename"] = function(command, ctx)
+      local client = assert(vim.lsp.get_client_by_id(ctx.client_id))
+      local uri, position = unpack(assert(command.arguments))
+
+      assert(vim.lsp.util.show_document({
+        uri = uri,
+        range = {
+          start = position,
+          ["end"] = position,
+        },
+      }, client.offset_encoding))
+
+      vim.lsp.buf.rename(nil, {
+        filter = function(candidate)
+          return candidate.id == client.id
+        end,
+      })
+    end,
+  },
 
   -- HACK: pull diagnostics do not update affected files, so force push based diagnostics
   -- https://github.com/JohnnyMorganz/luau-lsp/issues/541
