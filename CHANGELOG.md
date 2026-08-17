@@ -19,6 +19,7 @@
 
 ### Changed
 
+- Command completion only offers sourcemap regeneration when Roblox sourcemap is enabled
 - Server settings now use Neovim's built-in LSP configuration
 - Upgraded the required version of `luau-lsp` to `1.65.0`
 - Definition files can now have custom names and use local paths or URLs

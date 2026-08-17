@@ -1,7 +1,9 @@
+local config = require "luau-lsp.config"
 local log = require "luau-lsp.log"
 
 ---@class luau-lsp.Command
 ---@field execute fun()
+---@field enabled? fun(): boolean
 
 local M = {}
 
@@ -26,11 +28,20 @@ local commands = {
   },
   regenerate_sourcemap = {
     execute = require("luau-lsp.roblox.sourcemap").start,
+    enabled = function()
+      return config.get().platform.type == "roblox" and config.get().sourcemap.enabled
+    end,
   },
   refresh_types = {
     execute = require("luau-lsp.server").refresh_types,
   },
 }
+
+---@param command luau-lsp.Command
+---@return boolean
+local function is_enabled(command)
+  return command.enabled == nil or command.enabled()
+end
 
 ---@param arglead string
 ---@return string[]
@@ -39,16 +50,20 @@ function M.complete(arglead)
   table.sort(items)
 
   return vim.tbl_filter(function(item)
-    return vim.startswith(item, arglead)
+    local command = commands[item]
+    return command ~= nil and vim.startswith(item, arglead) and is_enabled(command)
   end, items)
 end
 
 ---@param args string[]
 function M.execute(args)
-  if commands[args[1]] then
-    commands[args[1]].execute()
-  else
+  local command = commands[args[1]]
+  if not command then
     log.error("Invalid command '%s'", args[1])
+  elseif not is_enabled(command) then
+    log.error("Command '%s' is disabled", args[1])
+  else
+    command.execute()
   end
 end
 
